@@ -1,0 +1,133 @@
+# ============================================================================
+# Supabase ローカル開発設定 — BUYMO C2C Marketplace
+# ============================================================================
+# このファイルはローカル Supabase CLI 環境の設定です。
+# 本番環境の接続情報は .env.local の NEXT_PUBLIC_SUPABASE_URL / ANON_KEY を参照してください。
+# ============================================================================
+
+# プロジェクトを区別するための識別子（ローカルホスト内でユニークである必要があります）
+project_id = "buymo-c2c"
+
+[api]
+enabled = true
+# API URL のポート番号
+port = 54321
+# API に公開するスキーマ
+schemas = ["public", "graphql_public"]
+# すべてのリクエストの search_path に追加するスキーマ
+extra_search_path = ["public", "extensions"]
+# テーブル・ビュー・ストアドプロシージャから返す最大行数
+max_rows = 1000
+
+[api.tls]
+enabled = false
+
+[db]
+# ローカルデータベース URL のポート番号
+port = 54322
+# shadow DB のポート（db diff コマンド用）
+shadow_port = 54320
+# 使用する PostgreSQL メジャーバージョン（本番 DB に合わせること）
+major_version = 15
+
+[db.pooler]
+enabled = false
+port = 54329
+pool_mode = "transaction"
+default_pool_size = 20
+max_client_conn = 100
+
+[realtime]
+enabled = true
+# バインドする追加 IP アドレス
+ip_version = "IPv4"
+max_header_length = 4096
+
+[studio]
+enabled = true
+port = 54323
+# Studio 管理者のデフォルトメールアドレス
+api_url = "http://127.0.0.1"
+
+[inbucket]
+enabled = true
+# 認証メールを受け取る Inbucket の受信ポート
+port = 54324
+smtp_port = 54325
+pop3_port = 54326
+
+[storage]
+enabled = true
+# アップロード可能な最大ファイルサイズ
+file_size_limit = "50MiB"
+
+[storage.image_transformation]
+enabled = true
+
+[auth]
+enabled = true
+# 認証後のリダイレクト先ベース URL
+site_url = "http://localhost:3000"
+# 認証プロバイダーが POST 後にリダイレクト可能な URL 一覧
+additional_redirect_urls = ["https://localhost:3000", "http://127.0.0.1:3000"]
+# JWT トークンの有効期限（秒）。デフォルト: 3600（1時間）
+jwt_expiry = 3600
+# リフレッシュトークンのローテーションを有効化
+enable_refresh_token_rotation = true
+# リフレッシュトークンの再利用許容時間（秒）
+refresh_token_reuse_interval = 10
+# 新規ユーザー登録の許可
+enable_signup = true
+# 匿名サインインの許可
+enable_anonymous_sign_ins = false
+# MFA の許可
+enable_manual_linking = false
+
+[auth.email]
+enable_signup = true
+# メールアドレス変更時に新旧両方の確認を要求
+double_confirm_changes = true
+# 開発中はメール確認をスキップ（本番では true に変更推奨）
+enable_confirmations = false
+# カスタムメールテンプレートのパス（省略時はデフォルトテンプレート使用）
+# template.invitation = "supabase/templates/invite.html"
+# template.confirmation = "supabase/templates/confirm.html"
+# template.recovery = "supabase/templates/recovery.html"
+# template.email_change = "supabase/templates/email_change.html"
+
+[auth.sms]
+# SMS 経由のサインアップを許可
+enable_signup = false
+enable_confirmations = false
+# テスト用 OTP（電話番号 → OTPコード のマップ）
+# [auth.sms.test_otp]
+# "09000000000" = "123456"
+
+[auth.external.github]
+enabled = false
+client_id = "env(SUPABASE_AUTH_GITHUB_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_GITHUB_SECRET)"
+
+[auth.external.google]
+enabled = false
+client_id = "env(SUPABASE_AUTH_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_GOOGLE_SECRET)"
+
+[edge_runtime]
+enabled = true
+policy = "per_worker"
+
+[analytics]
+enabled = false
+port = 54327
+vector_port = 54328
+# analytics バックエンド（postgres または bigquery）
+backend = "postgres"
+
+[experimental]
+# ローカル開発時の S3 互換ストレージエンドポイント（省略時は Supabase Storage を使用）
+# orioledb_version = ""
+# s3_host = "env(S3_HOST)"
+# s3_region = "env(S3_REGION)"
+# s3_access_key = "env(S3_ACCESS_KEY)"
+# s3_secret_key = "env(S3_SECRET_KEY)"

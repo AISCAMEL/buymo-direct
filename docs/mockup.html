@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BUYMO C2C — モックアップ</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+<script>
+tailwind.config = { theme: { extend: { colors: {
+  navy: { 50:'#EBF2FF',100:'#C7D7F0',400:'#2A5298',500:'#1E3A5F',600:'#162D4A',700:'#0F1F33' },
+  accent: { 500:'#F59E0B',600:'#D97706' } } } } }
+</script>
+<style>body{font-family:'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;background:#f1f5f9}
+.chip{display:inline-block;font-size:11px;font-weight:700;padding:2px 10px;border-radius:9999px}
+.scr-label{font-size:12px;font-weight:700;color:#64748b;letter-spacing:.05em}</style>
+</head>
+<body class="text-slate-800">
+
+<div class="max-w-6xl mx-auto p-4 sm:p-8 space-y-12">
+
+  <header class="text-center py-6">
+    <h1 class="text-3xl font-black text-navy-500">BUYMO C2C — 画面モックアップ</h1>
+    <p class="text-slate-500 mt-2">個人間中古車売買マーケットプレイス（実装済みUIの静的モック）</p>
+    <div class="mt-3 flex flex-wrap justify-center gap-2 text-xs">
+      <span class="chip bg-emerald-100 text-emerald-700">出品/検索</span>
+      <span class="chip bg-emerald-100 text-emerald-700">メッセージ</span>
+      <span class="chip bg-emerald-100 text-emerald-700">エスクロー(現金/ローン/クレジット)</span>
+      <span class="chip bg-emerald-100 text-emerald-700">レビュー/通報</span>
+      <span class="chip bg-emerald-100 text-emerald-700">運営コンソール</span>
+    </div>
+  </header>
+
+  <!-- ===== ① トップ ===== -->
+  <section class="space-y-3">
+    <p class="scr-label">① トップ / 検索結果</p>
+    <div class="rounded-2xl overflow-hidden shadow-lg bg-white">
+      <!-- nav -->
+      <div class="h-16 px-4 flex items-center justify-between border-b">
+        <div class="flex items-center gap-2 text-navy-500"><i class="fa-solid fa-car-side text-2xl"></i><span class="font-black text-lg">BUYMO<span class="text-accent-500">C2C</span></span></div>
+        <div class="flex items-center gap-2 text-sm font-bold text-slate-600">
+          <span>車を探す</span>
+          <span class="relative">メッセージ<span class="absolute -top-2 -right-3 bg-red-500 text-white text-[10px] rounded-full px-1.5">3</span></span>
+          <span class="hidden sm:inline">お気に入り</span>
+          <span class="bg-accent-500 text-white px-3 py-2 rounded-lg">出品する</span>
+        </div>
+      </div>
+      <!-- announcement banner -->
+      <div class="bg-navy-500 text-white text-sm px-4 py-2 flex items-center gap-2"><i class="fa-solid fa-bullhorn"></i><span class="font-bold">BUYMO C2C へようこそ — エスクロー決済で安全な個人間取引を。</span></div>
+      <!-- hero -->
+      <div class="bg-gradient-to-br from-navy-500 to-navy-700 text-white text-center px-6 py-12">
+        <span class="chip bg-white/10 mb-3">個人間（C2C）中古車売買</span>
+        <h2 class="text-3xl sm:text-4xl font-black">中古車を、個人どうしで直接売買。</h2>
+        <p class="mt-3 text-navy-50 text-sm">業者を介さないから高く売れて、安く買える。エスクロー＆名義変更代行で安心。</p>
+        <div class="mt-6 flex justify-center gap-3">
+          <span class="bg-accent-500 px-6 py-3 rounded-lg font-bold"><i class="fa-solid fa-magnifying-glass mr-1"></i>車を探す</span>
+          <span class="border border-white/40 px-6 py-3 rounded-lg font-bold">車を出品する</span>
+        </div>
+      </div>
+      <!-- cards -->
+      <div class="p-5">
+        <div class="flex items-center justify-between mb-3"><h3 class="font-black">新着の出品車両</h3><span class="text-sm text-navy-400 font-bold">すべて見る →</span></div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <!-- card -->
+          <div class="rounded-xl border bg-white overflow-hidden relative">
+            <button class="absolute right-2 top-2 z-10 h-8 w-8 rounded-full bg-white/90 shadow grid place-items-center"><i class="fa-solid fa-heart text-red-500"></i></button>
+            <img src="https://picsum.photos/seed/buymo2a/400/300" class="aspect-[4/3] w-full object-cover">
+            <div class="p-3">
+              <p class="text-[11px] font-bold text-navy-400">ホンダ ヴェゼル</p>
+              <p class="font-bold text-sm truncate">低走行 ハイブリッド</p>
+              <p class="text-lg font-black text-navy-600 mt-1">¥2,480,000</p>
+              <p class="text-[11px] font-bold text-slate-500">ローン月々 ¥40,600〜</p>
+              <div class="flex gap-2 text-[10px] text-slate-500 mt-1"><span>2022年</span><span>2.1万km</span><span>大阪府</span></div>
+            </div>
+          </div>
+          <div class="rounded-xl border bg-white overflow-hidden relative">
+            <button class="absolute right-2 top-2 z-10 h-8 w-8 rounded-full bg-white/90 shadow grid place-items-center"><i class="fa-regular fa-heart text-slate-400"></i></button>
+            <img src="https://picsum.photos/seed/buymo4a/400/300" class="aspect-[4/3] w-full object-cover">
+            <div class="p-3">
+              <p class="text-[11px] font-bold text-navy-400">日産 セレナ</p>
+              <p class="font-bold text-sm truncate">e-POWER 8人乗り</p>
+              <p class="text-lg font-black text-navy-600 mt-1">¥2,680,000</p>
+              <p class="text-[11px] font-bold text-slate-500">ローン月々 ¥43,900〜</p>
+              <div class="flex gap-2 text-[10px] text-slate-500 mt-1"><span>2021年</span><span>3.3万km</span><span>愛知県</span></div>
+            </div>
+          </div>
+          <div class="rounded-xl border bg-white overflow-hidden relative">
+            <span class="chip bg-red-100 text-red-700 absolute left-2 top-2 z-10">修復歴あり</span>
+            <button class="absolute right-2 top-2 z-10 h-8 w-8 rounded-full bg-white/90 shadow grid place-items-center"><i class="fa-regular fa-heart text-slate-400"></i></button>
+            <img src="https://picsum.photos/seed/buymo3a/400/300" class="aspect-[4/3] w-full object-cover">
+            <div class="p-3">
+              <p class="text-[11px] font-bold text-navy-400">マツダ CX-5</p>
+              <p class="font-bold text-sm truncate">ディーゼル 4WD</p>
+              <p class="text-lg font-black text-navy-600 mt-1">¥2,180,000</p>
+              <p class="text-[11px] font-bold text-slate-500">ローン月々 ¥35,700〜</p>
+              <div class="flex gap-2 text-[10px] text-slate-500 mt-1"><span>2020年</span><span>4.6万km</span><span>大阪府</span></div>
+            </div>
+          </div>
+          <div class="rounded-xl border bg-white overflow-hidden relative">
+            <span class="chip bg-slate-200 text-slate-600 absolute right-2 bottom-2 z-10">SOLD</span>
+            <img src="https://picsum.photos/seed/buymo1a/400/300" class="aspect-[4/3] w-full object-cover opacity-80">
+            <div class="p-3">
+              <p class="text-[11px] font-bold text-navy-400">トヨタ アルファード</p>
+              <p class="font-bold text-sm truncate">車検2年付き 禁煙車</p>
+              <p class="text-lg font-black text-navy-600 mt-1">¥3,980,000</p>
+              <p class="text-[11px] font-bold text-slate-500">ローン月々 ¥65,100〜</p>
+              <div class="flex gap-2 text-[10px] text-slate-500 mt-1"><span>2021年</span><span>3.8万km</span><span>大阪府</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ② 出品詳細 ===== -->
+  <section class="space-y-3">
+    <p class="scr-label">② 出品詳細</p>
+    <div class="rounded-2xl shadow-lg bg-white p-5 grid lg:grid-cols-[1fr_320px] gap-6">
+      <div class="space-y-4">
+        <img src="https://picsum.photos/seed/buymo2a/800/600" class="rounded-xl aspect-[4/3] w-full object-cover">
+        <div class="grid grid-cols-4 gap-2">
+          <img src="https://picsum.photos/seed/buymo2b/200/200" class="rounded-lg aspect-square object-cover">
+          <img src="https://picsum.photos/seed/buymo2c/200/200" class="rounded-lg aspect-square object-cover">
+          <img src="https://picsum.photos/seed/buymo2d/200/200" class="rounded-lg aspect-square object-cover">
+          <img src="https://picsum.photos/seed/buymo2e/200/200" class="rounded-lg aspect-square object-cover">
+        </div>
+        <div class="rounded-xl border p-4">
+          <h3 class="font-bold mb-2 text-sm">車両情報</h3>
+          <div class="grid grid-cols-3 gap-2 text-sm">
+            <div class="bg-slate-50 rounded-lg p-2"><p class="text-[11px] text-slate-500">年式</p><p class="font-bold">2022年</p></div>
+            <div class="bg-slate-50 rounded-lg p-2"><p class="text-[11px] text-slate-500">走行</p><p class="font-bold">2.1万km</p></div>
+            <div class="bg-slate-50 rounded-lg p-2"><p class="text-[11px] text-slate-500">地域</p><p class="font-bold">大阪府</p></div>
+          </div>
+          <p class="mt-3 text-sm"><i class="fa-solid fa-shield-halved text-emerald-500"></i> <b>修復歴：なし</b></p>
+        </div>
+      </div>
+      <aside class="space-y-3">
+        <div class="rounded-xl border p-4">
+          <p class="text-[11px] font-bold text-navy-400">ホンダ ヴェゼル</p>
+          <h3 class="font-black">低走行 ハイブリッド</h3>
+          <p class="text-3xl font-black text-navy-600 mt-2">¥2,480,000</p>
+          <p class="text-sm font-bold text-slate-600 mt-1">ローン月々 <span class="text-navy-600">¥40,600〜</span> <span class="text-[11px] text-slate-400">（60回・年率6.8%）</span></p>
+          <p class="text-xs text-accent-600 font-bold mt-1">ローン仮審査を申し込む →</p>
+          <button class="w-full bg-accent-500 text-white py-3 rounded-lg font-bold mt-4">出品者にメッセージ</button>
+          <button class="w-full border py-2.5 rounded-lg font-bold mt-2 text-slate-700"><i class="fa-regular fa-heart"></i> お気に入りに追加</button>
+        </div>
+        <div class="rounded-xl border p-4">
+          <p class="text-xs font-bold text-slate-500 mb-2">出品者</p>
+          <div class="flex items-center gap-3">
+            <div class="h-10 w-10 rounded-full bg-navy-100 grid place-items-center font-bold text-navy-500">中</div>
+            <div><p class="font-bold">中古車太郎</p>
+              <p class="text-amber-400 text-sm">★★★★★ <span class="text-slate-500 text-xs">5.0（1）</span></p></div>
+          </div>
+        </div>
+        <p class="text-right text-xs text-slate-400"><i class="fa-solid fa-flag"></i> この出品を通報</p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ===== ③ エスクロー / 支払い ===== -->
+  <section class="space-y-3">
+    <p class="scr-label">③ エスクロー取引 — 支払い（現金 / ローン / クレジット）</p>
+    <div class="rounded-2xl shadow-lg bg-white p-5 max-w-2xl mx-auto space-y-4">
+      <!-- stepper -->
+      <div class="flex items-center text-center text-[11px] font-bold">
+        <div class="flex-1"><div class="h-9 w-9 mx-auto rounded-full bg-emerald-500 text-white grid place-items-center"><i class="fa-solid fa-check"></i></div><span class="text-emerald-600">取引開始</span></div>
+        <div class="flex-1 border-t-2 border-navy-500 -mt-4"><div class="h-9 w-9 mx-auto rounded-full bg-navy-500 text-white grid place-items-center">2</div><span class="text-navy-600">入金・保全</span></div>
+        <div class="flex-1 border-t-2 border-slate-200 -mt-4"><div class="h-9 w-9 mx-auto rounded-full bg-slate-200 text-slate-400 grid place-items-center">3</div><span class="text-slate-400">現車確認</span></div>
+        <div class="flex-1 border-t-2 border-slate-200 -mt-4"><div class="h-9 w-9 mx-auto rounded-full bg-slate-200 text-slate-400 grid place-items-center">4</div><span class="text-slate-400">名義変更</span></div>
+        <div class="flex-none w-16 border-t-2 border-slate-200 -mt-4"><div class="h-9 w-9 mx-auto rounded-full bg-slate-200 text-slate-400 grid place-items-center">5</div><span class="text-slate-400">完了</span></div>
+      </div>
+      <!-- breakdown -->
+      <div class="rounded-xl border p-4 text-sm space-y-1">
+        <h3 class="font-bold mb-2">お支払い内訳</h3>
+        <div class="flex justify-between"><span class="text-slate-500">車両代金</span><b>¥2,480,000</b></div>
+        <div class="flex justify-between"><span class="text-slate-500">エスクロー手数料</span><b>¥5,500</b></div>
+        <div class="flex justify-between"><span class="text-slate-500">名義変更（通常代行）</span><b>¥49,800</b></div>
+        <div class="flex justify-between"><span class="text-slate-500">クレジット分割手数料（4.2%）</span><b>¥106,202</b></div>
+        <div class="flex justify-between border-t pt-2 text-base"><b>合計（買主負担）</b><b class="text-navy-600">¥2,641,502</b></div>
+      </div>
+      <!-- methods -->
+      <div class="rounded-xl border p-4 space-y-2">
+        <h3 class="font-bold">お支払い方法</h3>
+        <div class="flex items-center gap-3 rounded-lg border p-3"><i class="fa-solid fa-money-bill-wave text-slate-400"></i><div><b>現金</b><p class="text-xs text-slate-500">受け渡し時に現金で（オンライン決済なし）</p></div></div>
+        <div class="flex items-center gap-3 rounded-lg border p-3"><i class="fa-solid fa-building-columns text-slate-400"></i><div><b>ローン（提携クレジット）</b><p class="text-xs text-slate-500">年率6.8%〜（審査で決定）</p></div></div>
+        <div class="flex items-center gap-3 rounded-lg border-2 border-navy-400 bg-navy-50 p-3"><i class="fa-regular fa-credit-card text-navy-500"></i><div><b>クレジットカード</b><p class="text-xs text-slate-500">Squareで決済・分割手数料4.2%</p></div></div>
+        <div class="rounded-lg bg-slate-50 p-3 text-xs text-slate-500"><i class="fa-regular fa-credit-card mr-1"></i> [ Square カード番号入力欄 ]</div>
+        <button class="w-full bg-accent-500 text-white py-3 rounded-lg font-bold">カードで支払う</button>
+      </div>
+      <!-- loan sim -->
+      <div class="rounded-xl border p-4">
+        <h3 class="font-bold text-sm mb-2">ローン返済シミュレーション</h3>
+        <div class="rounded-lg bg-navy-50 p-3 text-center">
+          <p class="text-xs text-slate-500">月々のお支払い（年率6.8%・60回・頭金30万）</p>
+          <p class="text-2xl font-black text-navy-600">¥42,900<span class="text-sm">/月</span></p>
+          <p class="text-[11px] text-slate-400">融資額 ¥2,180,000 ／ 総支払 ¥2,574,000</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ④ 運営コンソール ===== -->
+  <section class="space-y-3">
+    <p class="scr-label">④ 運営コンソール（/admin）</p>
+    <div class="rounded-2xl shadow-lg bg-white p-5 space-y-4">
+      <div class="bg-navy-700 text-white rounded-xl px-5 py-3 flex items-center gap-2"><i class="fa-solid fa-shield-halved text-accent-500"></i><b>運営管理コンソール</b><span class="chip bg-white/10">ADMIN</span></div>
+      <div class="flex flex-wrap gap-2 text-sm font-bold">
+        <span class="border rounded-lg px-3 py-2 bg-slate-50">ダッシュボード</span>
+        <span class="border rounded-lg px-3 py-2">出品モデレーション</span>
+        <span class="border rounded-lg px-3 py-2">取引監視</span>
+        <span class="border rounded-lg px-3 py-2">ローン審査</span>
+        <span class="border rounded-lg px-3 py-2">通報</span>
+        <span class="border rounded-lg px-3 py-2">お知らせ</span>
+        <span class="border rounded-lg px-3 py-2">監査ログ</span>
+      </div>
+      <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="rounded-xl border p-4"><p class="text-xs text-slate-400 font-bold"><i class="fa-solid fa-users"></i> 登録ユーザー</p><p class="text-2xl font-black text-navy-600">128</p></div>
+        <div class="rounded-xl border p-4"><p class="text-xs text-slate-400 font-bold"><i class="fa-solid fa-car"></i> 出品（公開中）</p><p class="text-2xl font-black text-navy-600">42</p><p class="text-xs text-slate-400">商談中 6 / 売約 19</p></div>
+        <div class="rounded-xl border p-4"><p class="text-xs text-slate-400 font-bold"><i class="fa-solid fa-wallet"></i> 成約GMV</p><p class="text-2xl font-black text-navy-600">¥58,420,000</p><p class="text-xs text-slate-400">成約 19 件</p></div>
+        <div class="rounded-xl border p-4"><p class="text-xs text-slate-400 font-bold"><i class="fa-solid fa-shield"></i> 手数料売上</p><p class="text-2xl font-black text-navy-600">¥1,254,300</p></div>
+        <div class="rounded-xl border p-4"><p class="text-xs text-slate-400 font-bold"><i class="fa-solid fa-triangle-exclamation"></i> 進行中の取引</p><p class="text-2xl font-black text-navy-600">7</p><p class="text-xs text-red-500">係争 1 件</p></div>
+        <div class="rounded-xl border p-4"><p class="text-xs text-slate-400 font-bold"><i class="fa-solid fa-star"></i> 平均評価</p><p class="text-2xl font-black text-navy-600">4.82</p><p class="text-xs text-slate-400">63 件</p></div>
+      </div>
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div class="rounded-xl border p-4 flex items-center justify-between"><span class="font-bold"><i class="fa-solid fa-building-columns text-navy-400"></i> 未処理のローン審査</span><span class="chip bg-amber-100 text-amber-700">3 件</span></div>
+        <div class="rounded-xl border p-4 flex items-center justify-between"><span class="font-bold"><i class="fa-solid fa-flag text-navy-400"></i> 未対応の通報</span><span class="chip bg-red-100 text-red-700">2 件</span></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="text-center text-xs text-slate-400 py-6">BUYMO C2C — 静的モックアップ（実装済みUIの再現）。実データは Next.js + Supabase で動作します。</footer>
+</div>
+</body>
+</html>
