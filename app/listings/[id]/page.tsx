@@ -17,13 +17,8 @@ import { LOAN_APR_FROM } from '@/lib/constants';
 import { monthlyPayment } from '@/lib/loan';
 import { MakeOfferButton } from '@/components/MakeOfferButton';
 import { PriceAlertButton } from '@/components/PriceAlertButton';
-import nextDynamic from 'next/dynamic';
+import { InsuranceSimulator } from '@/components/InsuranceSimulatorLazy';
 import type { ListingWithImages, MaintenanceRecord } from '@/lib/types';
-
-const InsuranceSimulator = nextDynamic(
-  () => import('@/components/InsuranceSimulator').then((m) => m.InsuranceSimulator),
-  { ssr: false }
-);
 
 export const revalidate = 300; // ISR: rebuild listing detail at most once per 5 minutes
 

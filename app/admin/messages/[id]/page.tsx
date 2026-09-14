@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { use, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, AlertTriangle, ShieldCheck, Ban, Flag, MessageSquare } from 'lucide-react';
 import { formatYen } from '@/lib/format';
@@ -43,8 +43,8 @@ const DEFAULT_DETAIL = {
   ],
 };
 
-export default function AdminMessageDetailPage({ params }: { params: { id: string } }) {
-  const convId = params.id;
+export default function AdminMessageDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const convId = use(params).id;
   const data = DEMO_DETAIL[convId] ?? DEFAULT_DETAIL;
   const { conv, messages } = data;
 
