@@ -17,8 +17,7 @@ import { ListingGrid } from '@/components/ListingGrid';
 import { favoritedSet } from '@/lib/favorites';
 import { BODY_TYPES } from '@/lib/constants';
 import { HowItWorksTabs } from '@/components/HowItWorksTabs';
-import { getCachedFeaturedListings, getCachedListingStats } from '@/lib/cache';
-import { DEMO_LISTINGS } from '@/lib/demo-data';
+import { getCachedFeaturedListings } from '@/lib/cache';
 import type { ListingWithImages } from '@/lib/types';
 
 export const revalidate = 300; // ISR: home page rebuilds at most once per 5 minutes
@@ -111,24 +110,8 @@ export default async function HomePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Cached queries — do not depend on request cookies
-  const [rawListings, { count: activeCount }] = await Promise.all([
-    getCachedFeaturedListings(),
-    getCachedListingStats(),
-  ]);
-
-  // Fall back to demo data when Supabase has no listings
-  const listings: ListingWithImages[] = rawListings.length > 0 ? rawListings : DEMO_LISTINGS.filter(l => l.status === 'active').slice(0, 8).map((l, i) => ({
-    ...l,
-    seller_id: `demo-seller-${i}`,
-    status: l.status as import('@/lib/types').ListingStatus,
-    description: null, vin: null, video_url: null, expires_at: null,
-    listing_type: 'direct' as import('@/lib/types').ListingType, fee_rate: 3, ai_price_min: null, ai_price_max: null,
-    view_count: 50 + i * 37, updated_at: l.created_at,
-    listing_images: [],
-    profiles: { id: `demo-seller-${i}`, display_name: '出品者', prefecture: l.prefecture, avatar_url: null },
-  }));
-  const displayCount = activeCount > 0 ? activeCount : 1284;
+  // 実データのみ表示（出品が無いときは「入荷待ち」を表示する）
+  const listings: ListingWithImages[] = await getCachedFeaturedListings();
 
   // Favorites are user-specific — fetched per request using the auth client
   const favoritedIds = await favoritedSet(supabase, user?.id, listings.map((l) => l.id));
@@ -227,36 +210,24 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ── 2. 統計バー ── */}
-        <section className="bg-navy-500 py-5 text-white">
-          <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-y-4 px-4 text-center sm:divide-x sm:divide-white/20">
-            <div className="px-8">
-              <p className="text-2xl font-black">
-                {(displayCount ?? 0).toLocaleString()}
-                <span className="ml-1 text-sm font-bold opacity-80">台</span>
-              </p>
-              <p className="mt-0.5 text-xs opacity-70">出品台数</p>
+        {/* ── 2. 価値訴求バー ── */}
+        <section className="bg-navy-500 py-6 text-white">
+          <div className="mx-auto grid max-w-5xl grid-cols-2 gap-y-5 px-4 text-center sm:grid-cols-4 sm:divide-x sm:divide-white/20">
+            <div className="px-4">
+              <p className="text-lg font-black sm:text-xl">買取保証つき</p>
+              <p className="mt-0.5 text-xs opacity-70">売れなくても安心</p>
             </div>
-            <div className="px-8">
-              <p className="text-2xl font-black">
-                3,847
-                <span className="ml-1 text-sm font-bold opacity-80">件</span>
-              </p>
-              <p className="mt-0.5 text-xs opacity-70">累計成約件数</p>
+            <div className="px-4">
+              <p className="text-lg font-black sm:text-xl">エスクロー決済</p>
+              <p className="mt-0.5 text-xs opacity-70">第三者がお金を預かる</p>
             </div>
-            <div className="px-8">
-              <p className="text-2xl font-black">
-                12
-                <span className="ml-1 text-sm font-bold opacity-80">日</span>
-              </p>
-              <p className="mt-0.5 text-xs opacity-70">平均成約日数</p>
+            <div className="px-4">
+              <p className="text-lg font-black sm:text-xl">全国47都道府県</p>
+              <p className="mt-0.5 text-xs opacity-70">どこでもオンライン完結</p>
             </div>
-            <div className="px-8">
-              <p className="text-2xl font-black">
-                28,400
-                <span className="ml-1 text-sm font-bold opacity-80">人</span>
-              </p>
-              <p className="mt-0.5 text-xs opacity-70">会員数</p>
+            <div className="px-4">
+              <p className="text-lg font-black sm:text-xl">名義変更まで代行</p>
+              <p className="mt-0.5 text-xs opacity-70">面倒な手続きもおまかせ</p>
             </div>
           </div>
         </section>
@@ -429,10 +400,17 @@ export default async function HomePage() {
             {listings.length > 0 ? (
               <ListingGrid listings={listings} favoritedIds={favoritedIds} loggedIn={!!user} />
             ) : (
-              <div className="card p-10 text-center text-sm text-slate-500">
-                まだ出品がありません。最初の出品者になりましょう！
-                <div className="mt-4">
-                  <Link href="/sell" className="btn-accent">車を出品する</Link>
+              <div className="card flex flex-col items-center gap-3 p-12 text-center">
+                <div className="text-5xl" aria-hidden="true">🚗</div>
+                <span className="rounded-full bg-navy-50 px-3 py-1 text-xs font-black tracking-wide text-navy-600">入荷待ち</span>
+                <h3 className="text-lg font-black text-navy-700">ただいま入荷準備中です</h3>
+                <p className="max-w-md text-sm leading-relaxed text-slate-500">
+                  近日、BUYMO ダイレクトに車両を掲載予定です。<br />
+                  「買取保証つき」で、あなたのクルマの出品もお待ちしています。
+                </p>
+                <div className="mt-2 flex flex-wrap justify-center gap-2">
+                  <Link href="/sell" className="btn-primary px-5 py-2.5 text-sm">クルマを出品する</Link>
+                  <Link href="/listings/valuation" className="btn-outline px-5 py-2.5 text-sm">無料査定を試す</Link>
                 </div>
               </div>
             )}

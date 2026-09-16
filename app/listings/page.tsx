@@ -78,6 +78,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
 
   const listings = (data ?? []) as unknown as ListingWithImages[];
   const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE);
+  const hasFilters = Object.values(filterParams).some(Boolean);
   const favoritedIds = await favoritedSet(supabase, user?.id, listings.map((l) => l.id));
 
   const paginationParams: Record<string, string | undefined> = Object.fromEntries(
@@ -121,9 +122,23 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
             <ListingGrid listings={listings} favoritedIds={favoritedIds} loggedIn={!!user} />
             <PaginationBar page={page} totalPages={totalPages} searchParams={paginationParams} />
           </>
-        ) : (
+        ) : hasFilters ? (
           <div className="card p-10 text-center text-sm text-slate-500">
             条件に合う車両が見つかりませんでした。条件を変えてお試しください。
+          </div>
+        ) : (
+          <div className="card flex flex-col items-center gap-3 p-12 text-center">
+            <div className="text-5xl" aria-hidden="true">🚗</div>
+            <span className="rounded-full bg-navy-50 px-3 py-1 text-xs font-black tracking-wide text-navy-600">入荷待ち</span>
+            <h2 className="text-lg font-black text-navy-700">ただいま入荷準備中です</h2>
+            <p className="max-w-md text-sm leading-relaxed text-slate-500">
+              現在、出品車両を準備しています。近日、BUYMO ダイレクトに車両を掲載予定です。<br />
+              「買取保証つき」で、あなたのクルマの出品・売却もお待ちしています。
+            </p>
+            <div className="mt-2 flex flex-wrap justify-center gap-2">
+              <Link href="/sell" className="btn-primary px-5 py-2.5 text-sm">クルマを出品する</Link>
+              <Link href="/listings/valuation" className="btn-outline px-5 py-2.5 text-sm">無料査定を試す</Link>
+            </div>
           </div>
         )}
       </section>
