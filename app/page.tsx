@@ -198,17 +198,25 @@ export default async function HomePage() {
       <div className="-mx-4 -mt-6">
 
         {/* ── 1. Hero ── */}
-        <section className="bg-gradient-to-b from-slate-50 to-white px-4 pb-14 pt-16 text-center">
+        <section className="bg-gradient-to-b from-navy-50 to-white px-4 pb-14 pt-16 text-center">
           <p className="mb-3 inline-block rounded-full bg-accent-50 px-4 py-1 text-xs font-bold text-accent-600">
-            買取保証つき 中古車ダイレクト販売
+            🚗 買取保証つき 中古車ダイレクト販売
           </p>
           <h1 className="text-3xl font-black leading-tight text-slate-900 sm:text-5xl">
-            業者なし。<span className="text-accent-600">個人どうし</span>で<br />
-            中古車を安心・直接売買。
+            保証つきだから<span className="text-accent-600">安心</span>。<br />
+            クルマの売買、オンライン完結。
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-sm text-slate-500 sm:text-base">
-            エスクロー決済と名義変更代行で、個人間取引の不安をゼロに。
+            査定・出品・販売・エスクロー決済まで、BUYMOがまるごとサポート。全国どこでも、安心してクルマを売れる・買える。
           </p>
+
+          {/* ベネフィットのチップ（buymo.me風） */}
+          <ul className="mx-auto mt-5 flex max-w-xl flex-wrap justify-center gap-2 text-xs font-bold text-navy-600">
+            <li className="rounded-full bg-navy-50 px-3 py-1">買取保証つき</li>
+            <li className="rounded-full bg-navy-50 px-3 py-1">エスクロー決済で安心</li>
+            <li className="rounded-full bg-navy-50 px-3 py-1">全国47都道府県対応</li>
+            <li className="rounded-full bg-navy-50 px-3 py-1">オンライン完結</li>
+          </ul>
 
           {/* 検索バー */}
           <form
