@@ -360,8 +360,8 @@ export function ListingForm({
             <label
               className="flex cursor-pointer gap-3 rounded-xl border-2 p-4 transition-colors"
               style={{
-                borderColor: listingType === 'direct' ? '#1e3a6e' : '#e5e7eb',
-                background: listingType === 'direct' ? '#eff6ff' : '#fff',
+                borderColor: listingType === 'direct' ? '#0F766E' : '#e5e7eb',
+                background: listingType === 'direct' ? '#E6F2EF' : '#fff',
               }}
             >
               <input type="radio" name="listing_type_ui" value="direct" className="mt-0.5"
