@@ -7,7 +7,6 @@ import {
   ChevronRight,
   Banknote,
   Building2,
-  Star,
   Zap,
   LayoutDashboard,
   Tag,
@@ -65,36 +64,26 @@ const REASONS = [
   },
 ];
 
-const TESTIMONIALS = [
+const SAFETY_POINTS = [
   {
-    initial: '田',
-    avatarBg: 'bg-blue-500',
-    name: '田中 圭一',
-    role: '個人売主 / 東京都',
-    rating: 5,
-    date: '2026年5月',
-    comment:
-      'プリウスを売却。業者に見積もりを取ったら150万円と言われたのに、BUYMOでは210万円で売れました。エスクローで入金を確認してから引き渡せるのが安心でした。',
+    icon: ShieldCheck,
+    title: '買取保証つき',
+    desc: '万一売れなくても、BUYMOが買い取り。売り手も安心して出品できます。',
   },
   {
-    initial: '佐',
-    avatarBg: 'bg-rose-500',
-    name: '佐藤 由美',
-    role: '購入者 / 大阪府',
-    rating: 5,
-    date: '2026年4月',
-    comment:
-      '初めての個人間取引で心配でしたが、メッセージでのやりとりがスムーズで、名義変更も代行してもらえてとても楽でした。',
+    icon: Banknote,
+    title: 'エスクロー決済',
+    desc: '代金は第三者が一時お預かり。車と代金の受け渡しを安全に行えます。',
   },
   {
-    initial: '山',
-    avatarBg: 'bg-amber-500',
-    name: '山田 健太',
-    role: '加盟店スタッフ / 愛知県',
-    rating: 5,
-    date: '2026年3月',
-    comment:
-      '加盟店として在庫をAPI連携で自動登録できるのが便利。月の成約台数が1.5倍になりました。',
+    icon: FileCheck2,
+    title: '本人確認・名義変更',
+    desc: '出品者・購入者の本人確認を実施。面倒な名義変更手続きも代行します。',
+  },
+  {
+    icon: MessageSquare,
+    title: 'チャット＆取引監視',
+    desc: 'サイト内チャットで直接やりとり。不審な取引は運営が監視・対応します。',
   },
 ];
 
@@ -285,36 +274,21 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ── 6. ユーザーの声 ── */}
+        {/* ── 6. 安心の仕組み ── */}
         <section className="bg-white px-4 py-14">
           <div className="mx-auto max-w-5xl">
             <p className="mb-2 text-center text-xs font-bold uppercase tracking-widest text-accent-600">
-              Testimonials
+              Safety
             </p>
-            <h2 className="mb-8 text-center text-2xl font-black">利用者の声</h2>
-            <div className="grid gap-6 sm:grid-cols-3">
-              {TESTIMONIALS.map(({ initial, avatarBg, name, role, rating, date, comment }) => (
-                <div key={name} className="card flex flex-col p-6">
-                  <div className="mb-4 flex items-center gap-3">
-                    <div
-                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-black text-white ${avatarBg}`}
-                    >
-                      {initial}
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-800">{name}</p>
-                      <p className="text-xs text-slate-500">{role}</p>
-                    </div>
+            <h2 className="mb-8 text-center text-2xl font-black">安心して取引できる仕組み</h2>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {SAFETY_POINTS.map(({ icon: Icon, title, desc }) => (
+                <div key={title} className="card flex flex-col items-center gap-3 p-6 text-center">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-50">
+                    <Icon className="h-6 w-6 text-accent-600" />
                   </div>
-                  <div className="mb-3 flex items-center gap-2">
-                    <div className="flex gap-0.5">
-                      {Array.from({ length: rating }).map((_, i) => (
-                        <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                      ))}
-                    </div>
-                    <span className="text-xs text-slate-400">{date}</span>
-                  </div>
-                  <p className="text-sm leading-relaxed text-slate-600">{comment}</p>
+                  <h3 className="font-bold text-navy-700">{title}</h3>
+                  <p className="text-sm leading-relaxed text-slate-500">{desc}</p>
                 </div>
               ))}
             </div>
@@ -352,33 +326,16 @@ export default async function HomePage() {
                 </div>
               </div>
 
-              {/* Right: stats card */}
-              <div className="card p-8">
-                <div className="grid grid-cols-3">
-                  <div className="border-r border-slate-100 pr-4 text-center">
-                    <p className="text-2xl font-black text-navy-500">
-                      42<span className="text-base font-bold">社</span>
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500">登録加盟店数</p>
-                  </div>
-                  <div className="border-r border-slate-100 px-4 text-center">
-                    <p className="text-2xl font-black text-navy-500">
-                      1,200<span className="text-base font-bold">台+</span>
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500">加盟店在庫</p>
-                  </div>
-                  <div className="pl-4 text-center">
-                    <p className="text-2xl font-black text-accent-600">
-                      2.5<span className="text-base font-bold">%〜</span>
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500">成約手数料</p>
-                  </div>
-                </div>
-                <div className="mt-6 rounded-lg bg-slate-50 p-4">
-                  <p className="text-center text-xs leading-relaxed text-slate-500">
-                    個人間取引より優遇された手数料で在庫回転率を改善。<br />
-                    APIで自動出品、ダッシュボードで成約・在庫を一元管理。
-                  </p>
+              {/* Right: 募集中カード */}
+              <div className="card flex flex-col justify-center gap-4 p-8 text-center">
+                <span className="mx-auto rounded-full bg-navy-50 px-3 py-1 text-xs font-black tracking-wide text-navy-600">加盟店募集中</span>
+                <h3 className="text-lg font-black text-navy-700">在庫を BUYMO ダイレクトに<br />掲載しませんか？</h3>
+                <p className="text-sm leading-relaxed text-slate-500">
+                  API在庫連携で自動出品、専用ダッシュボードで成約・在庫を一元管理。<br />
+                  個人出品より優遇された手数料でご利用いただけます。
+                </p>
+                <div>
+                  <Link href="/dealer/register" className="btn-primary px-6 py-3 text-sm">加盟店として申請する</Link>
                 </div>
               </div>
             </div>
