@@ -27,3 +27,7 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# ローカルプレビュー・撮影用の生成物（リポジトリに含めない）
+.preview/
+.preview_*
