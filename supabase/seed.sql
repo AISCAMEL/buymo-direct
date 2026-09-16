@@ -236,21 +236,21 @@ on conflict (id) do nothing;
 -- ---------------------------------------------------------------------------
 insert into public.listing_images (listing_id, url, sort_order)
 values
-  ('a0000001-0000-0000-0000-000000000001', 'https://picsum.photos/seed/buymo1a/800/600', 0),
-  ('a0000001-0000-0000-0000-000000000001', 'https://picsum.photos/seed/buymo1b/800/600', 1),
-  ('a0000002-0000-0000-0000-000000000002', 'https://picsum.photos/seed/buymo2a/800/600', 0),
-  ('a0000002-0000-0000-0000-000000000002', 'https://picsum.photos/seed/buymo2b/800/600', 1),
-  ('a0000003-0000-0000-0000-000000000003', 'https://picsum.photos/seed/buymo3a/800/600', 0),
-  ('a0000004-0000-0000-0000-000000000004', 'https://picsum.photos/seed/buymo4a/800/600', 0),
-  ('a0000004-0000-0000-0000-000000000004', 'https://picsum.photos/seed/buymo4b/800/600', 1),
-  ('a0000005-0000-0000-0000-000000000005', 'https://picsum.photos/seed/buymo5a/800/600', 0),
-  ('a0000006-0000-0000-0000-000000000006', 'https://picsum.photos/seed/buymo6a/800/600', 0),
-  ('a0000007-0000-0000-0000-000000000007', 'https://picsum.photos/seed/buymo7a/800/600', 0),
-  ('a0000008-0000-0000-0000-000000000008', 'https://picsum.photos/seed/buymo8a/800/600', 0),
-  ('a0000009-0000-0000-0000-000000000009', 'https://picsum.photos/seed/buymo9a/800/600', 0),
-  ('a0000009-0000-0000-0000-000000000009', 'https://picsum.photos/seed/buymo9b/800/600', 1),
-  ('a0000010-0000-0000-0000-000000000010', 'https://picsum.photos/seed/buymo10a/800/600', 0),
-  ('a0000010-0000-0000-0000-000000000010', 'https://picsum.photos/seed/buymo10b/800/600', 1)
+  ('a0000001-0000-0000-0000-000000000001', 'https://buymo.me/assets/img/genre-hero/alphard.jpg', 0),
+  ('a0000001-0000-0000-0000-000000000001', 'https://buymo.me/assets/img/genre-hero/minivan.jpg', 1),
+  ('a0000002-0000-0000-0000-000000000002', 'https://buymo.me/assets/img/genre-hero/suv.jpg', 0),
+  ('a0000002-0000-0000-0000-000000000002', 'https://buymo.me/assets/img/genre-hero/honda.jpg', 1),
+  ('a0000003-0000-0000-0000-000000000003', 'https://buymo.me/assets/img/genre-hero/jiko.jpg', 0),
+  ('a0000004-0000-0000-0000-000000000004', 'https://buymo.me/assets/img/genre-hero/prius.jpg', 0),
+  ('a0000004-0000-0000-0000-000000000004', 'https://buymo.me/assets/img/genre-hero/ev.jpg', 1),
+  ('a0000005-0000-0000-0000-000000000005', 'https://buymo.me/assets/img/genre-hero/compact.jpg', 0),
+  ('a0000006-0000-0000-0000-000000000006', 'https://buymo.me/assets/img/genre-hero/minivan.jpg', 0),
+  ('a0000007-0000-0000-0000-000000000007', 'https://buymo.me/assets/img/genre-hero/kei.jpg', 0),
+  ('a0000008-0000-0000-0000-000000000008', 'https://buymo.me/assets/img/genre-hero/compact.jpg', 0),
+  ('a0000009-0000-0000-0000-000000000009', 'https://buymo.me/assets/img/genre-hero/subaru.jpg', 0),
+  ('a0000009-0000-0000-0000-000000000009', 'https://buymo.me/assets/img/genre-hero/suv.jpg', 1),
+  ('a0000010-0000-0000-0000-000000000010', 'https://buymo.me/assets/img/genre-hero/kyusha.jpg', 0),
+  ('a0000010-0000-0000-0000-000000000010', 'https://buymo.me/assets/img/genre-hero/luxury.jpg', 1)
 on conflict do nothing;
 
 -- ---------------------------------------------------------------------------
