@@ -1,0 +1,21 @@
+
+> buymo-c2c-marketplace@0.1.0 start
+> next start -p 3300
+
+   ▲ Next.js 15.5.19
+   - Local:        http://localhost:3300
+   - Network:      http://192.0.2.2:3300
+
+ ✓ Starting...
+ ✓ Ready in 621ms
+[env] Optional environment variable(s) not set — related features will be disabled: RESEND_API_KEY, ANTHROPIC_API_KEY, SQUARE_ACCESS_TOKEN, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /_not-found. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /listings. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport

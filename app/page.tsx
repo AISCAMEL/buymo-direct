@@ -133,11 +133,11 @@ export default async function HomePage() {
             🚗 買取保証つき 中古車ダイレクト販売
           </p>
           <h1 className="text-3xl font-black leading-tight text-slate-900 sm:text-5xl">
-            保証つきだから<span className="text-accent-600">安心</span>。<br />
-            クルマの売買、オンライン完結。
+            売るのも、買うのも、<span className="text-accent-600">BUYMO</span>。<br />
+            買取も、ダイレクト販売も。
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-sm text-slate-500 sm:text-base">
-            査定・出品・販売・エスクロー決済まで、BUYMOがまるごとサポート。全国どこでも、安心してクルマを売れる・買える。
+            すぐ現金化したいなら「買取」。もっと高く売りたいなら「ダイレクト販売」。どちらも写真査定・全国オンライン完結、買取保証つきで安心。
           </p>
 
           {/* ベネフィットのチップ（buymo.me風） */}
@@ -227,6 +227,47 @@ export default async function HomePage() {
             <div className="px-4">
               <p className="text-lg font-black sm:text-xl">名義変更まで代行</p>
               <p className="mt-0.5 text-xs opacity-70">面倒な手続きもおまかせ</p>
+            </div>
+          </div>
+        </section>
+
+        {/* ── 2.5 2つの売り方（買取／ダイレクト販売） ── */}
+        <section className="bg-white px-4 py-14">
+          <div className="mx-auto max-w-5xl">
+            <p className="mb-2 text-center text-xs font-bold uppercase tracking-widest text-accent-600">Choice</p>
+            <h2 className="mb-8 text-center text-2xl font-black sm:text-3xl">2つの売り方から選べる</h2>
+            <div className="grid gap-5 md:grid-cols-2">
+              {/* 買取 */}
+              <div className="card flex flex-col p-7">
+                <span className="self-start rounded-full bg-navy-50 px-3 py-1 text-xs font-black text-navy-600">買取</span>
+                <h3 className="mt-3 text-xl font-black text-navy-800">BUYMOが直接買い取り</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
+                  とにかく早く・確実に現金化したい方に。写真を送るだけで査定、最短で入金します。
+                </p>
+                <ul className="mt-4 flex flex-col gap-2 text-sm text-slate-700">
+                  <li className="flex gap-2"><span className="font-black text-accent-600">✓</span>写真査定でネット完結</li>
+                  <li className="flex gap-2"><span className="font-black text-accent-600">✓</span>最短3営業日で入金</li>
+                  <li className="flex gap-2"><span className="font-black text-accent-600">✓</span>手数料0円・無料引取り</li>
+                </ul>
+                <Link href="/listings/valuation" className="btn-outline mt-6 w-full py-3">無料査定を申し込む</Link>
+              </div>
+              {/* ダイレクト販売 */}
+              <div className="card flex flex-col p-7 ring-1 ring-gold-500/40">
+                <span className="self-start rounded-full bg-[#FBEEDC] px-3 py-1 text-xs font-black text-[#8a5a12]">ダイレクト販売</span>
+                <h3 className="mt-3 text-xl font-black text-navy-800">買取保証つきで、高く売る</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
+                  時間をかけても高く売りたい方に。出品して直接販売、売れなければBUYMOが買取保証。
+                </p>
+                <ul className="mt-4 flex flex-col gap-2 text-sm text-slate-700">
+                  <li className="flex gap-2"><span className="font-black text-accent-600">✓</span>買取保証つきだから安心</li>
+                  <li className="flex gap-2"><span className="font-black text-accent-600">✓</span>エスクロー決済で安全取引</li>
+                  <li className="flex gap-2"><span className="font-black text-accent-600">✓</span>全国オンラインで完結</li>
+                </ul>
+                <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+                  <Link href="/listings" className="btn-gold flex-1 py-3">ダイレクト販売を見る</Link>
+                  <Link href="/sell" className="btn-outline flex-1 py-3">出品する</Link>
+                </div>
+              </div>
             </div>
           </div>
         </section>
