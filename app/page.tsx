@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Search,
   ShieldCheck,
@@ -23,16 +24,13 @@ export const revalidate = 300; // ISR: home page rebuilds at most once per 5 min
 
 const POPULAR_MAKERS = ['トヨタ', 'ホンダ', '日産', 'マツダ', 'スバル', 'スズキ', 'ダイハツ', '三菱'];
 
-const BODY_EMOJI: Record<string, string> = {
-  '軽自動車': '🚗',
-  'コンパクト': '🚘',
-  'セダン': '🚙',
-  'SUV': '🛻',
-  'ミニバン': '🚐',
-  'ワゴン': '🚌',
-  'クーペ': '🏎️',
-  'オープン': '🚗',
-  'その他': '🚗',
+const BODY_IMG: Record<string, string> = {
+  '軽自動車': '/cars/kei.jpg',
+  'コンパクト': '/cars/compact.jpg',
+  'セダン': '/cars/sedan.jpg',
+  'SUV': '/cars/suv.jpg',
+  'ミニバン': '/cars/minivan.jpg',
+  'ワゴン': '/cars/subaru.jpg',
 };
 
 const TRUST_BADGES = [
@@ -197,6 +195,18 @@ export default async function HomePage() {
               </span>
             ))}
           </div>
+
+          {/* BUYMO マスコット */}
+          <div className="mt-8 flex justify-center">
+            <Image
+              src="/buymo-mascot.png"
+              alt="BUYMO マスコット"
+              width={320}
+              height={240}
+              priority
+              className="h-auto w-[220px] drop-shadow-md sm:w-[300px]"
+            />
+          </div>
         </section>
 
         {/* ── 2. 価値訴求バー ── */}
@@ -225,15 +235,25 @@ export default async function HomePage() {
         <section className="bg-white px-4 py-12">
           <div className="mx-auto max-w-5xl">
             <h2 className="mb-5 text-xl font-black">車種から探す</h2>
-            <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {BODY_TYPES.slice(0, 6).map((body) => (
                 <Link
                   key={body}
                   href={`/listings?body=${encodeURIComponent(body)}`}
-                  className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white py-5 text-sm font-bold text-slate-700 shadow-sm transition hover:border-accent-500 hover:bg-accent-50 hover:text-accent-600"
+                  className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-accent-400 hover:shadow-md"
                 >
-                  <span className="text-2xl leading-none">{BODY_EMOJI[body] ?? '🚗'}</span>
-                  {body}
+                  <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
+                    <Image
+                      src={BODY_IMG[body] ?? '/cars/sedan.jpg'}
+                      alt={body}
+                      fill
+                      sizes="(max-width:640px) 50vw, 16vw"
+                      className="object-cover transition duration-300 group-hover:scale-105"
+                    />
+                  </div>
+                  <div className="py-2.5 text-center text-sm font-bold text-slate-700 group-hover:text-accent-600">
+                    {body}
+                  </div>
                 </Link>
               ))}
             </div>
@@ -381,7 +401,7 @@ export default async function HomePage() {
             出品は無料。業者より高く売れる可能性があります。
           </p>
           <div className="mt-7 flex flex-wrap justify-center gap-3">
-            <Link href="/sell" className="btn-accent px-7 py-3 text-base">
+            <Link href="/sell" className="btn-gold px-7 py-3 text-base">
               無料で出品する
             </Link>
             <Link href="/listings" className="btn-outline px-7 py-3 text-base">

@@ -21,6 +21,10 @@ body {
   .btn-accent {
     @apply btn bg-accent-500 text-white shadow-sm hover:bg-accent-600 hover:shadow-md focus:ring-accent-500;
   }
+  /* buymo.me 準拠：ゴールドの主要CTA */
+  .btn-gold {
+    @apply btn bg-gold-500 text-[#2E2408] shadow-md hover:bg-gold-600 hover:shadow-lg focus:ring-gold-400;
+  }
   /* buymo.me 準拠：アウトラインはティール枠→ホバーで塗り */
   .btn-outline {
     @apply btn border-2 border-navy-500 bg-white text-navy-600 hover:bg-navy-500 hover:text-white focus:ring-navy-400;
