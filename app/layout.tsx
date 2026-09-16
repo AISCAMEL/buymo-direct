@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { Noto_Sans_JP } from 'next/font/google';
 import './globals.css';
 import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { NotificationRefresher } from '@/components/NotificationRefresher';
 import { BottomNav } from '@/components/BottomNav';
@@ -74,16 +74,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <BottomNav />
         <CompareBar />
         <AiChatWidget />
-        <footer className="border-t border-slate-200 bg-white py-8 text-center text-sm text-slate-500">
-          <p>BUYMO ダイレクト — 買取保証つき 中古車ダイレクト販売</p>
-          <nav className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs font-bold text-navy-400">
-            <Link href="/announcements" className="hover:underline">お知らせ</Link>
-            <Link href="/terms" className="hover:underline">利用規約</Link>
-            <Link href="/privacy" className="hover:underline">プライバシーポリシー</Link>
-            <Link href="/tokushoho" className="hover:underline">特定商取引法に基づく表記</Link>
-          </nav>
-          <p className="mt-2 text-xs">※ 本サイトはデモ実装です。決済・名義変更は連携先サービスを通じて行われます。</p>
-        </footer>
+        <Footer />
       </body>
     </html>
   );
