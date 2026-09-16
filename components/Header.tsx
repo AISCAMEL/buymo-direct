@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { Car, PlusCircle, MessageSquare, LayoutDashboard, Heart, ShieldAlert, Star, Building2 } from 'lucide-react';
+import Image from 'next/image';
+import { PlusCircle, MessageSquare, LayoutDashboard, Heart, ShieldAlert, Star, Building2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { unreadConversationIds } from '@/lib/unread';
 import { pendingReviewCount } from '@/lib/pendingReviews';
@@ -33,8 +34,8 @@ export async function Header() {
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 text-navy-500">
-          <Car className="h-7 w-7" />
-          <span className="text-lg font-black tracking-tight">
+          <Image src="/buymo-logo-mark.png" alt="BUYMO" width={32} height={32} className="h-8 w-8 object-contain" priority />
+          <span className="text-[22px] font-black tracking-tight leading-none">
             BUYMO<span className="ml-1 align-middle rounded-md bg-navy-500 px-1.5 py-[3px] text-[11px] font-bold text-white">ダイレクト</span>
           </span>
         </Link>
