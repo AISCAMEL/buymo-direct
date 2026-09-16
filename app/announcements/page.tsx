@@ -3,7 +3,7 @@ import { formatDate } from '@/lib/format';
 import type { Announcement } from '@/lib/types';
 
 export const revalidate = 300;
-export const metadata = { title: 'お知らせ | BUYMO C2C' };
+export const metadata = { title: 'お知らせ | BUYMO ダイレクト' };
 
 const LEVEL_LABEL: Record<string, string> = { info: 'お知らせ', warning: '注意', important: '重要' };
 const LEVEL_CLS: Record<string, string> = {
@@ -52,7 +52,7 @@ const DEMO: Announcement[] = [
   {
     id: 'ann-5',
     title: 'BUYMOサービス開始のお知らせ',
-    body: 'このたびBUYMO C2C個人間中古車売買マーケットプレイスをリリースしました。安心・安全なエスクロー決済や、名義変更代行サービスをご利用ください。',
+    body: 'このたびBUYMO ダイレクト個人間中古車売買マーケットプレイスをリリースしました。安心・安全なエスクロー決済や、名義変更代行サービスをご利用ください。',
     level: 'info',
     pinned: false,
     published: true,

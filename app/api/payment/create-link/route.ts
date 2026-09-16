@@ -57,7 +57,7 @@ export async function POST(req: Request) {
       .maybeSingle();
 
     const listingTitle = (listing as { title?: string } | null)?.title ?? '車両代金';
-    const description = `BUYMO C2C - ${listingTitle}`;
+    const description = `BUYMO ダイレクト - ${listingTitle}`;
 
     try {
       const result = await createPaymentLink(total, escrow_id, description);

@@ -1,11 +1,11 @@
 import { LegalLayout, LegalSection } from '@/components/LegalLayout';
 
-export const metadata = { title: 'プライバシーポリシー | BUYMO C2C' };
+export const metadata = { title: 'プライバシーポリシー | BUYMO ダイレクト' };
 
 export default function PrivacyPage() {
   return (
     <LegalLayout title="プライバシーポリシー" updated="2026-06-16">
-      <p>当社は、BUYMO C2C（以下「当サービス」）における利用者の個人情報を、以下の方針に基づき適切に取り扱います。</p>
+      <p>当社は、BUYMO ダイレクト（以下「当サービス」）における利用者の個人情報を、以下の方針に基づき適切に取り扱います。</p>
 
       <LegalSection heading="1. 取得する情報">
         <p>氏名・メールアドレス・電話番号・地域等の登録情報、出品・取引・メッセージ・レビューの内容、ローン仮審査の申込情報（年収・雇用形態等）、アクセスログ等を取得します。</p>

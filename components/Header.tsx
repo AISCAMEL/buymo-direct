@@ -35,7 +35,7 @@ export async function Header() {
         <Link href="/" className="flex items-center gap-2 text-navy-500">
           <Car className="h-7 w-7" />
           <span className="text-lg font-black tracking-tight">
-            BUYMO<span className="text-accent-500">C2C</span>
+            BUYMO<span className="ml-1 align-middle rounded-md bg-navy-500 px-1.5 py-[3px] text-[11px] font-bold text-white">ダイレクト</span>
           </span>
         </Link>
 

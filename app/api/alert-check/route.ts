@@ -112,7 +112,7 @@ export async function GET(req: NextRequest) {
 
         const result = await sendEmail({
           to: email,
-          subject: `【BUYMO C2C】新着 ${newCount} 件 — ${search.name}`,
+          subject: `【BUYMO ダイレクト】新着 ${newCount} 件 — ${search.name}`,
           html,
         });
 

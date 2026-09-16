@@ -26,13 +26,13 @@ const noto = Noto_Sans_JP({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://buymo.me'),
   title: {
-    default: 'BUYMO C2C | 個人間で中古車を直接売買',
-    template: '%s | BUYMO C2C',
+    default: 'BUYMO ダイレクト | 買取保証つき 中古車ダイレクト販売',
+    template: '%s | BUYMO',
   },
   description:
-    '個人間で中古車を直接売買できるC2Cマーケットプレイス。出品・検索・メッセージ・エスクロー決済・名義変更代行まで安心のワンストップ。',
+    '買取保証つきで安心の中古車ダイレクト販売。オンラインで完結、全国どこでもOK。出品・検索・チャット・エスクロー決済・名義変更まで、BUYMOがまるごとサポート。',
   openGraph: {
-    siteName: 'BUYMO C2C',
+    siteName: 'BUYMO ダイレクト',
     locale: 'ja_JP',
     type: 'website',
   },
@@ -40,11 +40,11 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
   },
   manifest: '/manifest.json',
-  themeColor: '#1e3a5f',
+  themeColor: '#0F766E',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'BUYMO C2C',
+    title: 'BUYMO',
   },
 };
 
@@ -75,7 +75,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <CompareBar />
         <AiChatWidget />
         <footer className="border-t border-slate-200 bg-white py-8 text-center text-sm text-slate-500">
-          <p>BUYMO C2C — 個人間中古車売買マーケットプレイス</p>
+          <p>BUYMO ダイレクト — 買取保証つき 中古車ダイレクト販売</p>
           <nav className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs font-bold text-navy-400">
             <Link href="/announcements" className="hover:underline">お知らせ</Link>
             <Link href="/terms" className="hover:underline">利用規約</Link>

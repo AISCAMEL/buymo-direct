@@ -48,10 +48,10 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const desc = BODY_DESC[body] ?? `${body}の中古車を個人間で直接売買。`;
   return {
     title: `${body}の中古車`,
-    description: `${desc}BUYMO C2Cで${body}の出品車両を探しましょう。手数料0円・エスクロー決済で安心。`,
+    description: `${desc}BUYMO ダイレクトで${body}の出品車両を探しましょう。手数料0円・エスクロー決済で安心。`,
     alternates: { canonical: `${BASE}/body/${encodedBody}` },
     openGraph: {
-      title: `${body}の中古車 | BUYMO C2C`,
+      title: `${body}の中古車 | BUYMO ダイレクト`,
       description: desc,
       url: `${BASE}/body/${encodedBody}`,
     },

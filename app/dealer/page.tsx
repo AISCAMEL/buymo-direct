@@ -33,7 +33,7 @@ export default async function DealerIndexPage({ searchParams }: Props) {
 
       <div className="card p-6 space-y-4">
         <p className="text-sm text-slate-600">
-          BUYMO C2C の加盟店プログラムに参加すると、複数台の在庫を一元管理し、
+          BUYMO ダイレクト の加盟店プログラムに参加すると、複数台の在庫を一元管理し、
           外部の在庫管理システム（DMS）と API で連携できます。
         </p>
         <ul className="space-y-2 text-sm text-slate-700">

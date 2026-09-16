@@ -1,11 +1,11 @@
 import { LegalLayout, LegalSection } from '@/components/LegalLayout';
 
-export const metadata = { title: '利用規約 | BUYMO C2C' };
+export const metadata = { title: '利用規約 | BUYMO ダイレクト' };
 
 export default function TermsPage() {
   return (
     <LegalLayout title="利用規約" updated="2026-06-16">
-      <p>本利用規約（以下「本規約」）は、BUYMO C2C（以下「当サービス」）の提供条件および当サービスの運営者（以下「当社」）と利用者の権利義務関係を定めるものです。</p>
+      <p>本利用規約（以下「本規約」）は、BUYMO ダイレクト（以下「当サービス」）の提供条件および当サービスの運営者（以下「当社」）と利用者の権利義務関係を定めるものです。</p>
 
       <LegalSection heading="第1条（適用）">
         <p>本規約は、利用者と当社との間の当サービスの利用に関する一切の関係に適用されます。利用者は、当サービスを利用することにより本規約に同意したものとみなされます。</p>

@@ -2,7 +2,7 @@ import { LegalLayout } from '@/components/LegalLayout';
 import { ESCROW_FEE, TITLE_OPTIONS, INSTALLMENT_RATE, LOAN_APR_FROM } from '@/lib/constants';
 import { formatYen } from '@/lib/format';
 
-export const metadata = { title: '特定商取引法に基づく表記 | BUYMO C2C' };
+export const metadata = { title: '特定商取引法に基づく表記 | BUYMO ダイレクト' };
 
 const ROWS: { label: string; value: string }[] = [
   { label: '販売事業者', value: '［事業者名を記載］' },

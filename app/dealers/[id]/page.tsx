@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   if (!data) return { title: '加盟店' };
 
   const title = `${data.name} | BUYMO 加盟店`;
-  const desc = data.description?.slice(0, 120) ?? `${data.name}（${data.prefecture ?? ''}）の中古車在庫をBUYMO C2Cで見る。`;
+  const desc = data.description?.slice(0, 120) ?? `${data.name}（${data.prefecture ?? ''}）の中古車在庫をBUYMO ダイレクトで見る。`;
 
   return {
     title,

@@ -217,7 +217,7 @@ export async function confirmEscrowPayment(
         sourceId,
         amountYen: total,
         idempotencyKey: `pay-${escrowId}`,
-        note: `BUYMO C2C escrow ${escrowId}`,
+        note: `BUYMO ダイレクト escrow ${escrowId}`,
       });
       if (!result.ok) return { error: `決済に失敗しました：${result.error ?? ''}` };
       squarePaymentId = result.paymentId ?? null;

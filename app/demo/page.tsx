@@ -32,7 +32,7 @@ export default function DemoIndexPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-8 px-4 py-16">
       <div className="text-center">
-        <h1 className="text-3xl font-black text-navy-800">BUYMO C2C デモ</h1>
+        <h1 className="text-3xl font-black text-navy-800">BUYMO ダイレクト デモ</h1>
         <p className="mt-2 text-slate-500">体験したいロールを選択してください</p>
       </div>
       <div className="space-y-4">

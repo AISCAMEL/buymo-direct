@@ -23,10 +23,10 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://buymo.me';
   return {
     title: `${maker}の中古車`,
-    description: `${maker}の中古車を個人間で直接売買。BUYMO C2Cで${maker}の出品車両を探しましょう。手数料0円・エスクロー決済で安心。`,
+    description: `${maker}の中古車を個人間で直接売買。BUYMO ダイレクトで${maker}の出品車両を探しましょう。手数料0円・エスクロー決済で安心。`,
     alternates: { canonical: `${BASE}/makers/${encodedMaker}` },
     openGraph: {
-      title: `${maker}の中古車 | BUYMO C2C`,
+      title: `${maker}の中古車 | BUYMO ダイレクト`,
       description: `${maker}の中古車を個人間で直接売買。`,
       url: `${BASE}/makers/${encodedMaker}`,
     },

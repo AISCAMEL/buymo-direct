@@ -50,7 +50,7 @@ export default function TransportPage() {
 
       <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700">
         ※ 掲載業者は参考情報です。料金・サービス内容は必ず直接ご確認ください。
-        BUYMO C2C は各業者との提携関係はなく、取引の保証を行いません。
+        BUYMO ダイレクト は各業者との提携関係はなく、取引の保証を行いません。
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">

@@ -181,7 +181,7 @@ export default async function HomePage() {
           __html: JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'WebSite',
-            name: 'BUYMO C2C',
+            name: 'BUYMO ダイレクト',
             url: 'https://buymo.me',
             description: '個人間で中古車を安心・直接売買できるC2Cマーケットプレイス',
             potentialAction: {
@@ -200,7 +200,7 @@ export default async function HomePage() {
         {/* ── 1. Hero ── */}
         <section className="bg-gradient-to-b from-slate-50 to-white px-4 pb-14 pt-16 text-center">
           <p className="mb-3 inline-block rounded-full bg-accent-50 px-4 py-1 text-xs font-bold text-accent-600">
-            個人間（C2C）中古車マーケットプレイス
+            買取保証つき 中古車ダイレクト販売
           </p>
           <h1 className="text-3xl font-black leading-tight text-slate-900 sm:text-5xl">
             業者なし。<span className="text-accent-600">個人どうし</span>で<br />
@@ -495,10 +495,10 @@ export default async function HomePage() {
               <div className="flex items-center gap-2 text-white">
                 <Car className="h-6 w-6" />
                 <span className="text-lg font-black tracking-tight">
-                  BUYMO<span className="text-accent-500">C2C</span>
+                  BUYMO<span className="text-accent-500"> ダイレクト</span>
                 </span>
               </div>
-              <p className="text-sm">個人間で中古車を安心・直接売買</p>
+              <p className="text-sm">買取保証つき 中古車ダイレクト販売</p>
             </div>
 
             {/* 4-column link grid */}
@@ -523,7 +523,7 @@ export default async function HomePage() {
 
             {/* Copyright */}
             <div className="border-t border-white/10 pt-6 text-center text-xs text-navy-200">
-              © 2026 BUYMO C2C. All rights reserved.
+              © 2026 BUYMO ダイレクト. All rights reserved.
             </div>
           </div>
         </footer>

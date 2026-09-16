@@ -44,7 +44,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const price = new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(d.price);
   const desc =
     d.description?.slice(0, 110) ??
-    `${d.maker} ${d.model} ${d.year}年 ${price}。BUYMO C2C で個人間売買。`;
+    `${d.maker} ${d.model} ${d.year}年 ${price}。BUYMO ダイレクト で個人間売買。`;
   const ogDesc = `${d.year}年 / ${(d.mileage_km ?? 0).toLocaleString()}km / ¥${(d.price ?? 0).toLocaleString()} — ${d.prefecture ?? ''}の中古車`;
 
   return {
@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
     keywords: [d.maker, d.model, `${d.year}年`, '中古車', '個人売買', 'C2C', d.prefecture].filter(Boolean),
     alternates: { canonical: `/listings/${id}` },
     openGraph: {
-      title: `${d.title} | BUYMO C2C`,
+      title: `${d.title} | BUYMO ダイレクト`,
       description: ogDesc,
       url: `/listings/${id}`,
       type: 'website',

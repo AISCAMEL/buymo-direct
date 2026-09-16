@@ -41,7 +41,7 @@ export async function GET(_req: Request, { params }: { params: Params }) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>領収書 #${id.slice(0, 8)} | BUYMO C2C</title>
+  <title>領収書 #${id.slice(0, 8)} | BUYMO ダイレクト</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif; color: #1e293b; background: #f8fafc; }
@@ -128,7 +128,7 @@ export async function GET(_req: Request, { params }: { params: Params }) {
   </table>
 
   <p class="footer">
-    本書は BUYMO C2C マーケットプレイスが発行する電子領収書です。<br/>
+    本書は BUYMO ダイレクト マーケットプレイスが発行する電子領収書です。<br/>
     取引に関するお問い合わせは support@buymo.jp までご連絡ください。
   </p>
 
