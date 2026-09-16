@@ -3,10 +3,18 @@ import { Car } from 'lucide-react';
 
 const FOOTER_LINKS = [
   {
-    heading: '使い方',
+    heading: '売る（買取・ダイレクト）',
+    links: [
+      { label: '無料査定（買取）', href: '/listings/valuation' },
+      { label: 'ダイレクト販売で出品', href: '/sell' },
+      { label: 'かんたん出品ウィザード', href: '/sell/wizard' },
+    ],
+  },
+  {
+    heading: '買う（ダイレクト）',
     links: [
       { label: '車を探す', href: '/listings' },
-      { label: '出品する', href: '/sell' },
+      { label: '地図から探す', href: '/listings/map' },
       { label: 'ローン審査', href: '/loan/apply' },
       { label: '加盟店一覧', href: '/dealers' },
     ],
@@ -16,22 +24,14 @@ const FOOTER_LINKS = [
     links: [
       { label: 'エスクロー決済', href: '/listings' },
       { label: '名義変更代行', href: '/listings' },
-      { label: '無料査定', href: '/listings/valuation' },
       { label: '陸送手配', href: '/transport' },
-    ],
-  },
-  {
-    heading: '加盟店',
-    links: [
       { label: '加盟店申請', href: '/dealer/register' },
-      { label: 'ログイン', href: '/dealer/dashboard' },
-      { label: 'API仕様', href: '/dealer/api-keys' },
-      { label: 'Webhook', href: '/dealer/settings' },
     ],
   },
   {
     heading: '運営',
     links: [
+      { label: 'お知らせ', href: '/announcements' },
       { label: 'プライバシーポリシー', href: '/privacy' },
       { label: '利用規約', href: '/terms' },
       { label: '特定商取引法', href: '/tokushoho' },

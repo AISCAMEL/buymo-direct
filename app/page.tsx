@@ -301,6 +301,31 @@ export default async function HomePage() {
           </div>
         </section>
 
+        {/* ── 3.5 エリアから探す ── */}
+        <section className="bg-[#F5F9F8] px-4 py-12">
+          <div className="mx-auto max-w-5xl">
+            <h2 className="mb-1 text-xl font-black">エリアから探す</h2>
+            <p className="mb-5 text-sm text-slate-500">全国47都道府県対応。お住まいの地域の出品車を探せます。</p>
+            <div className="flex flex-wrap gap-2.5">
+              {['北海道', '宮城県', '東京都', '神奈川県', '埼玉県', '千葉県', '愛知県', '静岡県', '大阪府', '兵庫県', '広島県', '福岡県'].map((pref) => (
+                <Link
+                  key={pref}
+                  href={`/listings?pref=${encodeURIComponent(pref)}`}
+                  className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-accent-400 hover:text-accent-600"
+                >
+                  {pref}
+                </Link>
+              ))}
+              <Link
+                href="/listings"
+                className="rounded-full border border-dashed border-slate-300 px-4 py-2 text-sm font-bold text-slate-400 transition hover:border-accent-400 hover:text-accent-600"
+              >
+                全国から探す →
+              </Link>
+            </div>
+          </div>
+        </section>
+
         {/* ── 4. How it works ── */}
         <section className="bg-navy-700 px-4 py-16 text-white">
           <div className="mx-auto max-w-5xl">
