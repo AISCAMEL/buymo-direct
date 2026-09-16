@@ -1,0 +1,21 @@
+const {chromium}=require('/opt/node22/lib/node_modules/playwright/node_modules/playwright-core');
+(async()=>{
+ const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium-1194/chrome-linux/chrome'});
+ const out='/home/user/buymo-direct/.preview'; require('fs').mkdirSync(out,{recursive:true});
+ const pg=await b.newPage({viewport:{width:1280,height:1000},deviceScaleFactor:1});
+ await pg.goto('http://localhost:3100/',{waitUntil:'load',timeout:60000});
+ await pg.waitForTimeout(1500);
+ await pg.screenshot({path:out+'/home-desktop.png',fullPage:true});
+ console.log('OK home-desktop');
+ await pg.goto('http://localhost:3100/listings',{waitUntil:'load',timeout:60000});
+ await pg.waitForTimeout(1500);
+ await pg.screenshot({path:out+'/listings.png',fullPage:true});
+ console.log('OK listings');
+ const m=await b.newPage({viewport:{width:390,height:844},isMobile:true,deviceScaleFactor:2});
+ await m.goto('http://localhost:3100/',{waitUntil:'load',timeout:60000});
+ await m.waitForTimeout(1500);
+ await m.screenshot({path:out+'/home-mobile.png',fullPage:true});
+ console.log('OK home-mobile');
+ await b.close();
+ console.log('SHOTS DONE');
+})().catch(e=>{console.error('ERR',e.message);process.exit(1)});
