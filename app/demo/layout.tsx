@@ -5,6 +5,7 @@ const ROLES = [
   { href: '/demo/admin', label: '本部管理', color: 'bg-red-600' },
   { href: '/demo/dealer', label: '加盟店', color: 'bg-navy-600' },
   { href: '/demo/seller', label: '売主会員', color: 'bg-emerald-600' },
+  { href: '/demo/buyer', label: '買主会員', color: 'bg-gold-600' },
 ];
 
 export default function DemoLayout({ children }: { children: React.ReactNode }) {

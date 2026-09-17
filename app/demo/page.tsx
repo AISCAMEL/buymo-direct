@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ShieldAlert, Building2, User } from 'lucide-react';
+import { ShieldAlert, Building2, User, Search } from 'lucide-react';
 
 const ROLES = [
   {
@@ -25,6 +25,14 @@ const ROLES = [
     desc: '出品管理・エスクロー取引・メッセージ・電話認証・お気に入り',
     color: 'border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50',
     badge: 'bg-emerald-600',
+  },
+  {
+    href: '/demo/buyer',
+    icon: Search,
+    label: '買主会員マイページ',
+    desc: '車を探す・車の詳細・お気に入り・オファー・メッセージ・購入エスクロー',
+    color: 'border-gold-200 hover:border-gold-400 hover:bg-gold-50',
+    badge: 'bg-gold-600',
   },
 ];
 
