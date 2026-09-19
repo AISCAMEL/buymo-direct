@@ -18,20 +18,20 @@ const DECISION_JA: Record<LoanScoreResult['autoDecision'], string> = {
 const DECISION_COLOR: Record<LoanScoreResult['autoDecision'], string> = {
   approved: 'text-emerald-600',
   conditional: 'text-amber-600',
-  manual_review: 'text-blue-600',
+  manual_review: 'text-navy-600',
   rejected: 'text-red-600',
 };
 
 const DECISION_BG: Record<LoanScoreResult['autoDecision'], string> = {
   approved: 'bg-emerald-50 border-emerald-200',
   conditional: 'bg-amber-50 border-amber-200',
-  manual_review: 'bg-blue-50 border-blue-200',
+  manual_review: 'bg-navy-50 border-navy-200',
   rejected: 'bg-red-50 border-red-200',
 };
 
 const GRADE_COLOR: Record<LoanScoreResult['grade'], string> = {
   A: 'bg-emerald-100 text-emerald-700 ring-emerald-300',
-  B: 'bg-blue-100 text-blue-700 ring-blue-300',
+  B: 'bg-navy-100 text-navy-700 ring-navy-200',
   C: 'bg-amber-100 text-amber-700 ring-amber-300',
   D: 'bg-red-100 text-red-700 ring-red-300',
 };
@@ -47,8 +47,8 @@ function ScoreGauge({ value }: { value: number }) {
 
   // Color based on score
   const strokeColor =
-    value >= 70 ? '#10b981' // emerald
-    : value >= 50 ? '#3b82f6' // blue
+    value >= 70 ? '#14B8A6' // mint
+    : value >= 50 ? '#0F766E' // navy
     : value >= 30 ? '#f59e0b' // amber
     : '#ef4444'; // red
 

@@ -13,7 +13,7 @@ export default function KpiCard({
   value,
   change,
   icon: Icon,
-  color = '#1e3a5f',
+  color = '#0F766E',
 }: KpiCardProps) {
   const isPositive = change !== undefined && change >= 0;
 

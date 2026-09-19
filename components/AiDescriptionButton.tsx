@@ -51,7 +51,7 @@ export function AiDescriptionButton({
         type="button"
         onClick={handleClick}
         disabled={loading || !maker || !model}
-        className="flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-sm font-bold text-white hover:bg-violet-700 disabled:opacity-50"
+        className="flex items-center gap-1.5 rounded-lg bg-accent-500 px-3 py-1.5 text-sm font-bold text-white hover:bg-accent-600 disabled:opacity-50"
       >
         {loading ? (
           <Loader2 className="h-4 w-4 animate-spin" />

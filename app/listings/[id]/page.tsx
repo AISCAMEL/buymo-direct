@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { MapPin, Gauge, Calendar, Fuel, Settings2, Palette, ShieldCheck, Eye, Heart, Hash } from 'lucide-react';
+import { MapPin, Gauge, Calendar, Fuel, Settings2, Palette, ShieldCheck, Eye, Heart, Hash, Banknote, Tag, ArrowRight } from 'lucide-react';
 import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { formatYen, formatMileage, formatDate } from '@/lib/format';
@@ -450,6 +450,23 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
         )}
       </aside>
     </div>
+
+      {/* 統合訴求：乗り換え・売却クロスセル */}
+      <section className="mt-10 overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-r from-navy-700 to-navy-500 p-6 text-white sm:p-8">
+        <span className="inline-block rounded-full bg-gold-500 px-3 py-1 text-xs font-black text-[#2E2408]">買取＋ダイレクト 完全1本化</span>
+        <h2 className="mt-3 text-xl font-black sm:text-2xl">お乗り換え・ご売却をお考えの方へ</h2>
+        <p className="mt-1 max-w-2xl text-sm text-white/85">
+          BUYMO なら「すぐ現金化の買取（手数料0円）」も「より高く売るダイレクト販売（買取保証つき）」も選べます。査定は無料・全国オンライン完結です。
+        </p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link href="/listings/valuation" className="inline-flex items-center gap-1.5 rounded-xl bg-gold-500 px-5 py-2.5 text-sm font-black text-[#2E2408] transition hover:bg-gold-600">
+            <Banknote className="h-4 w-4" /> 無料査定を依頼（買取）
+          </Link>
+          <Link href="/sell" className="inline-flex items-center gap-1.5 rounded-xl bg-white/15 px-5 py-2.5 text-sm font-bold text-white ring-1 ring-white/30 transition hover:bg-white/25">
+            <Tag className="h-4 w-4" /> 出品する（ダイレクト） <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </section>
     </>
   );
 }

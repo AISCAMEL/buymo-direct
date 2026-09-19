@@ -28,7 +28,7 @@ const DEMO_REQUESTS: DemoRequest[] = [
 
 const STATUS_MAP: Record<string, { label: string; icon: React.ComponentType<{className?: string}>; cls: string }> = {
   pending:   { label: '申請受付中', icon: Clock,         cls: 'text-amber-700 bg-amber-50 border-amber-200' },
-  in_review: { label: '審査中',    icon: AlertCircle,   cls: 'text-blue-700 bg-blue-50 border-blue-200' },
+  in_review: { label: '審査中',    icon: AlertCircle,   cls: 'text-navy-700 bg-navy-50 border-navy-200' },
   approved:  { label: '承認済み',  icon: CheckCircle2,  cls: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
   rejected:  { label: '不承認',   icon: XCircle,       cls: 'text-red-700 bg-red-50 border-red-200' },
   completed: { label: '買取完了',  icon: CheckCircle2,  cls: 'text-slate-700 bg-slate-50 border-slate-200' },

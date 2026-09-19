@@ -47,7 +47,7 @@ export async function GET(_req: Request, { params }: { params: Params }) {
     body { font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif; color: #1e293b; background: #f8fafc; }
     .page { max-width: 680px; margin: 40px auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 48px; }
     .logo { font-size: 28px; font-weight: 900; letter-spacing: -1px; color: #0f172a; }
-    .logo span { color: #3b82f6; }
+    .logo span { color: #0F766E; }
     .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 20px; margin-bottom: 28px; }
     .title-block h1 { font-size: 22px; font-weight: 800; margin-top: 12px; }
     .title-block p { font-size: 13px; color: #64748b; margin-top: 4px; }

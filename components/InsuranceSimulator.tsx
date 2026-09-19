@@ -43,7 +43,7 @@ export function InsuranceSimulator({ vehiclePrice, year, maker }: Props) {
         aria-expanded={open}
       >
         <span className="flex items-center gap-2 font-bold text-navy-800">
-          <Shield className="h-5 w-5 text-blue-600" />
+          <Shield className="h-5 w-5 text-navy-600" />
           保険料を試算する
         </span>
         {open ? (
@@ -68,7 +68,7 @@ export function InsuranceSimulator({ vehiclePrice, year, maker }: Props) {
                 max={80}
                 value={age}
                 onChange={(e) => setAge(Math.min(80, Math.max(18, Number(e.target.value))))}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-400"
               />
               <p className="mt-0.5 text-xs text-slate-400">18〜80歳</p>
             </div>
@@ -80,7 +80,7 @@ export function InsuranceSimulator({ vehiclePrice, year, maker }: Props) {
                 id="ins-no-accident"
                 value={yearsNoAccident}
                 onChange={(e) => setYearsNoAccident(Number(e.target.value))}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-400"
               >
                 {NO_ACCIDENT_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -99,7 +99,7 @@ export function InsuranceSimulator({ vehiclePrice, year, maker }: Props) {
                 className="rounded-xl border border-slate-200 p-4 space-y-3 bg-white hover:shadow-sm transition-shadow"
               >
                 <div>
-                  <p className="text-xs font-bold text-blue-600">{plan.company}</p>
+                  <p className="text-xs font-bold text-navy-600">{plan.company}</p>
                   <p className="text-sm font-bold text-navy-800 leading-snug mt-0.5">{plan.planName}</p>
                 </div>
 
@@ -114,7 +114,7 @@ export function InsuranceSimulator({ vehiclePrice, year, maker }: Props) {
                 <ul className="space-y-1">
                   {plan.coverage.map((c) => (
                     <li key={c} className="flex items-start gap-1.5 text-xs text-slate-600">
-                      <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />
+                      <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-navy-400" />
                       {c}
                     </li>
                   ))}
@@ -133,7 +133,7 @@ export function InsuranceSimulator({ vehiclePrice, year, maker }: Props) {
 
                 <a
                   href="#"
-                  className="block w-full rounded-lg border border-blue-200 py-1.5 text-center text-xs font-bold text-blue-600 hover:bg-blue-50 transition-colors"
+                  className="block w-full rounded-lg border border-navy-200 py-1.5 text-center text-xs font-bold text-navy-600 hover:bg-navy-50 transition-colors"
                 >
                   詳細を見る
                 </a>

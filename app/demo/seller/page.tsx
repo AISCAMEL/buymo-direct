@@ -19,9 +19,9 @@ const STATUS_LABEL: Record<string, string> = {
   title_transfer: '名義変更', completed: '取引完了',
 };
 const STATUS_COLOR: Record<string, string> = {
-  active: 'text-emerald-600 bg-emerald-50', reserved: 'text-blue-600 bg-blue-50',
+  active: 'text-emerald-600 bg-emerald-50', reserved: 'text-navy-600 bg-navy-50',
   sold: 'text-slate-500 bg-slate-100', initiated: 'text-amber-600 bg-amber-50',
-  funds_held: 'text-blue-600 bg-blue-50', inspection: 'text-purple-600 bg-purple-50',
+  funds_held: 'text-navy-600 bg-navy-50', inspection: 'text-accent-600 bg-accent-50',
   title_transfer: 'text-orange-600 bg-orange-50', completed: 'text-emerald-600 bg-emerald-50',
 };
 
@@ -248,7 +248,7 @@ export default function DemoSellerPage() {
               <h2 className="font-black text-navy-800 mb-3">最近の通知</h2>
               <div className="card divide-y divide-slate-100">
                 {[
-                  { text: '新着メッセージ: 青木 隆さんからメッセージが届きました', time: '14:32', dot: 'bg-blue-500' },
+                  { text: '新着メッセージ: 青木 隆さんからメッセージが届きました', time: '14:32', dot: 'bg-navy-500' },
                   { text: '査定結果が届きました — スバル フォレスター 2020年', time: '昨日', dot: 'bg-emerald-500' },
                   { text: 'エスクロー取引が更新されました — 入金確認', time: '昨日', dot: 'bg-amber-500' },
                 ].map((n, i) => (
@@ -559,7 +559,7 @@ export default function DemoSellerPage() {
             {/* 査定 */}
             <div className="card p-5 space-y-4">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center"><Car className="h-5 w-5 text-blue-600" /></div>
+                <div className="h-10 w-10 rounded-full bg-navy-50 flex items-center justify-center"><Car className="h-5 w-5 text-navy-600" /></div>
                 <div>
                   <h2 className="font-black">無料車両査定</h2>
                   <p className="text-xs text-slate-500">AIと専門家による無料相場査定</p>
@@ -656,7 +656,7 @@ export default function DemoSellerPage() {
             {/* 延長保証 */}
             <div className="card p-5 space-y-4">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-purple-50 flex items-center justify-center"><ShieldCheck className="h-5 w-5 text-purple-600" /></div>
+                <div className="h-10 w-10 rounded-full bg-accent-50 flex items-center justify-center"><ShieldCheck className="h-5 w-5 text-accent-600" /></div>
                 <div>
                   <h2 className="font-black">延長保証</h2>
                   <p className="text-xs text-slate-500">購入後も安心の保証プラン</p>

@@ -27,7 +27,7 @@ interface Notification {
 function typeIcon(type: NotificationType) {
   switch (type) {
     case 'message':
-      return <MessageSquare className="h-4 w-4 text-blue-500 shrink-0" />;
+      return <MessageSquare className="h-4 w-4 text-navy-500 shrink-0" />;
     case 'escrow':
       return <ShieldCheck className="h-4 w-4 text-amber-500 shrink-0" />;
     case 'kyc':
@@ -205,7 +205,7 @@ export function NotificationBell({ userId }: Props) {
             <div className="flex items-center gap-2">
               <button
                 onClick={handleMarkAllRead}
-                className="text-xs text-blue-600 hover:underline"
+                className="text-xs text-navy-600 hover:underline"
               >
                 すべて既読
               </button>
@@ -232,7 +232,7 @@ export function NotificationBell({ userId }: Props) {
                   key={notif.id}
                   onClick={() => handleNotificationClick(notif)}
                   className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50 ${
-                    !notif.read_at ? 'bg-blue-50/50' : ''
+                    !notif.read_at ? 'bg-navy-50/50' : ''
                   } ${notif.link ? 'cursor-pointer' : 'cursor-default'}`}
                 >
                   <span className="mt-0.5">{typeIcon(notif.type)}</span>
@@ -246,7 +246,7 @@ export function NotificationBell({ userId }: Props) {
                     <p className="mt-1 text-[10px] text-slate-400">{relativeTime(notif.created_at)}</p>
                   </div>
                   {!notif.read_at && (
-                    <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-500" />
+                    <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-navy-500" />
                   )}
                 </button>
               ))

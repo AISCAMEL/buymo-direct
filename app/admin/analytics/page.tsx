@@ -1,4 +1,4 @@
-import { TrendingUp, Users, ShoppingCart, Wallet } from 'lucide-react';
+import { TrendingUp, Users, ShoppingCart, Wallet, Banknote, ShieldCheck } from 'lucide-react';
 import KpiCard from '@/components/KpiCard';
 import BarChart from '@/components/BarChart';
 import LineChart from '@/components/LineChart';
@@ -26,6 +26,16 @@ const USER_GROWTH = [
   { label: '6月', value: 28_400 },
 ];
 
+// 買取事業（買取保証・BUYMO買取）の月次実績
+const BUYBACK_MONTHLY = [
+  { label: '1月', value: 9_800_000 },
+  { label: '2月', value: 11_200_000 },
+  { label: '3月', value: 13_600_000 },
+  { label: '4月', value: 12_900_000 },
+  { label: '5月', value: 15_400_000 },
+  { label: '6月', value: 18_700_000 },
+];
+
 const TOP_DEALERS: RevenueRow[] = [
   { name: 'トヨタカローラ東京', listings: 142, sold: 89, gmv: 267_000_000, commission: 8_010_000 },
   { name: 'ホンダカーズ神奈川', listings: 118, sold: 74, gmv: 222_000_000, commission: 6_660_000 },
@@ -50,12 +60,14 @@ function formatYenShort(v: number) {
 export default function AdminAnalyticsPage() {
   const totalGmv = GMV_MONTHLY.reduce((s, d) => s + d.value, 0);
   const commissionsTotal = Math.round(totalGmv * 0.025);
+  const buybackTotal = BUYBACK_MONTHLY.reduce((s, d) => s + d.value, 0);
+  const buybackShare = Math.round((buybackTotal / (totalGmv + buybackTotal)) * 100);
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-black text-navy-700">アナリティクス</h1>
-        <p className="text-sm text-slate-400">過去6ヶ月のプラットフォーム実績（モックデータ）</p>
+        <p className="text-sm text-slate-400">過去6ヶ月のプラットフォーム実績（ダイレクト販売＋買取／モックデータ）</p>
       </div>
 
       {/* KPI Cards */}
@@ -110,6 +122,24 @@ export default function AdminAnalyticsPage() {
             color="#D4AF65"
             formatValue={(v) => `${(v / 10000).toFixed(1)}万人`}
           />
+        </div>
+      </div>
+
+      {/* 買取事業（統合サービスの買取サイド） */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <span className="rounded-lg bg-gold-100 p-1.5"><Banknote className="h-4 w-4 text-gold-600" /></span>
+          <h2 className="font-black text-navy-700">買取事業（買取保証・BUYMO買取）</h2>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <KpiCard title="買取GMV（6ヶ月）" value={formatYenShort(buybackTotal)} change={22.6} icon={Banknote} color="#D4AF65" />
+          <KpiCard title="買取成約件数" value="612件" change={16.8} icon={ShieldCheck} color="#0F766E" />
+          <KpiCard title="平均買取単価" value={formatYenShort(Math.round(buybackTotal / 612))} change={5.1} icon={Wallet} color="#0C3A44" />
+          <KpiCard title="流通額に占める買取比率" value={`${buybackShare}%`} change={3.4} icon={TrendingUp} color="#14B8A6" />
+        </div>
+        <div className="card p-5">
+          <h3 className="mb-4 font-bold text-slate-700">月次 買取GMV（直近6ヶ月）</h3>
+          <BarChart data={BUYBACK_MONTHLY} height={200} color="#D4AF65" formatValue={formatYenShort} />
         </div>
       </div>
 

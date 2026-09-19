@@ -21,9 +21,9 @@ const STATUS_LABEL: Record<string, string> = {
 const STATUS_COLOR: Record<string, string> = {
   pending: 'text-amber-600 bg-amber-50', approved: 'text-emerald-600 bg-emerald-50',
   suspended: 'text-red-600 bg-red-50', active: 'text-emerald-600 bg-emerald-50',
-  reserved: 'text-blue-600 bg-blue-50', sold: 'text-slate-500 bg-slate-100',
-  initiated: 'text-amber-600 bg-amber-50', funds_held: 'text-blue-600 bg-blue-50',
-  inspection: 'text-purple-600 bg-purple-50', completed: 'text-emerald-600 bg-emerald-50',
+  reserved: 'text-navy-600 bg-navy-50', sold: 'text-slate-500 bg-slate-100',
+  initiated: 'text-amber-600 bg-amber-50', funds_held: 'text-navy-600 bg-navy-50',
+  inspection: 'text-accent-600 bg-accent-50', completed: 'text-emerald-600 bg-emerald-50',
   open: 'text-red-600 bg-red-50', resolved: 'text-slate-500 bg-slate-100',
 };
 
@@ -121,7 +121,7 @@ export default function DemoAdminPage() {
               {[
                 { icon: Building2, label: '承認済み加盟店', value: `${dealers.filter(d => d.status === 'approved').length}社`, sub: `審査待ち ${pendingDealers}件`, color: 'text-navy-600' },
                 { icon: Package, label: '公開中出品', value: `${listings.filter(l => l.status === 'active').length}台`, sub: `本日 +${Math.floor(Math.random() * 5) + 2}台`, color: 'text-emerald-600' },
-                { icon: TrendingUp, label: '累計GMV', value: formatYen(totalGmv), sub: '全加盟店合計', color: 'text-blue-600' },
+                { icon: TrendingUp, label: '累計GMV', value: formatYen(totalGmv), sub: '全加盟店合計', color: 'text-navy-600' },
                 { icon: AlertTriangle, label: '要対応', value: `${pendingKycs + openReports}件`, sub: `KYC ${pendingKycs}件・通報 ${openReports}件`, color: 'text-amber-600' },
               ].map(({ icon: Icon, label, value, sub, color }) => (
                 <div key={label} className="card p-5">

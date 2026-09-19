@@ -11,7 +11,7 @@ const RANKS = [
   { id: 'bronze', label: 'ブロンズ', min: 0, max: 999, color: 'text-amber-700 bg-amber-100', bar: 'bg-amber-500' },
   { id: 'silver', label: 'シルバー', min: 1000, max: 4999, color: 'text-slate-600 bg-slate-200', bar: 'bg-slate-500' },
   { id: 'gold', label: 'ゴールド', min: 5000, max: 19999, color: 'text-yellow-700 bg-yellow-100', bar: 'bg-yellow-500' },
-  { id: 'platinum', label: 'プラチナ', min: 20000, max: Infinity, color: 'text-purple-700 bg-purple-100', bar: 'bg-purple-500' },
+  { id: 'platinum', label: 'プラチナ', min: 20000, max: Infinity, color: 'text-gold-600 bg-gold-100', bar: 'bg-gold-500' },
 ];
 
 const RANK_BENEFITS: Record<string, string[]> = {
@@ -108,7 +108,7 @@ export default async function PointsPage() {
               <p className="mt-1 text-xs text-slate-400">{rank.label} {rank.min.toLocaleString()}pt 〜 / ゴール: {nextRank.min.toLocaleString()}pt</p>
             </>
           ) : (
-            <p className="text-center font-black text-purple-600">最高ランク達成！ありがとうございます。</p>
+            <p className="text-center font-black text-gold-600">最高ランク達成！ありがとうございます。</p>
           )}
         </div>
       </div>

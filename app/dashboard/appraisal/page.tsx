@@ -18,7 +18,7 @@ const CONDITIONS = [
 
 const STATUS: Record<string, { label: string; cls: string }> = {
   pending: { label: '申請受付中', cls: 'bg-amber-100 text-amber-700' },
-  in_review: { label: '査定中', cls: 'bg-blue-100 text-blue-700' },
+  in_review: { label: '査定中', cls: 'bg-navy-100 text-navy-700' },
   completed: { label: '査定完了', cls: 'bg-emerald-100 text-emerald-700' },
 };
 

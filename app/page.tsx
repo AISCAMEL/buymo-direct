@@ -232,7 +232,7 @@ export default async function HomePage() {
               </div>
               {/* ダイレクト販売 */}
               <div className="card flex flex-col p-7 ring-1 ring-gold-500/40">
-                <span className="self-start rounded-full bg-[#FBEEDC] px-3 py-1 text-xs font-black text-[#8a5a12]">ダイレクト販売</span>
+                <span className="self-start rounded-full bg-gold-100 px-3 py-1 text-xs font-black text-gold-600">ダイレクト販売</span>
                 <h3 className="mt-3 text-xl font-black text-navy-800">買取保証つきで、高く売る</h3>
                 <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
                   時間をかけても高く売りたい方に。出品して直接販売、売れなければBUYMOが買取保証。

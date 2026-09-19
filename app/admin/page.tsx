@@ -22,13 +22,14 @@ export default async function AdminDashboard() {
   const supabase = await createClient();
 
   // 管理者は is_admin() ポリシーで横断的に閲覧可能
-  const [{ count: userCount }, listingsRes, escrowRes, loansRes, reviewsRes, reportsRes] = await Promise.all([
+  const [{ count: userCount }, listingsRes, escrowRes, loansRes, reviewsRes, reportsRes, buybackRes] = await Promise.all([
     supabase.from('profiles').select('*', { count: 'exact', head: true }),
     supabase.from('listings').select('status'),
     supabase.from('escrow_transactions').select('status, amount, escrow_fee, title_fee, installment_fee'),
     supabase.from('loan_applications').select('status'),
     supabase.from('reviews').select('rating'),
     supabase.from('reports').select('status'),
+    supabase.from('buyback_requests').select('status, buyback_price'),
   ]);
 
   const listings = (listingsRes.data ?? []) as { status: string }[];
@@ -50,6 +51,11 @@ export default async function AdminDashboard() {
   const reports = (reportsRes.data ?? []) as { status: string }[];
   const openReports = reports.filter((r) => r.status === 'open').length;
 
+  const buybacks = (buybackRes.data ?? []) as { status: string; buyback_price: number }[];
+  const buybackPending = buybacks.filter((b) => b.status === 'pending' || b.status === 'in_review').length;
+  const buybackCompleted = buybacks.filter((b) => b.status === 'completed');
+  const buybackGmv = buybackCompleted.reduce((s, b) => s + (b.buyback_price ?? 0), 0);
+
   return (
     <div className="space-y-5">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -59,6 +65,8 @@ export default async function AdminDashboard() {
         <KpiCard icon={ShieldCheck} label="手数料売上" value={formatYen(feeRevenue)} sub="エスクロー+名義+分割" />
         <KpiCard icon={ShieldCheck} label="進行中の取引" value={`${activeEscrow}`} sub={disputed ? `係争 ${disputed} 件` : '係争なし'} />
         <KpiCard icon={Star} label="平均評価" value={reviews.length ? avgRating.toFixed(2) : '—'} sub={`${reviews.length} 件`} />
+        <KpiCard icon={Banknote} label="買取実績（GMV）" value={formatYen(buybackGmv)} sub={`買取完了 ${buybackCompleted.length} 件`} />
+        <KpiCard icon={Banknote} label="買取 審査待ち" value={`${buybackPending}`} sub="申請受付・審査中" />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -86,9 +94,9 @@ export default async function AdminDashboard() {
         <Link href="/admin/buyback" className="card flex items-center justify-between p-5 hover:shadow-md">
           <div className="flex items-center gap-2">
             <Banknote className="h-5 w-5 text-navy-400" />
-            <span className="font-bold">買取保証の申請管理</span>
+            <span className="font-bold">買取保証の審査待ち</span>
           </div>
-          <span className="badge bg-gold-100 text-gold-600">買取</span>
+          <span className={`badge ${buybackPending ? 'bg-gold-100 text-gold-600' : 'bg-slate-200 text-slate-600'}`}>{buybackPending} 件</span>
         </Link>
       </div>
     </div>

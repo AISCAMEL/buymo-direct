@@ -10,7 +10,7 @@ interface Props {
 
 const GRADE_COLOR: Record<string, string> = {
   A: 'text-emerald-600',
-  B: 'text-blue-600',
+  B: 'text-navy-600',
   C: 'text-amber-600',
   D: 'text-red-600',
 };

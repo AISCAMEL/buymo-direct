@@ -88,7 +88,7 @@ export default function RevenueTable({ rows }: RevenueTableProps) {
               <td className="px-4 py-3 text-right font-bold text-slate-800">
                 {formatYen(row.gmv)}
               </td>
-              <td className="px-4 py-3 text-right font-bold" style={{ color: '#1e3a5f' }}>
+              <td className="px-4 py-3 text-right font-bold" style={{ color: '#0F766E' }}>
                 {formatYen(row.commission)}
               </td>
             </tr>

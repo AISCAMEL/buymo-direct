@@ -125,7 +125,7 @@ export default function SellWizardPage() {
               <div
                 className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-colors"
                 style={{
-                  background: i < stepIdx ? '#22c55e' : i === stepIdx ? '#1e3a6e' : '#e5e7eb',
+                  background: i < stepIdx ? '#22c55e' : i === stepIdx ? '#0F766E' : '#e5e7eb',
                   color: i <= stepIdx ? '#fff' : '#9ca3af',
                 }}
               >
@@ -197,8 +197,8 @@ export default function SellWizardPage() {
                   key={c.value}
                   className="flex cursor-pointer gap-2 rounded-xl border-2 p-3 transition-colors"
                   style={{
-                    borderColor: info.condition === c.value ? '#1e3a6e' : '#e5e7eb',
-                    background: info.condition === c.value ? '#eff6ff' : '#fff',
+                    borderColor: info.condition === c.value ? '#0F766E' : '#e5e7eb',
+                    background: info.condition === c.value ? '#E6F2EF' : '#fff',
                   }}
                 >
                   <input type="radio" name="condition" value={c.value} className="mt-0.5"
@@ -261,14 +261,14 @@ export default function SellWizardPage() {
 
             {/* 相場レンジ */}
             <div className="rounded-2xl p-5 text-center mb-4"
-              style={{ background: 'linear-gradient(135deg, #1e3a6e, #2a527a)' }}>
-              <p className="text-xs text-blue-200 mb-2">推定市場相場</p>
+              style={{ background: 'linear-gradient(135deg, #0C3A44, #0F766E)' }}>
+              <p className="text-xs text-navy-200 mb-2">推定市場相場</p>
               <div className="flex items-center justify-center gap-2">
                 <span className="text-2xl font-black text-white">{formatYen(estimate.price_low)}</span>
                 <span className="text-slate-400">〜</span>
                 <span className="text-2xl font-black text-white">{formatYen(estimate.price_high)}</span>
               </div>
-              <p className="text-xs text-blue-200 mt-1">中央値: {formatYen(Math.round((estimate.price_low + estimate.price_high) / 2))}</p>
+              <p className="text-xs text-navy-200 mt-1">中央値: {formatYen(Math.round((estimate.price_low + estimate.price_high) / 2))}</p>
             </div>
 
             {/* 買取保証価格 */}
@@ -314,8 +314,8 @@ export default function SellWizardPage() {
               <label
                 className="flex cursor-pointer gap-4 rounded-2xl border-2 p-5 transition-all"
                 style={{
-                  borderColor: listingType === 'direct' ? '#1e3a6e' : '#e5e7eb',
-                  background: listingType === 'direct' ? '#eff6ff' : '#fff',
+                  borderColor: listingType === 'direct' ? '#0F766E' : '#e5e7eb',
+                  background: listingType === 'direct' ? '#E6F2EF' : '#fff',
                 }}
               >
                 <input type="radio" name="ltype" value="direct" className="mt-1"

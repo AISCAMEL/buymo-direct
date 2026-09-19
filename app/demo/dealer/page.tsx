@@ -18,12 +18,12 @@ const STATUS_LABEL: Record<string, string> = {
   active: '公開中', reserved: '商談中', sold: '成約済み', draft: '下書き',
 };
 const STATUS_COLOR: Record<string, string> = {
-  active: 'text-emerald-600 bg-emerald-50', reserved: 'text-blue-600 bg-blue-50',
+  active: 'text-emerald-600 bg-emerald-50', reserved: 'text-navy-600 bg-navy-50',
   sold: 'text-slate-500 bg-slate-100', draft: 'text-amber-600 bg-amber-50',
 };
 const ROLE_LABEL: Record<string, string> = { owner: 'オーナー', manager: 'マネージャー', staff: 'スタッフ' };
 const ROLE_COLOR: Record<string, string> = {
-  owner: 'text-red-600 bg-red-50', manager: 'text-blue-600 bg-blue-50', staff: 'text-slate-600 bg-slate-100',
+  owner: 'text-red-600 bg-red-50', manager: 'text-navy-600 bg-navy-50', staff: 'text-slate-600 bg-slate-100',
 };
 
 const maxBar = Math.max(...DEMO_ANALYTICS.map(a => a.gmv));
@@ -121,7 +121,7 @@ export default function DemoDealerPage() {
               {[
                 { label: '公開中在庫', value: `${activeCount}台`, sub: '本日 +2台', color: 'text-navy-700' },
                 { label: '成約件数', value: `${soldCount}台`, sub: '今月 +3台', color: 'text-emerald-600' },
-                { label: '成約 GMV', value: formatYen(gmv), sub: '累計', color: 'text-blue-600' },
+                { label: '成約 GMV', value: formatYen(gmv), sub: '累計', color: 'text-navy-600' },
                 { label: '手数料（推計）', value: formatYen(commission), sub: '3.0%', color: 'text-amber-600' },
               ].map(({ label, value, sub, color }) => (
                 <div key={label} className="card p-5">

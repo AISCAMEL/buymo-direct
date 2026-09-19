@@ -30,7 +30,7 @@ function makeIcon(count: number) {
     html: `<div style="
       width:${size}px;height:${size}px;
       border-radius:50%;
-      background:#1e3a5f;
+      background:#0F766E;
       color:white;
       display:flex;align-items:center;justify-content:center;
       font-weight:700;font-size:${fontSize}px;font-family:sans-serif;
@@ -61,7 +61,7 @@ export function MapListingsInner({ groups }: { groups: PrefectureGroup[] }) {
         <Marker key={group.prefecture} position={group.coords} icon={makeIcon(group.count)}>
           <Popup minWidth={220} maxWidth={280}>
             <div style={{ fontFamily: 'sans-serif' }}>
-              <p style={{ fontWeight: 700, marginBottom: 8, color: '#1e3a5f' }}>
+              <p style={{ fontWeight: 700, marginBottom: 8, color: '#0F766E' }}>
                 {group.prefecture}（{group.count}件）
               </p>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
@@ -94,7 +94,7 @@ export function MapListingsInner({ groups }: { groups: PrefectureGroup[] }) {
               {group.count > 3 && (
                 <a
                   href={`/listings?prefs=${encodeURIComponent(group.prefecture)}`}
-                  style={{ display: 'block', marginTop: 8, fontSize: 11, fontWeight: 700, color: '#1e3a5f', textAlign: 'center' }}
+                  style={{ display: 'block', marginTop: 8, fontSize: 11, fontWeight: 700, color: '#0F766E', textAlign: 'center' }}
                 >
                   {group.prefecture}の出品をすべて見る（{group.count}件）→
                 </a>

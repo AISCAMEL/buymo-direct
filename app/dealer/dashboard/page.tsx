@@ -46,6 +46,13 @@ export default async function DealerDashboardPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-black">ダッシュボード</h1>
 
+      <div className="flex items-start gap-3 rounded-2xl border border-gold-200 bg-gold-50 p-4">
+        <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-gold-600" />
+        <p className="text-sm text-slate-700">
+          <span className="font-black text-slate-800">買取保証つきで販売</span>：貴店の在庫は BUYMO の買取保証つきでダイレクト販売できます。売れ残りリスクを抑えつつ、購入者へより高く販売できます。
+        </p>
+      </div>
+
       {dealerInfo?.status === 'pending' && (
         <div className="card border-amber-200 bg-amber-50 p-5">
           <p className="font-bold text-amber-700">

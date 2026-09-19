@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 
 const STATUS_LABEL: Record<string, { label: string; className: string }> = {
   pending:   { label: '審査待ち',   className: 'bg-amber-100 text-amber-700' },
-  countered: { label: '反対提示中', className: 'bg-blue-100 text-blue-700' },
+  countered: { label: '反対提示中', className: 'bg-navy-100 text-navy-700' },
   accepted:  { label: '成立',       className: 'bg-emerald-100 text-emerald-700' },
   rejected:  { label: '拒否',       className: 'bg-red-100 text-red-700' },
   cancelled: { label: 'キャンセル', className: 'bg-slate-100 text-slate-500' },
@@ -168,12 +168,12 @@ export default async function OffersPage() {
 
                   {/* 反対提示への対応 */}
                   {o.status === 'countered' && o.counter_amount && (
-                    <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 space-y-2">
-                      <p className="text-sm font-bold text-blue-700">
+                    <div className="rounded-lg border border-navy-200 bg-navy-50 p-3 space-y-2">
+                      <p className="text-sm font-bold text-navy-700">
                         売主からの提示：{formatYen(o.counter_amount)}
                       </p>
                       {o.counter_message && (
-                        <p className="text-sm text-blue-600">「{o.counter_message}」</p>
+                        <p className="text-sm text-navy-600">「{o.counter_message}」</p>
                       )}
                       <div className="flex gap-2">
                         <form action={async () => {

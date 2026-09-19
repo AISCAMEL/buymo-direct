@@ -33,7 +33,7 @@ function cubicBezierPath(points: { x: number; y: number }[]): string {
 export default function LineChart({
   data,
   height = 220,
-  color = '#3b82f6',
+  color = '#0F766E',
   formatValue = (v) => v.toLocaleString('ja-JP'),
 }: LineChartProps) {
   if (!data.length) return null;

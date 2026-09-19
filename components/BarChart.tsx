@@ -20,7 +20,7 @@ const VIEWBOX_WIDTH = 600;
 export default function BarChart({
   data,
   height = 220,
-  color = '#1e3a5f',
+  color = '#0F766E',
   formatValue = (v) => v.toLocaleString('ja-JP'),
 }: BarChartProps) {
   const uid = useId();
