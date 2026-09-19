@@ -46,7 +46,7 @@ export default async function MakerPage({ params }: { params: Params }) {
   const [{ data, count }] = await Promise.all([
     supabase
       .from('listings')
-      .select('*, listing_images(*), profiles(id, display_name, prefecture, avatar_url)', { count: 'exact' })
+      .select('*, listing_images(*), profiles!listings_seller_id_fkey(id, display_name, prefecture, avatar_url)', { count: 'exact' })
       .eq('status', 'active')
       .eq('maker', maker)
       .order('created_at', { ascending: false })

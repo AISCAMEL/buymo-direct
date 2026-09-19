@@ -33,7 +33,7 @@ export const getCachedFeaturedListings = unstable_cache(
     const supabase = makePublicClient();
     const { data } = await supabase
       .from('listings')
-      .select('*, listing_images(*), profiles(id, display_name, prefecture, avatar_url)')
+      .select('*, listing_images(*), profiles!listings_seller_id_fkey(id, display_name, prefecture, avatar_url)')
       .eq('status', 'active')
       .order('created_at', { ascending: false })
       .limit(8);

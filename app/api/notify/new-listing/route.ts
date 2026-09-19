@@ -13,7 +13,7 @@ export async function POST(req: Request) {
 
   const { data: listing } = await supabase
     .from('listings')
-    .select('id, title, seller_id, profiles(display_name)')
+    .select('id, title, seller_id, profiles!listings_seller_id_fkey(display_name)')
     .eq('id', listingId)
     .eq('seller_id', user.id)
     .maybeSingle();

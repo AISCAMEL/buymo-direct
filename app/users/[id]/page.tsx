@@ -35,7 +35,7 @@ export default async function UserProfilePage({ params }: { params: Params }) {
 
   const { data: listingRows } = await supabase
     .from('listings')
-    .select('*, listing_images(*), profiles(id, display_name, prefecture, avatar_url)')
+    .select('*, listing_images(*), profiles!listings_seller_id_fkey(id, display_name, prefecture, avatar_url)')
     .eq('seller_id', id)
     .eq('status', 'active')
     .order('created_at', { ascending: false });

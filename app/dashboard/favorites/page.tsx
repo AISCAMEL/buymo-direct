@@ -16,7 +16,7 @@ export default async function FavoritesPage() {
 
   const { data } = await supabase
     .from('favorites')
-    .select('created_at, listings(*, listing_images(*), profiles(id, display_name, prefecture, avatar_url))')
+    .select('created_at, listings(*, listing_images(*), profiles!listings_seller_id_fkey(id, display_name, prefecture, avatar_url))')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 

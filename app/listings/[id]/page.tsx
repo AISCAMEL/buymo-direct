@@ -85,7 +85,7 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
 
   const { data } = await supabase
     .from('listings')
-    .select('*, listing_images(*), profiles(id, display_name, prefecture, avatar_url, kyc_status)')
+    .select('*, listing_images(*), profiles!listings_seller_id_fkey(id, display_name, prefecture, avatar_url, kyc_status)')
     .eq('id', id)
     .maybeSingle();
 

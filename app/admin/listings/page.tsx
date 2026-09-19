@@ -14,7 +14,7 @@ export default async function AdminListingsPage() {
   const supabase = await createClient();
   const { data } = await supabase
     .from('listings')
-    .select('*, profiles(display_name)')
+    .select('*, profiles!listings_seller_id_fkey(display_name)')
     .order('created_at', { ascending: false })
     .limit(200);
   const listings = (data ?? []) as (Listing & { profiles?: { display_name: string } })[];
