@@ -14,6 +14,7 @@ const config: Config = {
         // 主要色（ボタン・見出し・ロゴ）＝ BUYMO ティールグリーン
         navy: {
           50: '#E6F2EF',
+          100: '#CFE7E1',
           200: '#ABD7CF',
           400: '#1FA592',
           500: '#0F766E', // primary（BUYMOグリーン）
@@ -26,6 +27,7 @@ const config: Config = {
         accent: {
           50: '#E6FAF6',
           200: '#A7E4DB',
+          400: '#1BB6A4',
           500: '#0E9C8C',
           600: '#0B7A70',
         },
@@ -35,6 +37,9 @@ const config: Config = {
           500: '#14B8A6',
         },
         gold: {
+          50: '#FBF6EA',
+          100: '#F6ECD3',
+          200: '#EDDBA9',
           400: '#E0BD6A',
           500: '#D4AF65',
           600: '#C5A04E',

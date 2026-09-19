@@ -65,28 +65,28 @@ export default function AdminAnalyticsPage() {
           value="¥248M"
           change={18.4}
           icon={TrendingUp}
-          color="#1e3a5f"
+          color="#0F766E"
         />
         <KpiCard
           title="成約件数"
           value="3,847件"
           change={12.1}
           icon={ShoppingCart}
-          color="#0ea5e9"
+          color="#D4AF65"
         />
         <KpiCard
           title="新規会員"
           value="28,400名"
           change={9.7}
           icon={Users}
-          color="#8b5cf6"
+          color="#0C3A44"
         />
         <KpiCard
           title="手数料収入"
           value="¥6.2M"
           change={-3.2}
           icon={Wallet}
-          color="#f59e0b"
+          color="#14B8A6"
         />
       </div>
 
@@ -97,7 +97,7 @@ export default function AdminAnalyticsPage() {
           <BarChart
             data={GMV_MONTHLY}
             height={220}
-            color="#1e3a5f"
+            color="#0F766E"
             formatValue={formatYenShort}
           />
         </div>
@@ -107,7 +107,7 @@ export default function AdminAnalyticsPage() {
           <LineChart
             data={USER_GROWTH}
             height={220}
-            color="#8b5cf6"
+            color="#D4AF65"
             formatValue={(v) => `${(v / 10000).toFixed(1)}万人`}
           />
         </div>

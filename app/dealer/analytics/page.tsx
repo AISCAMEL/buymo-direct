@@ -80,25 +80,25 @@ export default async function DealerAnalyticsPage() {
           title="累計 GMV"
           value={formatYen(gmv)}
           icon={TrendingUp}
-          color="#1e3a5f"
+          color="#0F766E"
         />
         <KpiCard
           title="手数料（推計）"
           value={formatYen(commission)}
           icon={TrendingUp}
-          color="#0ea5e9"
+          color="#D4AF65"
         />
         <KpiCard
           title="成約件数"
           value={`${completed.length}件`}
           icon={ShieldCheck}
-          color="#10b981"
+          color="#14B8A6"
         />
         <KpiCard
           title="総閲覧数"
           value={totalViews.toLocaleString('ja-JP')}
           icon={Eye}
-          color="#8b5cf6"
+          color="#0C3A44"
         />
       </div>
 
@@ -109,7 +109,7 @@ export default async function DealerAnalyticsPage() {
           <BarChart
             data={monthlyData}
             height={220}
-            color="#1e3a5f"
+            color="#0F766E"
             formatValue={formatYenShort}
           />
         ) : (

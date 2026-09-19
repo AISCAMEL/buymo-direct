@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Users, Car, ShieldCheck, Landmark, Star, Wallet, Flag } from 'lucide-react';
+import { Users, Car, ShieldCheck, Landmark, Star, Wallet, Flag, Banknote } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { formatYen } from '@/lib/format';
 
@@ -82,6 +82,13 @@ export default async function AdminDashboard() {
             <span className="font-bold">未対応の通報</span>
           </div>
           <span className={`badge ${openReports ? 'bg-red-100 text-red-700' : 'bg-slate-200 text-slate-600'}`}>{openReports} 件</span>
+        </Link>
+        <Link href="/admin/buyback" className="card flex items-center justify-between p-5 hover:shadow-md">
+          <div className="flex items-center gap-2">
+            <Banknote className="h-5 w-5 text-navy-400" />
+            <span className="font-bold">買取保証の申請管理</span>
+          </div>
+          <span className="badge bg-gold-100 text-gold-600">買取</span>
         </Link>
       </div>
     </div>

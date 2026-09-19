@@ -156,7 +156,7 @@ export default function AdminCouponsPage() {
                   <tr key={c.id} className={!isValid ? 'opacity-50' : ''}>
                     <td className="px-4 py-3 font-black font-mono tracking-wider text-navy-700">{c.code}</td>
                     <td className="px-4 py-3">
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${c.type === 'fixed' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700'}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${c.type === 'fixed' ? 'bg-navy-50 text-navy-700' : 'bg-gold-100 text-gold-600'}`}>
                         {c.type === 'fixed' ? '固定額' : 'パーセント'}
                       </span>
                     </td>

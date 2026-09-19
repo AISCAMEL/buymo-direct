@@ -22,7 +22,7 @@ const DEMO: Request[] = [
 
 const STATUS_CONFIG: Record<Status, { label: string; cls: string; icon: React.ComponentType<{className?: string}> }> = {
   pending:   { label: '申請受付中', cls: 'text-amber-700 bg-amber-50',   icon: Clock },
-  in_review: { label: '審査中',    cls: 'text-blue-700 bg-blue-50',     icon: Eye },
+  in_review: { label: '審査中',    cls: 'text-navy-700 bg-navy-50',     icon: Eye },
   approved:  { label: '承認済み',  cls: 'text-emerald-700 bg-emerald-50', icon: CheckCircle2 },
   rejected:  { label: '不承認',   cls: 'text-red-700 bg-red-50',       icon: XCircle },
   completed: { label: '買取完了',  cls: 'text-slate-600 bg-slate-100',  icon: CheckCircle2 },
@@ -66,7 +66,7 @@ export default function AdminBuybackPage() {
       <div className="grid grid-cols-3 gap-4">
         {[
           { label: '申請受付中', count: counts.pending, color: 'text-amber-700', bg: 'bg-amber-50' },
-          { label: '審査中', count: counts.in_review, color: 'text-blue-700', bg: 'bg-blue-50' },
+          { label: '審査中', count: counts.in_review, color: 'text-navy-700', bg: 'bg-navy-50' },
           { label: '承認済み', count: counts.approved, color: 'text-emerald-700', bg: 'bg-emerald-50' },
         ].map(s => (
           <div key={s.label} className={`rounded-xl ${s.bg} p-4 text-center`}>
@@ -161,7 +161,7 @@ export default function AdminBuybackPage() {
 
             {detail.status === 'pending' && (
               <button onClick={() => updateStatus(detail.id, 'in_review')} disabled={processing}
-                className="w-full mb-2 rounded-xl bg-blue-600 py-2.5 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-50">
+                className="w-full mb-2 rounded-xl bg-navy-600 py-2.5 text-sm font-bold text-white hover:bg-navy-700 disabled:opacity-50">
                 {processing ? '処理中...' : '審査開始（in_review に変更）'}
               </button>
             )}

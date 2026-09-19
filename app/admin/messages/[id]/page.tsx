@@ -152,7 +152,7 @@ export default function AdminMessageDetailPage({ params }: { params: Promise<{ i
                 <span
                   className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
                     m.sender === 'buyer'
-                      ? 'bg-blue-100 text-blue-700'
+                      ? 'bg-navy-100 text-navy-700'
                       : 'bg-emerald-100 text-emerald-700'
                   }`}
                 >

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import {
   Landmark, Star, ShieldCheck, Truck, ClipboardList,
-  Zap, Phone, Heart, BarChart2, FileCheck, Gift, Shield,
+  Zap, Phone, Heart, BarChart2, FileCheck, Gift, Shield, Banknote,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 
@@ -11,20 +11,12 @@ export const metadata = { title: '会員サービス | BUYMO' };
 
 const SERVICES = [
   {
-    href: '/dashboard/loans',
-    icon: Landmark,
-    label: 'ローン仮審査',
-    desc: '最短即日回答。GMO・ジャックス・アプラスなど複数社に同時申請。',
-    badge: null,
-    color: 'text-blue-600 bg-blue-50',
-  },
-  {
-    href: '/listings',
-    icon: Shield,
-    label: '保険料シミュレーター',
-    desc: '東京海上日動・損保ジャパン・AIG損保の3社を年齢・無事故年数に応じてリアルタイム比較。',
-    badge: '無料',
-    color: 'text-blue-700 bg-blue-50',
+    href: '/dashboard/buyback',
+    icon: Banknote,
+    label: '買取保証・BUYMO買取',
+    desc: '売れなくてもBUYMOが買い取る安心の買取保証。手数料0円・査定無料で最短現金化。',
+    badge: '買取',
+    color: 'text-gold-600 bg-gold-50',
   },
   {
     href: '/dashboard/appraisal',
@@ -32,7 +24,23 @@ const SERVICES = [
     label: '無料車両査定',
     desc: '売却を検討中の車の相場をAIと専門家が無料で査定します。',
     badge: '無料',
-    color: 'text-emerald-600 bg-emerald-50',
+    color: 'text-navy-600 bg-navy-50',
+  },
+  {
+    href: '/dashboard/loans',
+    icon: Landmark,
+    label: 'ローン仮審査',
+    desc: '最短即日回答。GMO・ジャックス・アプラスなど複数社に同時申請。',
+    badge: null,
+    color: 'text-navy-600 bg-navy-50',
+  },
+  {
+    href: '/listings',
+    icon: Shield,
+    label: '保険料シミュレーター',
+    desc: '東京海上日動・損保ジャパン・AIG損保の3社を年齢・無事故年数に応じてリアルタイム比較。',
+    badge: '無料',
+    color: 'text-accent-600 bg-accent-50',
   },
   {
     href: '/dashboard/transport',
@@ -48,7 +56,7 @@ const SERVICES = [
     label: '延長保証',
     desc: 'エンジン・ミッションから全部位まで。3ヶ月〜1年のプランをご用意。',
     badge: 'おすすめ',
-    color: 'text-purple-600 bg-purple-50',
+    color: 'text-accent-600 bg-accent-50',
   },
   {
     href: '/dashboard/points',
@@ -130,7 +138,7 @@ export default async function ServicesPage() {
               <div className="flex items-center gap-2">
                 <h2 className="font-black text-navy-800">{label}</h2>
                 {badge && (
-                  <span className="rounded-full bg-accent-500 px-2 py-0.5 text-xs font-bold text-white">{badge}</span>
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${badge === '買取' ? 'bg-gold-500 text-[#2E2408]' : 'bg-accent-500 text-white'}`}>{badge}</span>
                 )}
               </div>
               <p className="mt-1 text-sm text-slate-500">{desc}</p>

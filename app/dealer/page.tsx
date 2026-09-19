@@ -33,11 +33,12 @@ export default async function DealerIndexPage({ searchParams }: Props) {
 
       <div className="card p-6 space-y-4">
         <p className="text-sm text-slate-600">
-          BUYMO ダイレクト の加盟店プログラムに参加すると、複数台の在庫を一元管理し、
-          外部の在庫管理システム（DMS）と API で連携できます。
+          BUYMO は「買取」と「ダイレクト販売」を1つにした統合サービスです。加盟店プログラムに参加すると、
+          複数台の在庫を一元管理し、外部の在庫管理システム（DMS）と API で連携できます。
         </p>
         <ul className="space-y-2 text-sm text-slate-700">
           {[
+            '在庫は BUYMO 買取保証つきで販売（売れ残りリスクを軽減）',
             '在庫一括管理・スタッフアカウント追加',
             'REST API で外部 DMS と在庫同期',
             '取引完了時の Webhook 通知',

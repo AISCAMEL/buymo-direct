@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Mail, MessageCircle, Phone, CheckCircle2 } from 'lucide-react';
-type Category = 'general' | 'listing' | 'payment' | 'account' | 'dealer' | 'other';
+import Link from 'next/link';
+import { Mail, MessageCircle, Phone, CheckCircle2, Banknote, Tag } from 'lucide-react';
+type Category = 'general' | 'buyback' | 'listing' | 'payment' | 'account' | 'dealer' | 'other';
 
 const CATEGORIES: { value: Category; label: string }[] = [
   { value: 'general', label: '一般的なお問い合わせ' },
-  { value: 'listing', label: '出品・掲載について' },
+  { value: 'buyback', label: '買取・無料査定について' },
+  { value: 'listing', label: 'ダイレクト販売・出品について' },
   { value: 'payment', label: '決済・エスクローについて' },
   { value: 'account', label: 'アカウント・ログインについて' },
   { value: 'dealer', label: '加盟店申請について' },
@@ -23,8 +25,12 @@ const FAQ = [
     a: '名義変更代行サービスをご利用いただけます。行政書士が書類作成から陸運局手続きまでを代行します。遠隔地のお取引でも対応可能です。',
   },
   {
-    q: '出品手数料はいくらですか？',
-    a: '個人間取引の出品は無料です。成約時に成約額の3%（税別）の手数料をいただきます。加盟店は別途プランをご確認ください。',
+    q: '手数料はいくらですか？（買取／ダイレクト販売）',
+    a: '買取は手数料0円・査定無料・引取り無料です。ダイレクト販売の出品は無料で、成約時のみ「自分で交渉」3%／「BUYMOに任せる」7%（いずれも税別）をいただきます。加盟店は別途プランをご確認ください。',
+  },
+  {
+    q: '買取とダイレクト販売の違いは？',
+    a: '「買取」はBUYMOが直接買い取り最短で現金化できます（手数料0円）。「ダイレクト販売」は購入者へ直接販売してより高く売る方法で、売れなくてもBUYMOが買い取る「買取保証つき」なので安心です。どちらも写真査定・全国オンライン完結です。',
   },
   {
     q: 'ローンは利用できますか？',
@@ -51,6 +57,34 @@ export default function ContactPage() {
         <p className="mt-1 text-sm text-slate-500">
           ご不明な点はお気軽にお問い合わせください。通常2営業日以内にご返信します。
         </p>
+      </div>
+
+      {/* クイックアクション（買取・ダイレクト） */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Link
+          href="/listings/valuation"
+          className="flex items-center gap-3 rounded-2xl border border-gold-200 bg-gold-50 p-4 transition hover:border-gold-400 hover:shadow-sm"
+        >
+          <div className="rounded-xl bg-gold-500 p-2.5">
+            <Banknote className="h-5 w-5 text-[#2E2408]" />
+          </div>
+          <div>
+            <p className="font-black text-slate-800">無料査定を依頼する（買取）</p>
+            <p className="text-xs text-slate-500">手数料0円・査定無料・全国オンライン完結</p>
+          </div>
+        </Link>
+        <Link
+          href="/sell"
+          className="flex items-center gap-3 rounded-2xl border border-accent-200 bg-accent-50 p-4 transition hover:border-accent-400 hover:shadow-sm"
+        >
+          <div className="rounded-xl bg-accent-500 p-2.5">
+            <Tag className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <p className="font-black text-slate-800">出品する（ダイレクト販売）</p>
+            <p className="text-xs text-slate-500">買取保証つき・出品無料でより高く売る</p>
+          </div>
+        </Link>
       </div>
 
       {/* 連絡手段 */}

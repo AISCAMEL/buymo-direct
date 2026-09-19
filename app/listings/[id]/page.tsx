@@ -329,6 +329,17 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
             ローン仮審査を申し込む →
           </Link>
 
+          {/* 安心バナー（買取保証・エスクロー） */}
+          <div className="mt-4 flex items-center gap-2 rounded-xl bg-gold-50 px-3 py-2.5 text-xs font-bold text-gold-600">
+            <ShieldCheck className="h-4 w-4 shrink-0" />
+            買取保証つき／エスクロー決済で安全に取引
+          </div>
+          <ul className="mt-2 grid grid-cols-3 gap-1.5 text-center text-[10px] font-bold text-slate-600">
+            <li className="rounded-lg bg-slate-50 px-1 py-1.5">代金は<br />第三者保全</li>
+            <li className="rounded-lg bg-slate-50 px-1 py-1.5">現車確認<br />してから</li>
+            <li className="rounded-lg bg-slate-50 px-1 py-1.5">名義変更<br />まで代行</li>
+          </ul>
+
           {/* 保険料シミュレーター */}
           <div className="mt-4">
             <InsuranceSimulator
