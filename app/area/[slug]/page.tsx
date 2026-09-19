@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import { ChevronRight, MapPin } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
@@ -66,17 +67,22 @@ export default async function AreaPage({ params }: { params: Params }) {
         }}
       />
       <div className="space-y-8">
-        <section className="rounded-2xl bg-gradient-to-br from-navy-500 to-navy-700 px-6 py-12 text-white">
-          <p className="mb-2 flex items-center gap-1 text-sm font-bold text-mint-500"><MapPin className="h-4 w-4" />{area.region}エリア</p>
-          <h1 className="text-3xl font-black sm:text-4xl">{area.name} の中古車</h1>
-          <p className="mt-2 text-white/80">{count ?? 0} 台出品中 · 買取保証つき · 手数料0円 · エスクロー決済</p>
-          <div className="mt-5 flex flex-wrap gap-2">
-            <Link href={`/listings?prefs=${encodeURIComponent(area.name)}`} className="inline-flex items-center gap-1 rounded-xl bg-white/20 px-4 py-2 text-sm font-bold hover:bg-white/30 transition">
-              {area.name} の車を探す <ChevronRight className="h-4 w-4" />
-            </Link>
-            <Link href="/listings/valuation" className="inline-flex items-center gap-1 rounded-xl bg-gold-500 px-4 py-2 text-sm font-bold text-[#2E2408] hover:bg-gold-600 transition">
-              {area.name} で無料査定（買取）
-            </Link>
+        <section className="relative overflow-hidden rounded-2xl">
+          <Image src={`/area/${slug}.jpg`} alt={`${area.name}の中古車・買取`} fill priority sizes="100vw" className="object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-navy-900/85 to-navy-700/55" />
+          <div className="relative px-6 py-12 text-white">
+            <p className="mb-2 flex items-center gap-1 text-sm font-bold text-accent-200"><MapPin className="h-4 w-4" />{area.region}エリア</p>
+            <span className="mb-2 inline-block rounded-full bg-gold-500 px-3 py-1 text-xs font-black text-[#2E2408]">買取保証つき</span>
+            <h1 className="text-3xl font-black sm:text-4xl">{area.name} の中古車</h1>
+            <p className="mt-2 text-white/85">{count ?? 0} 台出品中 · 買取保証つき · 手数料0円 · エスクロー決済</p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <Link href={`/listings?prefs=${encodeURIComponent(area.name)}`} className="inline-flex items-center gap-1 rounded-xl bg-white/20 px-4 py-2 text-sm font-bold hover:bg-white/30 transition">
+                {area.name} の車を探す <ChevronRight className="h-4 w-4" />
+              </Link>
+              <Link href="/listings/valuation" className="inline-flex items-center gap-1 rounded-xl bg-gold-500 px-4 py-2 text-sm font-bold text-[#2E2408] hover:bg-gold-600 transition">
+                {area.name} で無料査定（買取）
+              </Link>
+            </div>
           </div>
         </section>
 

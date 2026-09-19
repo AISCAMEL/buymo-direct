@@ -106,85 +106,103 @@ export default async function HomePage() {
       />
       <div className="-mx-4 -mt-6">
 
-        {/* ── 1. Hero ── */}
-        <section className="bg-gradient-to-b from-navy-50 to-white px-4 pb-14 pt-16 text-center">
-          <p className="mb-3 inline-block rounded-full bg-accent-50 px-4 py-1 text-xs font-bold text-accent-600">
-            🚗 買取保証つき 中古車ダイレクト販売
-          </p>
-          <h1 className="text-3xl font-black leading-tight text-slate-900 sm:text-5xl">
-            売るのも、買うのも、<span className="text-accent-600">BUYMO</span>。<br />
-            買取も、ダイレクト販売も。
-          </h1>
-          <p className="mx-auto mt-4 max-w-xl text-sm text-slate-500 sm:text-base">
-            すぐ現金化したいなら「買取」。もっと高く売りたいなら「ダイレクト販売」。どちらも写真査定・全国オンライン完結、買取保証つきで安心。
-          </p>
+        {/* ── 1. Hero（実写真ヒーロー）── */}
+        <section className="relative overflow-hidden px-4 pb-14 pt-16 text-center">
+          {/* 背景写真 */}
+          <Image
+            src="/hero-photo.jpg"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-navy-900/85 via-navy-800/75 to-navy-700/85" />
 
-          {/* ベネフィットのチップ（buymo.me風） */}
-          <ul className="mx-auto mt-5 flex max-w-xl flex-wrap justify-center gap-2 text-xs font-bold text-navy-600">
-            <li className="rounded-full bg-navy-50 px-3 py-1">買取保証つき</li>
-            <li className="rounded-full bg-navy-50 px-3 py-1">エスクロー決済で安心</li>
-            <li className="rounded-full bg-navy-50 px-3 py-1">全国47都道府県対応</li>
-            <li className="rounded-full bg-navy-50 px-3 py-1">オンライン完結</li>
-          </ul>
+          <div className="relative mx-auto max-w-3xl">
+            <p className="mb-3 inline-block rounded-full bg-white/15 px-4 py-1 text-xs font-bold text-white ring-1 ring-white/25 backdrop-blur">
+              🚗 買取保証つき 中古車ダイレクト販売
+            </p>
+            <h1 className="text-3xl font-black leading-tight text-white drop-shadow sm:text-5xl">
+              売るのも、買うのも、<span className="text-accent-200">BUYMO</span>。<br />
+              買取も、ダイレクト販売も。
+            </h1>
+            <p className="mx-auto mt-4 max-w-xl text-sm text-white/85 sm:text-base">
+              すぐ現金化したいなら「買取」。もっと高く売りたいなら「ダイレクト販売」。どちらも写真査定・全国オンライン完結、買取保証つきで安心。
+            </p>
 
-          {/* 検索バー */}
-          <form
-            action="/listings"
-            className="mx-auto mt-8 flex max-w-xl gap-2 rounded-2xl bg-white p-2 shadow-md ring-1 ring-slate-200"
-          >
-            <input
-              name="q"
-              className="min-w-0 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-slate-400"
-              placeholder="車名・メーカー・モデルで検索"
-            />
-            <button type="submit" className="btn-accent shrink-0 rounded-xl px-5 py-2.5">
-              <Search className="h-4 w-4" />
-              <span className="hidden sm:inline">検索</span>
-            </button>
-          </form>
+            {/* ベネフィットのチップ */}
+            <ul className="mx-auto mt-5 flex max-w-xl flex-wrap justify-center gap-2 text-xs font-bold text-white">
+              <li className="rounded-full bg-white/12 px-3 py-1 ring-1 ring-white/20">買取保証つき</li>
+              <li className="rounded-full bg-white/12 px-3 py-1 ring-1 ring-white/20">エスクロー決済で安心</li>
+              <li className="rounded-full bg-white/12 px-3 py-1 ring-1 ring-white/20">全国47都道府県対応</li>
+              <li className="rounded-full bg-white/12 px-3 py-1 ring-1 ring-white/20">オンライン完結</li>
+            </ul>
 
-          {/* 人気メーカーチップ */}
-          <div className="mt-5 flex flex-wrap justify-center gap-2">
-            {POPULAR_MAKERS.map((maker) => (
-              <Link
-                key={maker}
-                href={`/listings?maker=${encodeURIComponent(maker)}`}
-                className="rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-sm font-bold text-slate-600 shadow-sm transition hover:border-accent-500 hover:text-accent-600"
-              >
-                {maker}
-              </Link>
-            ))}
-            <Link
-              href="/listings"
-              className="rounded-full border border-dashed border-slate-300 px-3.5 py-1.5 text-sm font-bold text-slate-400 transition hover:border-accent-400 hover:text-accent-600"
+            {/* 検索バー */}
+            <form
+              action="/listings"
+              className="mx-auto mt-8 flex max-w-xl gap-2 rounded-2xl bg-white p-2 shadow-xl ring-1 ring-black/5"
             >
-              すべて →
-            </Link>
-          </div>
+              <input
+                name="q"
+                className="min-w-0 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-slate-400"
+                placeholder="車名・メーカー・モデルで検索"
+              />
+              <button type="submit" className="btn-accent shrink-0 rounded-xl px-5 py-2.5">
+                <Search className="h-4 w-4" />
+                <span className="hidden sm:inline">検索</span>
+              </button>
+            </form>
 
-          {/* 信頼バッジ */}
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            {TRUST_BADGES.map(({ icon: Icon, label }) => (
-              <span
-                key={label}
-                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-bold text-slate-600 shadow-sm"
+            {/* 人気メーカーチップ */}
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              {POPULAR_MAKERS.map((maker) => (
+                <Link
+                  key={maker}
+                  href={`/listings?maker=${encodeURIComponent(maker)}`}
+                  className="rounded-full bg-white/12 px-3.5 py-1.5 text-sm font-bold text-white ring-1 ring-white/20 backdrop-blur transition hover:bg-white/25"
+                >
+                  {maker}
+                </Link>
+              ))}
+              <Link
+                href="/listings"
+                className="rounded-full border border-dashed border-white/40 px-3.5 py-1.5 text-sm font-bold text-white/80 transition hover:border-white/70 hover:text-white"
               >
-                <Icon className="h-3.5 w-3.5 text-accent-600" />
-                {label}
-              </span>
-            ))}
-          </div>
+                すべて →
+              </Link>
+            </div>
 
-          {/* BUYMO マスコット */}
-          <div className="mt-8 flex justify-center">
+            {/* 信頼バッジ */}
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              {TRUST_BADGES.map(({ icon: Icon, label }) => (
+                <span
+                  key={label}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white/12 px-4 py-1.5 text-xs font-bold text-white ring-1 ring-white/20 backdrop-blur"
+                >
+                  <Icon className="h-3.5 w-3.5 text-accent-200" />
+                  {label}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── 1.5 BUYMO マスコット（別枠）── */}
+        <section className="bg-gradient-to-b from-navy-50 to-white px-4 py-8">
+          <div className="mx-auto flex max-w-3xl flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Image
               src="/buymo-mascot.png"
               alt="BUYMO マスコット"
               width={320}
               height={240}
-              priority
-              className="h-auto w-[220px] drop-shadow-md sm:w-[300px]"
+              className="h-auto w-[160px] drop-shadow-md sm:w-[200px]"
             />
+            <p className="text-center text-sm font-bold text-navy-700 sm:text-left sm:text-base">
+              愛車の売却も、次のクルマ探しも。<br className="hidden sm:block" />
+              BUYMO がまるごとサポートします。
+            </p>
           </div>
         </section>
 
