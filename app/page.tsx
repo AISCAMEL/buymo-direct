@@ -7,7 +7,6 @@ import {
   FileCheck2,
   ChevronRight,
   Banknote,
-  Building2,
   Zap,
   LayoutDashboard,
   Tag,
@@ -37,29 +36,6 @@ const TRUST_BADGES = [
   { icon: ShieldCheck, label: 'エスクロー決済' },
   { icon: FileCheck2, label: '名義変更代行' },
   { icon: Banknote, label: '出品手数料¥0' },
-];
-
-const REASONS = [
-  {
-    icon: MessageSquare,
-    title: '直接メッセージで交渉',
-    desc: '出品者と1対1でやり取り。価格・受け渡し方法を柔軟に相談できます。',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'エスクロー決済で安心',
-    desc: '代金は第三者が一時保全。現車確認後に売主へ送金されます。',
-  },
-  {
-    icon: FileCheck2,
-    title: '名義変更まで代行',
-    desc: '行政書士が書類作成〜陸運局手続きを代行。遠隔地も対応。',
-  },
-  {
-    icon: Building2,
-    title: '認定加盟店で安心購入',
-    desc: '全国の認定加盟店も出品中。品質保証付きの在庫も多数掲載。',
-  },
 ];
 
 const SAFETY_POINTS = [
@@ -339,34 +315,14 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ── 5. 安心の理由 (4 cards) ── */}
-        <section className="bg-slate-50 px-4 py-14">
+        {/* ── 5. BUYMOダイレクトが選ばれる理由（買取保証・安心の仕組み）── */}
+        <section className="bg-white px-4 py-14">
           <div className="mx-auto max-w-5xl">
             <p className="mb-2 text-center text-xs font-bold uppercase tracking-widest text-accent-600">
               Why BUYMO
             </p>
-            <h2 className="mb-8 text-center text-2xl font-black">BUYMOが選ばれる4つの理由</h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {REASONS.map(({ icon: Icon, title, desc }) => (
-                <div key={title} className="card p-6">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-50">
-                    <Icon className="h-5 w-5 text-accent-600" />
-                  </div>
-                  <h3 className="mt-3 font-bold">{title}</h3>
-                  <p className="mt-1 text-sm text-slate-600">{desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── 6. 安心の仕組み ── */}
-        <section className="bg-white px-4 py-14">
-          <div className="mx-auto max-w-5xl">
-            <p className="mb-2 text-center text-xs font-bold uppercase tracking-widest text-accent-600">
-              Safety
-            </p>
-            <h2 className="mb-8 text-center text-2xl font-black">安心して取引できる仕組み</h2>
+            <h2 className="mb-2 text-center text-2xl font-black">BUYMOダイレクトが選ばれる理由</h2>
+            <p className="mb-8 text-center text-sm text-slate-500">買取保証つき・エスクロー決済で、はじめての個人間売買でも安心。</p>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {SAFETY_POINTS.map(({ icon: Icon, title, desc }) => (
                 <div key={title} className="card flex flex-col items-center gap-3 p-6 text-center">
