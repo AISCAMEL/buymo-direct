@@ -10,11 +10,14 @@ import {
   Zap,
   LayoutDashboard,
   Tag,
+  BookOpen,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ListingGrid } from '@/components/ListingGrid';
 import { favoritedSet } from '@/lib/favorites';
 import { BODY_TYPES } from '@/lib/constants';
+import { GENRES, AREAS } from '@/lib/catalog';
+import { COLUMNS } from '@/lib/columns';
 import { HowItWorksTabs } from '@/components/HowItWorksTabs';
 import { getCachedFeaturedListings } from '@/lib/cache';
 import type { ListingWithImages } from '@/lib/types';
@@ -277,25 +280,50 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ── 3.5 エリアから探す ── */}
+        {/* ── 3.2 ジャンルから探す ── */}
         <section className="bg-[#F5F9F8] px-4 py-12">
           <div className="mx-auto max-w-5xl">
+            <div className="mb-5 flex items-end justify-between">
+              <div>
+                <h2 className="flex items-center gap-1.5 text-xl font-black"><Tag className="h-5 w-5 text-accent-600" />ジャンルから探す</h2>
+                <p className="mt-1 text-sm text-slate-500">人気車種・事故車/廃車・輸入車・パーツまで。買取もダイレクト販売も。</p>
+              </div>
+              <Link href="/genre" className="hidden shrink-0 text-sm font-bold text-accent-600 hover:underline sm:block">すべてのジャンル →</Link>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+              {['kei', 'suv', 'minivan', 'alphard', 'hiace', 'prius', 'jimny', 'jiko', 'haisha', 'ev', 'import', 'truck']
+                .map((s) => GENRES.find((g) => g.slug === s))
+                .filter((g): g is NonNullable<typeof g> => Boolean(g))
+                .map((g) => (
+                  <Link key={g.slug} href={`/genre/${g.slug}`}
+                    className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-accent-400 hover:shadow-md">
+                    <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
+                      <Image src={`/genre/${g.slug}.jpg`} alt={g.label} fill sizes="(max-width:640px) 50vw, 16vw" className="object-cover transition duration-300 group-hover:scale-105" />
+                    </div>
+                    <div className="py-2.5 text-center text-sm font-bold text-slate-700 group-hover:text-accent-600">{g.label}</div>
+                  </Link>
+                ))}
+            </div>
+            <Link href="/genre" className="mt-4 block text-center text-sm font-bold text-accent-600 hover:underline sm:hidden">すべてのジャンルを見る →</Link>
+          </div>
+        </section>
+
+        {/* ── 3.5 エリアから探す ── */}
+        <section className="bg-white px-4 py-12">
+          <div className="mx-auto max-w-5xl">
             <h2 className="mb-1 text-xl font-black">エリアから探す</h2>
-            <p className="mb-5 text-sm text-slate-500">全国47都道府県対応。お住まいの地域の出品車を探せます。</p>
+            <p className="mb-5 text-sm text-slate-500">全国47都道府県対応。お住まいの地域の出品車・買取査定を。</p>
             <div className="flex flex-wrap gap-2.5">
-              {['北海道', '宮城県', '東京都', '神奈川県', '埼玉県', '千葉県', '愛知県', '静岡県', '大阪府', '兵庫県', '広島県', '福岡県'].map((pref) => (
-                <Link
-                  key={pref}
-                  href={`/listings?pref=${encodeURIComponent(pref)}`}
-                  className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-accent-400 hover:text-accent-600"
-                >
-                  {pref}
-                </Link>
-              ))}
-              <Link
-                href="/listings"
-                className="rounded-full border border-dashed border-slate-300 px-4 py-2 text-sm font-bold text-slate-400 transition hover:border-accent-400 hover:text-accent-600"
-              >
+              {['hokkaido', 'miyagi', 'tokyo', 'kanagawa', 'saitama', 'chiba', 'aichi', 'shizuoka', 'osaka', 'hyogo', 'hiroshima', 'fukuoka']
+                .map((s) => AREAS.find((a) => a.slug === s))
+                .filter((a): a is NonNullable<typeof a> => Boolean(a))
+                .map((a) => (
+                  <Link key={a.slug} href={`/area/${a.slug}`}
+                    className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-accent-400 hover:text-accent-600">
+                    {a.name}
+                  </Link>
+                ))}
+              <Link href="/area" className="rounded-full border border-dashed border-slate-300 px-4 py-2 text-sm font-bold text-slate-400 transition hover:border-accent-400 hover:text-accent-600">
                 全国から探す →
               </Link>
             </div>
@@ -413,6 +441,25 @@ export default async function HomePage() {
                 </div>
               </div>
             )}
+          </div>
+        </section>
+
+        {/* ── 8.5 コラム ── */}
+        <section className="bg-[#F5F9F8] px-4 py-14">
+          <div className="mx-auto max-w-5xl">
+            <div className="mb-5 flex items-end justify-between">
+              <h2 className="flex items-center gap-1.5 text-xl font-black"><BookOpen className="h-5 w-5 text-accent-600" />お役立ちコラム</h2>
+              <Link href="/column" className="shrink-0 text-sm font-bold text-accent-600 hover:underline">すべて見る →</Link>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {COLUMNS.slice(0, 4).map((c) => (
+                <Link key={c.slug} href={`/column/${c.slug}`} className="card group flex flex-col p-5 transition hover:shadow-md">
+                  <span className="mb-2 inline-flex w-fit items-center rounded-full bg-accent-50 px-2.5 py-0.5 text-xs font-bold text-accent-600">{c.cat}</span>
+                  <h3 className="line-clamp-3 text-sm font-bold text-navy-800 group-hover:text-accent-600">{c.title}</h3>
+                  <span className="mt-3 text-xs font-bold text-accent-600">続きを読む →</span>
+                </Link>
+              ))}
+            </div>
           </div>
         </section>
 
