@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import { ChevronRight } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
@@ -15,16 +16,16 @@ export async function generateStaticParams() {
   return BODY_TYPES.map((body) => ({ body: encodeURIComponent(body) }));
 }
 
-const BODY_EMOJI: Record<string, string> = {
-  '軽自動車': '🚗',
-  'コンパクト': '🚘',
-  'セダン': '🚙',
-  'SUV': '🛻',
-  'ミニバン': '🚐',
-  'ワゴン': '🚌',
-  'クーペ': '🏎️',
-  'オープン': '🚗',
-  'その他': '🚗',
+const BODY_IMG: Record<string, string> = {
+  '軽自動車': '/cars/kei.jpg',
+  'コンパクト': '/cars/compact.jpg',
+  'セダン': '/cars/sedan.jpg',
+  'SUV': '/cars/suv.jpg',
+  'ミニバン': '/cars/minivan.jpg',
+  'ワゴン': '/cars/subaru.jpg',
+  'クーペ': '/cars/sedan.jpg',
+  'オープン': '/cars/sedan.jpg',
+  'その他': '/cars/sedan.jpg',
 };
 
 const BODY_DESC: Record<string, string> = {
@@ -97,22 +98,23 @@ export default async function BodyTypePage({ params }: { params: Params }) {
 
       <div className="space-y-8">
         {/* ヘッダー */}
-        <section className="rounded-2xl bg-gradient-to-br from-accent-500 to-accent-600 px-6 py-12 text-white">
-          <p className="mb-2 text-sm font-bold text-green-100">ボディタイプで探す</p>
-          <h1 className="text-3xl font-black sm:text-4xl">
-            <span className="mr-2">{BODY_EMOJI[body] ?? '🚗'}</span>
-            {body} の中古車
-          </h1>
-          <p className="mt-2 text-green-50">
-            {count ?? 0} 台出品中 · 個人間直接取引 · 手数料0円
-          </p>
-          <p className="mt-1 text-sm text-green-100">{BODY_DESC[body]}</p>
-          <Link
-            href={`/listings?body=${encodeURIComponent(body)}`}
-            className="mt-5 inline-flex items-center gap-1 rounded-xl bg-white/20 px-4 py-2 text-sm font-bold hover:bg-white/30 transition"
-          >
-            すべての {body} を見る <ChevronRight className="h-4 w-4" />
-          </Link>
+        <section className="relative overflow-hidden rounded-2xl">
+          <Image src={BODY_IMG[body] ?? '/cars/sedan.jpg'} alt={body} fill className="object-cover" sizes="100vw" priority />
+          <div className="absolute inset-0 bg-gradient-to-r from-navy-900/85 to-navy-700/55" />
+          <div className="relative px-6 py-12 text-white">
+            <span className="mb-2 inline-block rounded-full bg-gold-500 px-3 py-1 text-xs font-black text-[#2E2408]">買取保証つき</span>
+            <h1 className="text-3xl font-black sm:text-4xl">{body} の中古車</h1>
+            <p className="mt-2 text-white/85">{count ?? 0} 台出品中 · ダイレクト販売・買取 · 手数料0円</p>
+            <p className="mt-1 text-sm text-white/70">{BODY_DESC[body]}</p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <Link href={`/listings?body=${encodeURIComponent(body)}`} className="inline-flex items-center gap-1 rounded-xl bg-white/20 px-4 py-2 text-sm font-bold hover:bg-white/30 transition">
+                すべての {body} を見る <ChevronRight className="h-4 w-4" />
+              </Link>
+              <Link href="/listings/valuation" className="inline-flex items-center gap-1 rounded-xl bg-gold-500 px-4 py-2 text-sm font-bold text-[#2E2408] hover:bg-gold-600 transition">
+                無料査定（買取）
+              </Link>
+            </div>
+          </div>
         </section>
 
         {/* 人気メーカー × このボディタイプ */}
@@ -175,7 +177,7 @@ export default async function BodyTypePage({ params }: { params: Params }) {
                 href={`/body/${encodeURIComponent(b)}`}
                 className="rounded-full border border-slate-200 bg-white px-4 py-1.5 text-sm font-bold text-slate-600 shadow-sm transition hover:border-accent-500 hover:text-accent-600"
               >
-                {BODY_EMOJI[b] ?? '🚗'} {b}
+                {b}
               </Link>
             ))}
           </div>
