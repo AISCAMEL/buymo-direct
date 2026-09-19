@@ -43,3 +43,15 @@ body {
     @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold;
   }
 }
+
+/* コラム記事本文 */
+.column-body { @apply text-[15px] leading-relaxed text-slate-700; }
+.column-body p { @apply my-4; }
+.column-body h2 { @apply mt-8 mb-3 border-l-4 border-accent-500 pl-3 text-xl font-black text-navy-800; }
+.column-body h3 { @apply mt-5 mb-2 text-base font-bold text-navy-700; }
+.column-body ul { @apply my-4 list-disc space-y-1.5 pl-6; }
+.column-body strong, .column-body b { @apply font-bold text-navy-800; }
+.column-body .answer { @apply my-5 rounded-xl border border-accent-200 bg-accent-50 p-4 text-sm text-navy-800; }
+.column-body table { @apply my-5 w-full overflow-hidden rounded-xl border border-slate-200 text-sm; }
+.column-body th { @apply bg-navy-50 px-3 py-2 text-left font-bold text-navy-700; }
+.column-body td { @apply border-t border-slate-100 px-3 py-2; }

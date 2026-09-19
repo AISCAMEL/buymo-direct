@@ -14,6 +14,8 @@ const FOOTER_LINKS = [
     heading: '買う（ダイレクト）',
     links: [
       { label: '車を探す', href: '/listings' },
+      { label: 'ジャンルから探す', href: '/genre' },
+      { label: 'エリアから探す', href: '/area' },
       { label: '地図から探す', href: '/listings/map' },
       { label: 'ローン審査', href: '/loan/apply' },
       { label: '加盟店一覧', href: '/dealers' },
@@ -31,6 +33,7 @@ const FOOTER_LINKS = [
   {
     heading: '運営',
     links: [
+      { label: 'コラム', href: '/column' },
       { label: 'お知らせ', href: '/announcements' },
       { label: 'プライバシーポリシー', href: '/privacy' },
       { label: '利用規約', href: '/terms' },
