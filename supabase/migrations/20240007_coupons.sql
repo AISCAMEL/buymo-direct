@@ -1,5 +1,9 @@
 -- クーポン・割引コード
-create type if not exists coupon_type as enum ('percent', 'fixed');
+do $$ begin
+  if not exists (select 1 from pg_type where typname='coupon_type') then
+    create type coupon_type as enum ('percent', 'fixed');
+  end if;
+end $$;
 
 create table if not exists public.coupons (
   id          uuid primary key default gen_random_uuid(),

@@ -1,5 +1,7 @@
 -- 価格交渉（オファー）
-create type if not exists offer_status as enum (
+do $$ begin
+  if not exists (select 1 from pg_type where typname='offer_status') then
+    create type offer_status as enum (
   'pending',      -- 提示中（売主待ち）
   'countered',    -- 売主が反対提示（買主待ち）
   'accepted',     -- 成立
@@ -7,6 +9,8 @@ create type if not exists offer_status as enum (
   'cancelled',    -- 買主がキャンセル
   'expired'       -- 期限切れ（cron で更新）
 );
+  end if;
+end $$;
 
 create table if not exists public.offers (
   id               uuid primary key default gen_random_uuid(),

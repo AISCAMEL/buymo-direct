@@ -1,5 +1,9 @@
 -- KYC (本人確認) ステータス
-create type if not exists kyc_status as enum ('unverified', 'pending', 'verified', 'rejected');
+do $$ begin
+  if not exists (select 1 from pg_type where typname='kyc_status') then
+    create type kyc_status as enum ('unverified', 'pending', 'verified', 'rejected');
+  end if;
+end $$;
 
 alter table public.profiles
   add column if not exists kyc_status kyc_status not null default 'unverified',

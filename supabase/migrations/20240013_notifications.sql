@@ -1,5 +1,9 @@
 -- 通知テーブル
-create type if not exists notification_type as enum ('message', 'escrow', 'kyc', 'system');
+do $$ begin
+  if not exists (select 1 from pg_type where typname='notification_type') then
+    create type notification_type as enum ('message', 'escrow', 'kyc', 'system');
+  end if;
+end $$;
 
 create table if not exists public.notifications (
   id         uuid primary key default gen_random_uuid(),

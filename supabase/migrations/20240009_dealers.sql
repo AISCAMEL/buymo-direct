@@ -2,8 +2,16 @@
 -- 加盟店（ディーラー）管理システム
 -- =============================================
 
-create type if not exists dealer_status as enum ('pending', 'approved', 'suspended');
-create type if not exists dealer_role   as enum ('owner', 'manager', 'staff');
+do $$ begin
+  if not exists (select 1 from pg_type where typname='dealer_status') then
+    create type dealer_status as enum ('pending', 'approved', 'suspended');
+  end if;
+end $$;
+do $$ begin
+  if not exists (select 1 from pg_type where typname='dealer_role') then
+    create type dealer_role as enum ('owner', 'manager', 'staff');
+  end if;
+end $$;
 
 -- 加盟店マスタ
 create table if not exists public.dealers (

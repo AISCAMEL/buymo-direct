@@ -34,7 +34,7 @@ set search_path = public
 as $$
   select
     count(*)                                                                     as total_listings,
-    count(*) filter (where status = 'active')                                    as active_listings,
+    count(*) filter (where l.status = 'active')                                    as active_listings,
     coalesce(sum(et.amount) filter (where et.status = 'completed'), 0)::bigint   as total_gmv,
     coalesce(avg(price) filter (where l.status = 'active'), 0)::bigint           as avg_price
   from public.listings l
