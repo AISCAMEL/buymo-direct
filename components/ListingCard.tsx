@@ -43,8 +43,9 @@ export function ListingCard({
         ) : (
           <div className="flex h-full items-center justify-center text-slate-300">No Image</div>
         )}
+        <span className="badge absolute left-2 top-2 bg-gold-500 text-[#2E2408] shadow-sm">買取保証つき</span>
         {listing.repair_history && (
-          <span className="badge absolute left-2 top-2 bg-red-100 text-red-700">修復歴あり</span>
+          <span className="badge absolute bottom-2 left-2 bg-red-100 text-red-700">修復歴あり</span>
         )}
         {listing.status !== 'active' && STATUS_BADGE[listing.status] && (
           <span className={`badge absolute bottom-2 right-2 ${STATUS_BADGE[listing.status]}`}>
