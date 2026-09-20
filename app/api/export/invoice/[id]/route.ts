@@ -78,7 +78,7 @@ export async function GET(_req: Request, { params }: { params: Params }) {
 <div class="page">
   <div class="header">
     <div class="title-block">
-      <div class="logo">BUYMO<span>.</span>C2C</div>
+      <div class="logo">BUYMO<span> </span>ダイレクト</div>
       <h1>領収書 / 売買確認書</h1>
       <p>取引番号: ${id}</p>
     </div>

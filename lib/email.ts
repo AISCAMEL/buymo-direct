@@ -1,7 +1,7 @@
 // メール送信（Resend REST API）。SDK 依存なし。
 // 環境変数:
 //   RESEND_API_KEY      … Resend のAPIキー（未設定なら送信スキップ＝デモ動作）
-//   EMAIL_FROM          … 送信元（例: "BUYMO C2C <noreply@buymo.me>"）
+//   EMAIL_FROM          … 送信元（例: "BUYMO ダイレクト <noreply@buymo.me>"）
 //   OPS_EMAIL           … 運営の通知先（通報・申込の受信）
 //   NEXT_PUBLIC_SITE_URL … サイトURL（メール内リンク生成用）
 
@@ -50,14 +50,14 @@ export async function sendEmail(params: {
 /** シンプルな共通レイアウト。 */
 export function emailLayout(title: string, bodyHtml: string): string {
   return `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#1e293b">
-    <div style="background:#1E3A5F;color:#fff;padding:16px 20px;border-radius:8px 8px 0 0">
-      <strong style="font-size:16px">BUYMO C2C</strong>
+    <div style="background:#0C3A44;color:#fff;padding:16px 20px;border-radius:8px 8px 0 0">
+      <strong style="font-size:16px">BUYMO ダイレクト</strong>
     </div>
     <div style="border:1px solid #e2e8f0;border-top:0;padding:20px;border-radius:0 0 8px 8px">
       <h2 style="margin:0 0 12px;font-size:18px">${title}</h2>
       ${bodyHtml}
       <p style="margin-top:20px;font-size:12px;color:#94a3b8">
-        ※ 本メールは BUYMO C2C から自動送信されています。
+        ※ 本メールは BUYMO ダイレクト から自動送信されています。
       </p>
     </div>
   </div>`;
@@ -69,22 +69,22 @@ function _wrap(content: string): string {
   return `<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="font-family:-apple-system,sans-serif;background:#f8fafc;margin:0;padding:24px">
 <div style="max-width:560px;margin:0 auto;background:white;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.1)">
-<div style="background:#1e3a5f;padding:20px 24px">
-  <span style="color:white;font-weight:900;font-size:18px">BUYMO C2C</span>
+<div style="background:#0C3A44;padding:20px 24px">
+  <span style="color:white;font-weight:900;font-size:18px">BUYMO ダイレクト</span>
 </div>
 <div style="padding:24px">${content}</div>
 <div style="background:#f1f5f9;padding:16px 24px;text-align:center;font-size:12px;color:#94a3b8">
-  © 2026 BUYMO C2C — <a href="https://buymo.me" style="color:#64748b">buymo.me</a>
+  © 2026 BUYMO ダイレクト — <a href="https://buymo.me" style="color:#64748b">buymo.me</a>
 </div>
 </div></body></html>`;
 }
 
 function _btn(label: string, url: string): string {
-  return `<a href="${url}" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#e85d04;border-radius:8px;color:white;text-decoration:none;font-weight:700">${label}</a>`;
+  return `<a href="${url}" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#0F766E;border-radius:8px;color:white;text-decoration:none;font-weight:700">${label}</a>`;
 }
 
 function _h(text: string): string {
-  return `<h2 style="margin:0 0 12px;color:#1e3a5f;font-size:18px">${text}</h2>`;
+  return `<h2 style="margin:0 0 12px;color:#0C3A44;font-size:18px">${text}</h2>`;
 }
 
 function _p(text: string): string {
@@ -92,7 +92,7 @@ function _p(text: string): string {
 }
 
 function _strong(text: string): string {
-  return `<strong style="color:#1e3a5f">${text}</strong>`;
+  return `<strong style="color:#0C3A44">${text}</strong>`;
 }
 
 function _siteUrl(): string {
@@ -201,7 +201,7 @@ export async function sendNewMessageEmail(
   const html = _wrap(`
     ${_h('新しいメッセージが届いています')}
     ${_p(`${_strong(opts.fromName)} さんから ${_strong(opts.listingTitle)} についてメッセージが届きました。`)}
-    <div style="margin:16px 0;padding:12px 16px;background:#f8fafc;border-left:3px solid #1e3a5f;border-radius:4px;color:#475569;font-size:14px">${opts.preview}</div>
+    <div style="margin:16px 0;padding:12px 16px;background:#f8fafc;border-left:3px solid #0C3A44;border-radius:4px;color:#475569;font-size:14px">${opts.preview}</div>
     ${_btn('返信する', url)}
   `);
   await sendEmail({

@@ -76,7 +76,7 @@ export default function BuybackPage() {
         <h2 className="font-bold text-slate-700 mb-4">買取保証の仕組み</h2>
         <div className="grid grid-cols-3 gap-4 text-center text-sm">
           {[
-            { step: '1', icon: '📋', label: '出品', desc: '30日間C2Cで販売' },
+            { step: '1', icon: '📋', label: '出品', desc: '30日間ダイレクト販売' },
             { step: '2', icon: '🛡️', label: '申請', desc: '30日経過後に申請' },
             { step: '3', icon: '💰', label: '買取', desc: 'AI査定の75%で買取' },
           ].map(s => (
