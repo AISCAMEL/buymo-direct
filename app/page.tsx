@@ -106,85 +106,91 @@ export default async function HomePage() {
       />
       <div className="-mx-4 -mt-6">
 
-        {/* ── 1. Hero（実写真ヒーロー）── */}
-        <section className="relative overflow-hidden px-4 pb-14 pt-16 text-center">
-          {/* 背景写真 */}
-          <Image
-            src="/hero-photo.jpg"
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover object-center"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-navy-900/85 via-navy-800/75 to-navy-700/85" />
+        {/* ── 1. Hero（人物＋車の実写真・分割レイアウト）── */}
+        <section className="bg-gradient-to-br from-navy-800 to-navy-900">
+          <div className="mx-auto grid max-w-7xl items-stretch lg:grid-cols-2">
+            {/* テキストパネル */}
+            <div className="order-2 px-5 py-10 text-center text-white sm:px-8 lg:order-1 lg:py-16 lg:text-left xl:px-12">
+              <p className="mb-3 inline-block rounded-full bg-white/12 px-4 py-1 text-xs font-bold text-white ring-1 ring-white/25">
+                🚗 買取保証つき 中古車ダイレクト販売
+              </p>
+              <h1 className="text-3xl font-black leading-tight text-white sm:text-4xl xl:text-5xl">
+                売るのも、買うのも、<span className="text-accent-200">BUYMO</span>。<br />
+                買取も、ダイレクト販売も。
+              </h1>
+              <p className="mx-auto mt-4 max-w-xl text-sm text-white/85 sm:text-base lg:mx-0">
+                すぐ現金化したいなら「買取」。もっと高く売りたいなら「ダイレクト販売」。どちらも写真査定・全国オンライン完結、買取保証つきで安心。
+              </p>
 
-          <div className="relative mx-auto max-w-3xl">
-            <p className="mb-3 inline-block rounded-full bg-white/15 px-4 py-1 text-xs font-bold text-white ring-1 ring-white/25 backdrop-blur">
-              🚗 買取保証つき 中古車ダイレクト販売
-            </p>
-            <h1 className="text-3xl font-black leading-tight text-white drop-shadow sm:text-5xl">
-              売るのも、買うのも、<span className="text-accent-200">BUYMO</span>。<br />
-              買取も、ダイレクト販売も。
-            </h1>
-            <p className="mx-auto mt-4 max-w-xl text-sm text-white/85 sm:text-base">
-              すぐ現金化したいなら「買取」。もっと高く売りたいなら「ダイレクト販売」。どちらも写真査定・全国オンライン完結、買取保証つきで安心。
-            </p>
+              {/* ベネフィットのチップ */}
+              <ul className="mx-auto mt-5 flex max-w-xl flex-wrap justify-center gap-2 text-xs font-bold text-white lg:mx-0 lg:justify-start">
+                <li className="rounded-full bg-white/12 px-3 py-1 ring-1 ring-white/20">買取保証つき</li>
+                <li className="rounded-full bg-white/12 px-3 py-1 ring-1 ring-white/20">エスクロー決済で安心</li>
+                <li className="rounded-full bg-white/12 px-3 py-1 ring-1 ring-white/20">全国47都道府県対応</li>
+                <li className="rounded-full bg-white/12 px-3 py-1 ring-1 ring-white/20">オンライン完結</li>
+              </ul>
 
-            {/* ベネフィットのチップ */}
-            <ul className="mx-auto mt-5 flex max-w-xl flex-wrap justify-center gap-2 text-xs font-bold text-white">
-              <li className="rounded-full bg-white/12 px-3 py-1 ring-1 ring-white/20">買取保証つき</li>
-              <li className="rounded-full bg-white/12 px-3 py-1 ring-1 ring-white/20">エスクロー決済で安心</li>
-              <li className="rounded-full bg-white/12 px-3 py-1 ring-1 ring-white/20">全国47都道府県対応</li>
-              <li className="rounded-full bg-white/12 px-3 py-1 ring-1 ring-white/20">オンライン完結</li>
-            </ul>
-
-            {/* 検索バー */}
-            <form
-              action="/listings"
-              className="mx-auto mt-8 flex max-w-xl gap-2 rounded-2xl bg-white p-2 shadow-xl ring-1 ring-black/5"
-            >
-              <input
-                name="q"
-                className="min-w-0 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-slate-400"
-                placeholder="車名・メーカー・モデルで検索"
-              />
-              <button type="submit" className="btn-accent shrink-0 rounded-xl px-5 py-2.5">
-                <Search className="h-4 w-4" />
-                <span className="hidden sm:inline">検索</span>
-              </button>
-            </form>
-
-            {/* 人気メーカーチップ */}
-            <div className="mt-5 flex flex-wrap justify-center gap-2">
-              {POPULAR_MAKERS.map((maker) => (
-                <Link
-                  key={maker}
-                  href={`/listings?maker=${encodeURIComponent(maker)}`}
-                  className="rounded-full bg-white/12 px-3.5 py-1.5 text-sm font-bold text-white ring-1 ring-white/20 backdrop-blur transition hover:bg-white/25"
-                >
-                  {maker}
-                </Link>
-              ))}
-              <Link
-                href="/listings"
-                className="rounded-full border border-dashed border-white/40 px-3.5 py-1.5 text-sm font-bold text-white/80 transition hover:border-white/70 hover:text-white"
+              {/* 検索バー */}
+              <form
+                action="/listings"
+                className="mx-auto mt-8 flex max-w-xl gap-2 rounded-2xl bg-white p-2 shadow-xl ring-1 ring-black/5 lg:mx-0"
               >
-                すべて →
-              </Link>
+                <input
+                  name="q"
+                  className="min-w-0 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-slate-400"
+                  placeholder="車名・メーカー・モデルで検索"
+                />
+                <button type="submit" className="btn-accent shrink-0 rounded-xl px-5 py-2.5">
+                  <Search className="h-4 w-4" />
+                  <span className="hidden sm:inline">検索</span>
+                </button>
+              </form>
+
+              {/* 人気メーカーチップ */}
+              <div className="mt-5 flex flex-wrap justify-center gap-2 lg:justify-start">
+                {POPULAR_MAKERS.map((maker) => (
+                  <Link
+                    key={maker}
+                    href={`/listings?maker=${encodeURIComponent(maker)}`}
+                    className="rounded-full bg-white/12 px-3.5 py-1.5 text-sm font-bold text-white ring-1 ring-white/20 transition hover:bg-white/25"
+                  >
+                    {maker}
+                  </Link>
+                ))}
+                <Link
+                  href="/listings"
+                  className="rounded-full border border-dashed border-white/40 px-3.5 py-1.5 text-sm font-bold text-white/80 transition hover:border-white/70 hover:text-white"
+                >
+                  すべて →
+                </Link>
+              </div>
+
+              {/* 信頼バッジ */}
+              <div className="mt-6 flex flex-wrap justify-center gap-3 lg:justify-start">
+                {TRUST_BADGES.map(({ icon: Icon, label }) => (
+                  <span
+                    key={label}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-white/12 px-4 py-1.5 text-xs font-bold text-white ring-1 ring-white/20"
+                  >
+                    <Icon className="h-3.5 w-3.5 text-accent-200" />
+                    {label}
+                  </span>
+                ))}
+              </div>
             </div>
 
-            {/* 信頼バッジ */}
-            <div className="mt-6 flex flex-wrap justify-center gap-3">
-              {TRUST_BADGES.map(({ icon: Icon, label }) => (
-                <span
-                  key={label}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-white/12 px-4 py-1.5 text-xs font-bold text-white ring-1 ring-white/20 backdrop-blur"
-                >
-                  <Icon className="h-3.5 w-3.5 text-accent-200" />
-                  {label}
-                </span>
-              ))}
+            {/* 人物＋車の写真 */}
+            <div className="relative order-1 min-h-[260px] sm:min-h-[360px] lg:order-2 lg:min-h-full">
+              <Image
+                src="/hero-photo.jpg"
+                alt="スマホで愛車を撮影して査定を申し込む様子（写真査定・全国オンライン完結）"
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover object-center"
+              />
+              {/* パネルへ自然になじませる（lg以上は左端、モバイルは下端をぼかす） */}
+              <div className="absolute inset-0 bg-gradient-to-t from-navy-900/40 to-transparent lg:bg-gradient-to-r lg:from-navy-900/70 lg:via-navy-900/10 lg:to-transparent" />
             </div>
           </div>
         </section>
