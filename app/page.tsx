@@ -121,6 +121,25 @@ export default async function HomePage() {
                 すぐ現金化なら「買取」、じっくり高値なら「ダイレクト販売」。売れなくてもBUYMOが買い取るから、いちばん高い売り方を選べます。
               </p>
 
+              {/* 主要CTA（売る導線） */}
+              <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:justify-center lg:justify-start">
+                <Link href="/listings/valuation" className="btn-gold justify-center px-6 py-3 text-base">
+                  無料査定を試す（買取）
+                </Link>
+                <Link
+                  href="/sell"
+                  className="btn justify-center bg-white/12 px-6 py-3 text-base font-bold text-white ring-1 ring-white/30 transition hover:bg-white/25"
+                >
+                  出品して高く売る
+                </Link>
+              </div>
+              {/* 安心の一言 */}
+              <p className="mt-3 flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-white/70 lg:justify-start">
+                <span>✓ 査定無料</span>
+                <span>✓ 最短ネット完結</span>
+                <span>✓ しつこい営業なし</span>
+              </p>
+
               {/* ベネフィットのチップ */}
               <ul className="mx-auto mt-5 flex max-w-xl flex-wrap justify-center gap-2 text-xs font-bold text-white lg:mx-0 lg:justify-start">
                 <li className="rounded-full bg-white/12 px-3 py-1 ring-1 ring-white/20">いちばん高い売り方を選べる</li>
@@ -129,10 +148,11 @@ export default async function HomePage() {
                 <li className="rounded-full bg-white/12 px-3 py-1 ring-1 ring-white/20">全国オンライン完結</li>
               </ul>
 
-              {/* 検索バー */}
+              {/* 買う導線 */}
+              <p className="mt-8 text-xs font-bold text-white/70">クルマを探す方はこちら</p>
               <form
                 action="/listings"
-                className="mx-auto mt-8 flex max-w-xl gap-2 rounded-2xl bg-white p-2 shadow-xl ring-1 ring-black/5 lg:mx-0"
+                className="mx-auto mt-2 flex max-w-xl gap-2 rounded-2xl bg-white p-2 shadow-xl ring-1 ring-black/5 lg:mx-0"
               >
                 <input
                   name="q"
