@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Mail, MessageCircle, Phone, CheckCircle2, Banknote, Tag } from 'lucide-react';
+import { Mail, MessageCircle, Phone, CheckCircle2, Banknote, Tag, Loader2 } from 'lucide-react';
+import { submitContact } from './actions';
 type Category = 'general' | 'buyback' | 'listing' | 'payment' | 'account' | 'dealer' | 'other';
 
 const CATEGORIES: { value: Category; label: string }[] = [
@@ -44,10 +45,26 @@ export default function ContactPage() {
   const [category, setCategory] = useState<Category>('general');
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSubmitted(true);
+    if (sending) return;
+    setSending(true);
+    setError(null);
+    try {
+      const res = await submitContact({ name, email, category, message });
+      if (res.ok) {
+        setSubmitted(true);
+      } else {
+        setError(res.error ?? '送信に失敗しました。時間をおいて再度お試しください。');
+      }
+    } catch {
+      setError('送信に失敗しました。時間をおいて再度お試しください。');
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
@@ -177,7 +194,19 @@ export default function ContactPage() {
                 placeholder="ご質問・ご要望をできるだけ詳しくご記入ください。"
               />
             </div>
-            <button type="submit" className="btn-accent w-full">送信する</button>
+            {error && (
+              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-bold text-red-700">{error}</p>
+            )}
+            <button type="submit" disabled={sending} className="btn-accent w-full disabled:opacity-60">
+              {sending ? (
+                <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />送信中...</span>
+              ) : (
+                '送信する'
+              )}
+            </button>
+            <p className="text-center text-xs text-slate-400">
+              送信いただいた内容は運営に届き、通常2営業日以内にご入力のメールアドレスへご返信します。
+            </p>
           </form>
         )}
       </div>

@@ -211,6 +211,46 @@ export async function sendNewMessageEmail(
   });
 }
 
+/** お問い合わせ通知（運営向け）＋自動返信（送信者向け）。ベストエフォート。 */
+export async function sendContactEmails(opts: {
+  name: string;
+  email: string;
+  categoryLabel: string;
+  message: string;
+}): Promise<void> {
+  const esc = (s: string) =>
+    s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const bodyLines = `
+    ${_p(`お名前: ${_strong(esc(opts.name))}`)}
+    ${_p(`メール: ${_strong(esc(opts.email))}`)}
+    ${_p(`種別: ${_strong(esc(opts.categoryLabel))}`)}
+    <div style="margin:16px 0;padding:12px 16px;background:#f8fafc;border-left:3px solid #0F766E;border-radius:4px;color:#475569;font-size:14px;white-space:pre-wrap">${esc(opts.message)}</div>
+  `;
+
+  // 運営への通知
+  const ops = opsEmail();
+  if (ops) {
+    await sendEmail({
+      to: ops,
+      subject: `【BUYMO】お問い合わせ（${opts.categoryLabel}）— ${opts.name}様`,
+      html: emailLayout('新しいお問い合わせ', bodyLines),
+    });
+  }
+
+  // 送信者への自動返信
+  await sendEmail({
+    to: opts.email,
+    subject: '【BUYMO】お問い合わせを受け付けました',
+    html: emailLayout(
+      'お問い合わせを受け付けました',
+      `${_p(`${_strong(esc(opts.name))} 様`)}
+       ${_p('この度はBUYMOへお問い合わせいただきありがとうございます。以下の内容で受け付けました。通常2営業日以内にご返信いたします。')}
+       ${bodyLines}
+       ${_p('お急ぎの場合は「無料査定」やアプリ内チャットもご利用ください。')}`,
+    ),
+  });
+}
+
 /** 車両査定結果メール。 */
 export async function sendAppraisalResultEmail(
   to: string,

@@ -12,6 +12,7 @@ const NAV = [
   { href: '/admin/buyback', label: '買取保証審査' },
   { href: '/admin/loans', label: 'ローン審査' },
   { href: '/admin/messages', label: 'チャット監視' },
+  { href: '/admin/contact', label: 'お問い合わせ' },
   { href: '/admin/reports', label: '通報' },
   { href: '/admin/announcements', label: 'お知らせ' },
   { href: '/admin/kyc', label: '本人確認審査' },
