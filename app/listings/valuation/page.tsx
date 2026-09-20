@@ -56,13 +56,16 @@ export default function ValuationPage() {
     <div className="mx-auto max-w-xl space-y-6">
       <div className="flex items-center gap-2">
         <Calculator className="h-6 w-6 text-navy-500" />
-        <h1 className="text-2xl font-black">車両査定ツール</h1>
+        <div>
+          <h1 className="text-2xl font-black">無料査定・相場チェック</h1>
+          <p className="text-sm text-slate-500">登録不要。売るなら、もっと高く。</p>
+        </div>
       </div>
 
       <div className="card p-5">
         <p className="mb-4 text-sm text-slate-500">
           メーカー・年式・走行距離から市場相場の目安を算出します。
-          実際の売却価格は車両状態・需給により異なります。
+          実際の売却価格は車両状態・需給により異なります。査定は無料・引取り無料です。
         </p>
 
         <form onSubmit={calc} className="space-y-4">
@@ -124,13 +127,29 @@ export default function ValuationPage() {
             <p className="mt-1 text-sm text-slate-400">中央値：{formatYen(result.est)}</p>
           </div>
 
+          {/* 売却コンバージョン（価格訴求） */}
+          <div className="rounded-xl border border-gold-200 bg-gold-50 p-4">
+            <p className="text-sm font-black text-slate-800">ダイレクト販売なら、この相場より高く売れることも。</p>
+            <p className="mt-1 text-xs text-slate-600">
+              購入者へ直接販売してより高く。売れなくてもBUYMOが買い取る「買取保証つき」なので安心です。すぐ現金化したい方は買取もどうぞ。
+            </p>
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+              <a href="/sell" className="btn-gold flex-1 justify-center py-2.5 text-sm">
+                この車を出品する（ダイレクト）
+              </a>
+              <a href="/dashboard/buyback" className="btn-outline flex-1 justify-center py-2.5 text-sm">
+                買取を申し込む
+              </a>
+            </div>
+          </div>
+
           <div className="rounded-lg bg-amber-50 p-3 text-xs text-amber-700">
             ※ この査定額は簡易計算による目安です。実際の市場価格は車両状態・オプション・地域の需給等により大きく異なります。
-            正確な査定は専門業者にご依頼ください。
+            正確な査定は無料でご依頼いただけます。
           </div>
 
           <a href={`/listings?maker=${encodeURIComponent(maker)}&year_min=${year - 1}&year_max=${year + 1}`}
-            className="btn-outline block text-center text-sm">
+            className="block text-center text-sm font-bold text-accent-600 hover:underline">
             {maker} {year}年の出品を探す →
           </a>
         </div>
