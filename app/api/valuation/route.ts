@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { valuate } from '@/lib/valuation';
+import { valuate, logValuation } from '@/lib/valuation';
+import { createClient } from '@/lib/supabase/server';
 
 // 公開の無料査定エンドポイント（裏側で査定して結果を返す）。
 export async function POST(req: Request) {
@@ -20,13 +21,25 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'メーカー・年式・走行距離を確認してください' }, { status: 400 });
   }
 
-  const result = await valuate({
+  const input = {
     maker,
     model: body.model ? String(body.model).trim() : undefined,
     year,
     mileageKm,
     condition,
-  });
+  };
+  const result = await valuate(input);
+
+  // ログイン中ならユーザー紐付け（任意）→ 履歴保存（ベストエフォート）
+  let userId: string | null = null;
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.auth.getUser();
+    userId = data.user?.id ?? null;
+  } catch {
+    /* 未ログインでも可 */
+  }
+  await logValuation(input, result, userId);
 
   return NextResponse.json(result);
 }

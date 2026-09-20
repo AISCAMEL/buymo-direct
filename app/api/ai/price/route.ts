@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { valuate } from '@/lib/valuation';
+import { valuate, logValuation } from '@/lib/valuation';
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -23,7 +23,11 @@ export async function POST(req: Request) {
   }
 
   // 裏側で査定（AI優先・フォールバックで相場計算式）
-  const r = await valuate({ maker, model, year, mileageKm: Number(mileage_km), condition });
+  const input = { maker, model, year, mileageKm: Number(mileage_km), condition };
+  const r = await valuate(input);
+
+  // 査定履歴を保存（ベストエフォート・ユーザー紐付け）
+  await logValuation(input, r, user.id);
 
   return NextResponse.json({
     price_low: r.lower,

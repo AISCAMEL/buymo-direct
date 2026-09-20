@@ -1,6 +1,7 @@
 // 車両査定ロジック（サーバー側）。
 // まず裏側で査定し、ANTHROPIC_API_KEY があればAI査定、無ければ相場計算式にフォールバックする。
 import { generateWithClaude } from '@/lib/ai';
+import { createServiceClient } from '@/lib/supabase/service';
 
 export type ValuationInput = {
   maker: string;
@@ -91,4 +92,30 @@ price_lowとprice_highは円単位の整数です。`;
 
   const f = estimateByFormula(input);
   return { ...f, source: 'formula' };
+}
+
+/** 査定履歴を保存（service role・ベストエフォート）。テーブル未作成/失敗時も例外を投げない。 */
+export async function logValuation(
+  input: ValuationInput,
+  result: ValuationResult,
+  userId: string | null,
+): Promise<void> {
+  try {
+    const service = createServiceClient();
+    await service.from('valuations').insert({
+      maker: input.maker,
+      model: input.model ?? null,
+      year: input.year,
+      mileage_km: input.mileageKm,
+      condition: input.condition,
+      price_low: result.lower,
+      price_high: result.upper,
+      price_est: result.est,
+      source: result.source,
+      reasoning: result.reasoning ?? null,
+      user_id: userId,
+    });
+  } catch (err) {
+    console.error('[valuation] 履歴保存に失敗:', err instanceof Error ? err.message : err);
+  }
 }
