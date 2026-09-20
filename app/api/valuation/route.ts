@@ -10,12 +10,18 @@ export async function POST(req: Request) {
     year?: number;
     mileageKm?: number;
     condition?: string;
+    shaken?: string;
+    accident?: string;
   };
 
   const maker = String(body.maker ?? '').trim();
   const year = Number(body.year);
   const mileageKm = Number(body.mileageKm);
   const condition = String(body.condition ?? 'good');
+  const shaken: 'valid' | 'none' | undefined =
+    body.shaken === 'valid' || body.shaken === 'none' ? body.shaken : undefined;
+  const accident: 'none' | 'repaired' | undefined =
+    body.accident === 'repaired' || body.accident === 'none' ? body.accident : undefined;
 
   if (!maker || !Number.isFinite(year) || !Number.isFinite(mileageKm) || mileageKm < 0) {
     return NextResponse.json({ error: 'メーカー・年式・走行距離を確認してください' }, { status: 400 });
@@ -27,6 +33,8 @@ export async function POST(req: Request) {
     year,
     mileageKm,
     condition,
+    shaken,
+    accident,
   };
   const result = await valuate(input);
 

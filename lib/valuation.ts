@@ -9,6 +9,10 @@ export type ValuationInput = {
   year: number;
   mileageKm: number;
   condition: string;
+  /** 車検: 'valid'=あり(有効) / 'none'=なし・切れ */
+  shaken?: 'valid' | 'none';
+  /** 事故歴: 'none'=なし / 'repaired'=修復歴あり */
+  accident?: 'none' | 'repaired';
 };
 
 export type ValuationResult = {
@@ -46,7 +50,13 @@ export function estimateByFormula(input: ValuationInput): { lower: number; upper
   // コンディション係数
   const condFactor = ({ excellent: 1.15, good: 1.0, fair: 0.82 } as Record<string, number>)[condition] ?? 1.0;
 
-  const est = base * residual * mileageFactor * condFactor;
+  // 車検係数（残っていれば加点、無ければ減点）
+  const shakenFactor = input.shaken === 'valid' ? 1.03 : input.shaken === 'none' ? 0.96 : 1.0;
+
+  // 事故歴（修復歴）係数：修復歴ありは大きく減額
+  const accidentFactor = input.accident === 'repaired' ? 0.7 : 1.0;
+
+  const est = base * residual * mileageFactor * condFactor * shakenFactor * accidentFactor;
   const lower = Math.round((est * 0.85) / 10000) * 10000;
   const upper = Math.round((est * 1.15) / 10000) * 10000;
 
@@ -63,6 +73,8 @@ export async function valuate(input: ValuationInput): Promise<ValuationResult> {
 ${input.model ? `モデル: ${input.model}\n` : ''}年式: ${input.year}年
 走行距離: ${Number(input.mileageKm).toLocaleString('ja-JP')}km
 コンディション: ${input.condition}
+車検: ${input.shaken === 'valid' ? 'あり（有効）' : input.shaken === 'none' ? 'なし・切れ' : '不明'}
+事故歴: ${input.accident === 'repaired' ? '修復歴あり' : input.accident === 'none' ? 'なし' : '不明'}
 
 以下のJSON形式のみで返答してください（説明文・前置き・コードブロック記号は不要）:
 {"price_low": 数値, "price_high": 数値, "reasoning": "査定理由（日本語100字以内）"}

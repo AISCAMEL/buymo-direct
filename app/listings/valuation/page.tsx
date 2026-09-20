@@ -7,11 +7,23 @@ import { formatYen } from '@/lib/format';
 
 type ValuationResult = { lower: number; upper: number; est: number; source: 'ai' | 'formula'; reasoning?: string };
 
+// 西暦→和暦（車の年式選択用の簡易変換）
+function wareki(y: number): string {
+  if (y >= 2019) { const n = y - 2018; return `令和${n === 1 ? '元' : n}年`; }
+  if (y >= 1989) { const n = y - 1988; return `平成${n === 1 ? '元' : n}年`; }
+  const n = y - 1925; return `昭和${n === 1 ? '元' : n}年`;
+}
+
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_OPTIONS = Array.from({ length: CURRENT_YEAR - 1990 + 1 }, (_, i) => CURRENT_YEAR - i);
+
 export default function ValuationPage() {
   const [maker, setMaker] = useState('');
-  const [year, setYear] = useState(new Date().getFullYear() - 5);
-  const [mileage, setMileage] = useState(50000);
+  const [year, setYear] = useState(CURRENT_YEAR - 5);
+  const [mileage, setMileage] = useState<number | ''>('');
   const [condition, setCondition] = useState('good');
+  const [shaken, setShaken] = useState<'valid' | 'none'>('valid');
+  const [accident, setAccident] = useState<'none' | 'repaired'>('none');
   const [result, setResult] = useState<ValuationResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,13 +31,14 @@ export default function ValuationPage() {
   async function calc(e: React.FormEvent) {
     e.preventDefault();
     if (!maker || loading) return;
+    if (mileage === '' || Number(mileage) < 0) { setError('走行距離を入力してください。'); return; }
     setLoading(true);
     setError(null);
     try {
       const res = await fetch('/api/valuation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ maker, year, mileageKm: mileage, condition }),
+        body: JSON.stringify({ maker, year, mileageKm: Number(mileage), condition, shaken, accident }),
       });
       if (!res.ok) throw new Error('failed');
       setResult((await res.json()) as ValuationResult);
@@ -36,8 +49,6 @@ export default function ValuationPage() {
       setLoading(false);
     }
   }
-
-  const currentYear = new Date().getFullYear();
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
@@ -67,13 +78,36 @@ export default function ValuationPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="label">年式</label>
-              <input type="number" min={1990} max={currentYear} className="input"
-                value={year} onChange={(e) => setYear(Number(e.target.value))} />
+              <select className="input" value={year} onChange={(e) => setYear(Number(e.target.value))}>
+                {YEAR_OPTIONS.map((y) => (
+                  <option key={y} value={y}>{y}年（{wareki(y)}）</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="label">走行距離(km)</label>
-              <input type="number" min={0} className="input"
-                value={mileage} onChange={(e) => setMileage(Number(e.target.value))} />
+              <input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                step={1000}
+                placeholder="例）50000"
+                className="input"
+                value={mileage}
+                onChange={(e) => setMileage(e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))}
+              />
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {[10000, 30000, 50000, 80000, 100000].map((km) => (
+                  <button
+                    key={km}
+                    type="button"
+                    onClick={() => setMileage(km)}
+                    className={`rounded-full border px-2.5 py-0.5 text-xs font-bold transition ${mileage === km ? 'border-navy-400 bg-navy-50 text-navy-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}
+                  >
+                    {km / 10000}万km
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -91,6 +125,39 @@ export default function ValuationPage() {
                   <p className="text-xs text-slate-400">{c.desc}</p>
                 </label>
               ))}
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="label">車検</label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { value: 'valid' as const, label: '車検あり', desc: '有効期間が残っている' },
+                  { value: 'none' as const, label: '車検なし', desc: '切れ・残りわずか' },
+                ].map((o) => (
+                  <label key={o.value} className={`cursor-pointer rounded-lg border p-3 text-center transition ${shaken === o.value ? 'border-navy-400 bg-navy-50 text-navy-700' : 'border-slate-200 hover:bg-slate-50'}`}>
+                    <input type="radio" className="sr-only" checked={shaken === o.value} onChange={() => setShaken(o.value)} />
+                    <p className="text-sm font-bold">{o.label}</p>
+                    <p className="text-xs text-slate-400">{o.desc}</p>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="label">事故歴（修復歴）</label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { value: 'none' as const, label: 'なし', desc: '無事故・修復歴なし' },
+                  { value: 'repaired' as const, label: '修復歴あり', desc: '事故・修復歴あり' },
+                ].map((o) => (
+                  <label key={o.value} className={`cursor-pointer rounded-lg border p-3 text-center transition ${accident === o.value ? 'border-navy-400 bg-navy-50 text-navy-700' : 'border-slate-200 hover:bg-slate-50'}`}>
+                    <input type="radio" className="sr-only" checked={accident === o.value} onChange={() => setAccident(o.value)} />
+                    <p className="text-sm font-bold">{o.label}</p>
+                    <p className="text-xs text-slate-400">{o.desc}</p>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
 
