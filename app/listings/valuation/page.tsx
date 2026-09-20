@@ -1,53 +1,40 @@
 'use client';
 
 import { useState } from 'react';
-import { Calculator, TrendingDown } from 'lucide-react';
-import { MAKERS, PREFECTURES } from '@/lib/constants';
+import { Calculator, TrendingDown, Loader2 } from 'lucide-react';
+import { MAKERS } from '@/lib/constants';
 import { formatYen } from '@/lib/format';
 
-const MAKER_BASE_PRICE: Record<string, number> = {
-  レクサス: 5500000, 輸入車: 4200000, トヨタ: 2800000, ホンダ: 2400000,
-  日産: 2200000, マツダ: 2200000, スバル: 2300000, 三菱: 2000000,
-  スズキ: 1300000, ダイハツ: 1200000, その他: 2000000,
-};
-
-function estimate(maker: string, year: number, mileageKm: number, condition: string) {
-  const base = MAKER_BASE_PRICE[maker] ?? 2000000;
-  const age = new Date().getFullYear() - year;
-
-  // 年次減価
-  let residual = 1.0;
-  for (let i = 0; i < age; i++) {
-    const rate = i < 3 ? 0.18 : i < 6 ? 0.12 : 0.08;
-    residual *= (1 - rate);
-  }
-
-  // 走行距離係数（15000km/年を基準）
-  const stdMileage = age * 15000;
-  const excessKm = Math.max(0, mileageKm - stdMileage);
-  const mileageFactor = Math.max(0.4, 1 - excessKm * 0.000008);
-
-  // コンディション係数
-  const condFactor = { excellent: 1.15, good: 1.0, fair: 0.82 }[condition] ?? 1.0;
-
-  const est = base * residual * mileageFactor * condFactor;
-  const lower = Math.round(est * 0.85 / 10000) * 10000;
-  const upper = Math.round(est * 1.15 / 10000) * 10000;
-
-  return { lower: Math.max(50000, lower), upper: Math.max(100000, upper), est: Math.round(est) };
-}
+type ValuationResult = { lower: number; upper: number; est: number; source: 'ai' | 'formula'; reasoning?: string };
 
 export default function ValuationPage() {
   const [maker, setMaker] = useState('');
   const [year, setYear] = useState(new Date().getFullYear() - 5);
   const [mileage, setMileage] = useState(50000);
   const [condition, setCondition] = useState('good');
-  const [result, setResult] = useState<{ lower: number; upper: number; est: number } | null>(null);
+  const [result, setResult] = useState<ValuationResult | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function calc(e: React.FormEvent) {
+  async function calc(e: React.FormEvent) {
     e.preventDefault();
-    if (!maker) return;
-    setResult(estimate(maker, year, mileage, condition));
+    if (!maker || loading) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/valuation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ maker, year, mileageKm: mileage, condition }),
+      });
+      if (!res.ok) throw new Error('failed');
+      setResult((await res.json()) as ValuationResult);
+    } catch {
+      setError('査定に失敗しました。時間をおいて再度お試しください。');
+      setResult(null);
+    } finally {
+      setLoading(false);
+    }
   }
 
   const currentYear = new Date().getFullYear();
@@ -107,9 +94,14 @@ export default function ValuationPage() {
             </div>
           </div>
 
-          <button type="submit" className="btn-accent w-full">
-            <Calculator className="h-4 w-4" /> 査定額を計算する
+          <button type="submit" disabled={loading} className="btn-accent w-full disabled:opacity-60">
+            {loading ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> 査定中...</>
+            ) : (
+              <><Calculator className="h-4 w-4" /> 査定額を計算する</>
+            )}
           </button>
+          {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-bold text-red-700">{error}</p>}
         </form>
       </div>
 
@@ -117,6 +109,9 @@ export default function ValuationPage() {
         <div className="card space-y-4 p-6">
           <h2 className="flex items-center gap-2 text-lg font-black">
             <TrendingDown className="h-5 w-5 text-navy-500" /> 査定結果
+            <span className={`ml-auto rounded-full px-2.5 py-0.5 text-xs font-bold ${result.source === 'ai' ? 'bg-accent-50 text-accent-600' : 'bg-slate-100 text-slate-500'}`}>
+              {result.source === 'ai' ? 'AI査定' : '相場計算'}
+            </span>
           </h2>
 
           <div className="rounded-xl bg-navy-50 p-5 text-center">
@@ -125,6 +120,11 @@ export default function ValuationPage() {
               {formatYen(result.lower)} 〜 {formatYen(result.upper)}
             </p>
             <p className="mt-1 text-sm text-slate-400">中央値：{formatYen(result.est)}</p>
+            {result.reasoning && (
+              <p className="mt-3 border-t border-navy-100 pt-3 text-left text-xs leading-relaxed text-slate-600">
+                {result.reasoning}
+              </p>
+            )}
           </div>
 
           {/* 売却コンバージョン（価格訴求） */}
