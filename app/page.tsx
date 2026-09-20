@@ -112,22 +112,21 @@ export default async function HomePage() {
             {/* テキストパネル */}
             <div className="order-2 px-5 py-10 text-center text-white sm:px-8 lg:order-1 lg:py-16 lg:text-left xl:px-12">
               <p className="mb-3 inline-block rounded-full bg-white/12 px-4 py-1 text-xs font-bold text-white ring-1 ring-white/25">
-                🚗 買取保証つき 中古車ダイレクト販売
+                💰 買取も、ダイレクト販売も
               </p>
               <h1 className="text-3xl font-black leading-tight text-white sm:text-4xl xl:text-5xl">
-                売るのも、買うのも、<span className="text-accent-200">BUYMO</span>。<br />
-                買取も、ダイレクト販売も。
+                愛車は、<span className="text-accent-200">もっと高く</span>売れる。
               </h1>
               <p className="mx-auto mt-4 max-w-xl text-sm text-white/85 sm:text-base lg:mx-0">
-                すぐ現金化したいなら「買取」。もっと高く売りたいなら「ダイレクト販売」。どちらも写真査定・全国オンライン完結、買取保証つきで安心。
+                すぐ現金化なら「買取」、じっくり高値なら「ダイレクト販売」。売れなくてもBUYMOが買い取るから、いちばん高い売り方を選べます。
               </p>
 
               {/* ベネフィットのチップ */}
               <ul className="mx-auto mt-5 flex max-w-xl flex-wrap justify-center gap-2 text-xs font-bold text-white lg:mx-0 lg:justify-start">
+                <li className="rounded-full bg-white/12 px-3 py-1 ring-1 ring-white/20">いちばん高い売り方を選べる</li>
                 <li className="rounded-full bg-white/12 px-3 py-1 ring-1 ring-white/20">買取保証つき</li>
-                <li className="rounded-full bg-white/12 px-3 py-1 ring-1 ring-white/20">エスクロー決済で安心</li>
-                <li className="rounded-full bg-white/12 px-3 py-1 ring-1 ring-white/20">全国47都道府県対応</li>
-                <li className="rounded-full bg-white/12 px-3 py-1 ring-1 ring-white/20">オンライン完結</li>
+                <li className="rounded-full bg-white/12 px-3 py-1 ring-1 ring-white/20">査定無料・手数料0円</li>
+                <li className="rounded-full bg-white/12 px-3 py-1 ring-1 ring-white/20">全国オンライン完結</li>
               </ul>
 
               {/* 検索バー */}
