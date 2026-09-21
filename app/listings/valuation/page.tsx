@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Calculator, TrendingDown, Loader2, ClipboardCheck, ArrowRight } from 'lucide-react';
 import { VEHICLE_CATALOG, CATALOG_MAKERS } from '@/lib/vehicle-catalog';
+import { MILEAGE_OPTIONS } from '@/lib/mileage';
 import { formatYen } from '@/lib/format';
 
 type ValuationResult = { lower: number; upper: number; est: number; source: 'ai' | 'formula'; reasoning?: string };
@@ -133,29 +134,17 @@ export default function ValuationPage() {
               </select>
             </div>
             <div>
-              <label className="label">走行距離(km)</label>
-              <input
-                type="number"
-                inputMode="numeric"
-                min={0}
-                step={1000}
-                placeholder="例）50000"
+              <label className="label">走行距離</label>
+              <select
                 className="input"
-                value={mileage}
-                onChange={(e) => setMileage(e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))}
-              />
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
-                {[10000, 30000, 50000, 80000, 100000].map((km) => (
-                  <button
-                    key={km}
-                    type="button"
-                    onClick={() => setMileage(km)}
-                    className={`rounded-full border px-2.5 py-0.5 text-xs font-bold transition ${mileage === km ? 'border-navy-400 bg-navy-50 text-navy-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}
-                  >
-                    {km / 10000}万km
-                  </button>
+                value={mileage === '' ? '' : mileage}
+                onChange={(e) => setMileage(e.target.value === '' ? '' : Number(e.target.value))}
+              >
+                <option value="">選択してください</option>
+                {MILEAGE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
-              </div>
+              </select>
             </div>
           </div>
 

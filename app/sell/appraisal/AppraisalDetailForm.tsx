@@ -8,6 +8,7 @@ import { CATALOG_MAKERS } from '@/lib/vehicle-catalog';
 import { PREFECTURES, TRANSMISSIONS, FUELS, BODY_TYPES } from '@/lib/constants';
 import { APPRAISAL_PHOTO_GUIDE, appraisalGuideIndex } from '@/lib/photo-guide';
 import { DIAGNOSIS_QUESTIONS, SELL_TIMING_OPTIONS } from '@/lib/appraisal-diagnosis';
+import { MILEAGE_OPTIONS, mileageToOption } from '@/lib/mileage';
 import { formatYen } from '@/lib/format';
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -18,21 +19,7 @@ function wareki(year: number): string {
 }
 const YEARS = Array.from({ length: CURRENT_YEAR - 1985 + 1 }, (_, i) => CURRENT_YEAR - i);
 
-// 走行距離：1万km範囲で50万kmまで（値は代表値の km）
-const MILEAGE_OPTIONS: { value: number; label: string }[] = [
-  { value: 5000, label: '1万km未満' },
-  ...Array.from({ length: 49 }, (_, i) => ({ value: (i + 1) * 10000 + 5000, label: `${i + 1}〜${i + 2}万km` })),
-  { value: 505000, label: '50万km以上' },
-];
-function mileageToOption(km: number): number {
-  if (!km || km <= 0) return 0;
-  if (km < 10000) return 5000;
-  if (km >= 500000) return 505000;
-  const i = Math.floor(km / 10000);
-  return i * 10000 + 5000;
-}
-
-const COLORS = ['パールホワイト', 'ホワイト', 'ブラック', 'シルバー', 'グレー', 'レッド', 'ブルー', 'ネイビー', 'グリーン', 'イエロー', 'オレンジ', 'ブラウン', 'ベージュ', 'ゴールド', 'パープル', 'ピンク', 'その他'];
+const COLORS =['パールホワイト', 'ホワイト', 'ブラック', 'シルバー', 'グレー', 'レッド', 'ブルー', 'ネイビー', 'グリーン', 'イエロー', 'オレンジ', 'ブラウン', 'ベージュ', 'ゴールド', 'パープル', 'ピンク', 'その他'];
 
 const STEPS = ['車両情報', '車の詳細', '状態の問診', '写真', 'ご連絡先'];
 
