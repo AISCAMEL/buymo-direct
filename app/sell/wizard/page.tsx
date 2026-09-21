@@ -1,10 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronRight, Bot, ShieldCheck, Users, Sparkles } from 'lucide-react';
-import { MAKERS } from '@/lib/constants';
+import { VEHICLE_CATALOG, CATALOG_MAKERS } from '@/lib/vehicle-catalog';
 import { formatYen } from '@/lib/format';
+
+// 西暦→和暦
+function wareki(y: number): string {
+  if (y >= 2019) { const n = y - 2018; return `令和${n === 1 ? '元' : n}年`; }
+  if (y >= 1989) { const n = y - 1988; return `平成${n === 1 ? '元' : n}年`; }
+  const n = y - 1925; return `昭和${n === 1 ? '元' : n}年`;
+}
 
 type Step = 'info' | 'analyzing' | 'result' | 'type';
 
@@ -75,6 +82,20 @@ export default function SellWizardPage() {
   const [estimate, setEstimate] = useState<Estimate | null>(null);
   const [listingType, setListingType] = useState<'direct' | 'proxy'>('direct');
   const [error, setError] = useState('');
+  const [modelOptions, setModelOptions] = useState<string[]>([]);
+  const [otherModel, setOtherModel] = useState(false);
+
+  // メーカー選択に応じて車名候補を取得（DB＋実出品＋AIで自動更新）
+  useEffect(() => {
+    if (!info.maker) { setModelOptions([]); return; }
+    setModelOptions((VEHICLE_CATALOG[info.maker] ?? []).filter((m) => m !== 'その他'));
+    let cancelled = false;
+    fetch(`/api/models?maker=${encodeURIComponent(info.maker)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { models?: string[] } | null) => { if (!cancelled && d?.models?.length) setModelOptions(d.models); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [info.maker]);
 
   const stepIdx = { info: 0, analyzing: 1, result: 2, type: 3 }[step];
 
@@ -152,28 +173,45 @@ export default function SellWizardPage() {
 
           {error && <div className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{error}</div>}
 
-          <div>
-            <label className="label">メーカー *</label>
-            <select className="input" value={info.maker} onChange={e => setInfo({ ...info, maker: e.target.value })} required>
-              <option value="">選択してください</option>
-              {Object.keys(MAKERS).map(m => <option key={m} value={m}>{m}</option>)}
-            </select>
-          </div>
-
-          <div>
-            <label className="label">車種・グレード *</label>
-            <input
-              className="input" type="text" placeholder="例: プリウス Z"
-              value={info.model} onChange={e => setInfo({ ...info, model: e.target.value })}
-            />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="label">メーカー *</label>
+              <select className="input" value={info.maker} onChange={e => { setInfo({ ...info, maker: e.target.value, model: '' }); setOtherModel(false); }} required>
+                <option value="">選択してください</option>
+                {CATALOG_MAKERS.map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="label">車種・グレード *</label>
+              <select
+                className="input"
+                value={otherModel ? '__other__' : info.model}
+                disabled={!info.maker}
+                onChange={e => {
+                  const v = e.target.value;
+                  if (v === '__other__') { setOtherModel(true); setInfo({ ...info, model: '' }); }
+                  else { setOtherModel(false); setInfo({ ...info, model: v }); }
+                }}
+              >
+                <option value="">{info.maker ? '選択してください' : '先にメーカーを選択'}</option>
+                {modelOptions.map(m => <option key={m} value={m}>{m}</option>)}
+                {info.maker && <option value="__other__">その他（一覧にない）</option>}
+              </select>
+              {otherModel && (
+                <input
+                  className="input mt-2" type="text" placeholder="車種・グレードを入力（例: プリウス Z）"
+                  value={info.model} onChange={e => setInfo({ ...info, model: e.target.value })} autoComplete="off"
+                />
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="label">年式 *</label>
               <select className="input" value={info.year} onChange={e => setInfo({ ...info, year: Number(e.target.value) })}>
-                {Array.from({ length: 30 }, (_, i) => currentYear - i).map(y => (
-                  <option key={y} value={y}>{y}年</option>
+                {Array.from({ length: 37 }, (_, i) => currentYear - i).map(y => (
+                  <option key={y} value={y}>{y}年（{wareki(y)}）</option>
                 ))}
               </select>
             </div>
@@ -181,10 +219,21 @@ export default function SellWizardPage() {
               <label className="label">走行距離 *</label>
               <div className="relative">
                 <input
-                  className="input pr-8" type="number" min={0} step={1000}
-                  value={info.mileage_km} onChange={e => setInfo({ ...info, mileage_km: Number(e.target.value) })}
+                  className="input pr-8" type="number" min={0} step={1000} inputMode="numeric"
+                  value={info.mileage_km} onFocus={e => e.target.select()}
+                  onChange={e => setInfo({ ...info, mileage_km: Math.max(0, Number(e.target.value)) })}
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">km</span>
+              </div>
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
+                {[10000, 30000, 50000, 80000, 100000].map(km => (
+                  <button
+                    key={km} type="button" onClick={() => setInfo({ ...info, mileage_km: km })}
+                    className={`rounded-full border px-2.5 py-0.5 text-xs font-bold transition ${info.mileage_km === km ? 'border-navy-400 bg-navy-50 text-navy-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}
+                  >
+                    {km / 10000}万km
+                  </button>
+                ))}
               </div>
             </div>
           </div>
