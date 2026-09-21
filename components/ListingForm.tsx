@@ -9,6 +9,7 @@ import { MAKERS, BODY_TYPES, TRANSMISSIONS, FUELS, PREFECTURES } from '@/lib/con
 import type { Listing, ListingImage } from '@/lib/types';
 import { AiDescriptionButton } from '@/components/AiDescriptionButton';
 import { formatYen } from '@/lib/format';
+import { PHOTO_GUIDE, guideIndex } from '@/lib/photo-guide';
 
 const CURRENT_YEAR = new Date().getFullYear();
 const STORAGE_MARKER = '/listing-images/';
@@ -24,59 +25,74 @@ type ImageItem = {
   file?: File;
   dbId?: string;
   caption?: string;
+  carried?: boolean; // 査定から引き継いだ既存URL（再アップロード不要）
 };
 
-// 撮影ガイド（推奨アングル）
-const PHOTO_GUIDE: { label: string; hint: string }[] = [
-  { label: 'フロント（正面）', hint: '車の正面全体' },
-  { label: 'リア（背面）', hint: '車の後ろ全体' },
-  { label: '左サイド', hint: '左横から全体' },
-  { label: '右サイド', hint: '右横から全体' },
-  { label: '室内（前席）', hint: '運転席まわり' },
-  { label: '室内（後席）', hint: '後部座席' },
-  { label: 'メーター', hint: '走行距離が写るように' },
-  { label: 'エンジンルーム', hint: 'ボンネットを開けて' },
-  { label: '傷・気になる箇所', hint: 'あれば近くで' },
-];
-const GUIDE_LABELS = PHOTO_GUIDE.map((g) => g.label);
-function guideIndex(caption?: string): number {
-  const i = caption ? GUIDE_LABELS.indexOf(caption) : -1;
-  return i < 0 ? 100 : i;
-}
+export type ListingInitial = {
+  maker?: string;
+  model?: string;
+  year?: number;
+  mileage_km?: number;
+  price?: number;
+  body_type?: string | null;
+  transmission?: string | null;
+  fuel?: string | null;
+  color?: string | null;
+  prefecture?: string | null;
+  repair_history?: boolean;
+  vin?: string | null;
+  description?: string | null;
+  listing_type?: 'direct' | 'proxy';
+};
 
 export function ListingForm({
   userId,
   listing,
   existingImages = [],
+  initial,
+  initialImages = [],
+  fromAppraisalId,
 }: {
   userId: string;
   listing?: Listing;
   existingImages?: ListingImage[];
+  initial?: ListingInitial;
+  initialImages?: { url: string; caption?: string | null }[];
+  fromAppraisalId?: string;
 }) {
   const router = useRouter();
   const sp = useSearchParams();
   const isEdit = !!listing;
 
-  // ウィザードから引き継いだパラメータ
-  const wizardMaker       = sp.get('maker') ?? '';
-  const wizardModel       = sp.get('model') ?? '';
-  const wizardYear        = sp.get('year') ? Number(sp.get('year')) : null;
-  const wizardMileage     = sp.get('mileage_km') ? Number(sp.get('mileage_km')) : null;
-  const wizardAiMin       = sp.get('ai_price_min') ? Number(sp.get('ai_price_min')) : null;
+  // ウィザード/査定から引き継いだパラメータ（クエリ優先、なければ initial）
+  const wizardMaker       = sp.get('maker') ?? initial?.maker ?? '';
+  const wizardModel       = sp.get('model') ?? initial?.model ?? '';
+  const wizardYear        = sp.get('year') ? Number(sp.get('year')) : (initial?.year ?? null);
+  const wizardMileage     = sp.get('mileage_km') ? Number(sp.get('mileage_km')) : (initial?.mileage_km ?? null);
+  const wizardAiMin       = sp.get('ai_price_min') ? Number(sp.get('ai_price_min')) : (initial?.price ?? null);
   const wizardAiMax       = sp.get('ai_price_max') ? Number(sp.get('ai_price_max')) : null;
-  const wizardType        = (sp.get('listing_type') ?? 'direct') as 'direct' | 'proxy';
+  const wizardType        = (sp.get('listing_type') ?? initial?.listing_type ?? 'direct') as 'direct' | 'proxy';
 
   const [maker, setMaker] = useState(listing?.maker ?? wizardMaker);
   const [modelVal, setModelVal] = useState(listing?.model ?? wizardModel);
   const [year, setYear] = useState(listing?.year ?? wizardYear ?? CURRENT_YEAR - 3);
   const [mileageKm, setMileageKm] = useState(listing?.mileage_km ?? wizardMileage ?? 0);
   const [listingType, setListingType] = useState<'direct' | 'proxy'>(listing?.listing_type ?? wizardType);
-  const [description, setDescription] = useState(listing?.description ?? '');
-  const [images, setImages] = useState<ImageItem[]>(
-    [...existingImages]
-      .sort((a, b) => a.sort_order - b.sort_order)
-      .map((img) => ({ key: img.id, url: img.url, dbId: img.id, caption: img.caption ?? undefined }))
-  );
+  const [description, setDescription] = useState(listing?.description ?? initial?.description ?? '');
+  const [images, setImages] = useState<ImageItem[]>(() => {
+    if (existingImages.length > 0) {
+      return [...existingImages]
+        .sort((a, b) => a.sort_order - b.sort_order)
+        .map((img) => ({ key: img.id, url: img.url, dbId: img.id, caption: img.caption ?? undefined }));
+    }
+    // 査定から引き継いだ写真（既存URL・再アップロード不要）
+    return initialImages.map((img, i) => ({
+      key: `carried-${i}`,
+      url: img.url,
+      caption: img.caption ?? undefined,
+      carried: true,
+    }));
+  });
   const [removedIds, setRemovedIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -205,7 +221,24 @@ export function ListingForm({
             sort_order: sortOrder,
             caption: img.caption ?? null,
           });
+        } else if (img.carried && img.url) {
+          // 査定から引き継いだ既存URLはそのまま登録（再アップロード不要）
+          await supabase.from('listing_images').insert({
+            listing_id: listingId,
+            url: img.url,
+            sort_order: sortOrder,
+            caption: img.caption ?? null,
+          });
         }
+      }
+
+      // 査定から作成した場合は、その査定を「出品済み」に紐付け（ベストエフォート）
+      if (fromAppraisalId && !isEdit && listingId) {
+        fetch('/api/appraisal/convert', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ appraisalId: fromAppraisalId, listingId }),
+        }).catch(() => {});
       }
 
       router.push(`/listings/${listingId}`);
@@ -459,21 +492,21 @@ export function ListingForm({
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
             <label className="label">ボディタイプ</label>
-            <select name="body_type" className="input" defaultValue={listing?.body_type ?? ''}>
+            <select name="body_type" className="input" defaultValue={listing?.body_type ?? initial?.body_type ?? ''}>
               <option value="">指定なし</option>
               {BODY_TYPES.map((b) => <option key={b} value={b}>{b}</option>)}
             </select>
           </div>
           <div>
             <label className="label">ミッション</label>
-            <select name="transmission" className="input" defaultValue={listing?.transmission ?? ''}>
+            <select name="transmission" className="input" defaultValue={listing?.transmission ?? initial?.transmission ?? ''}>
               <option value="">指定なし</option>
               {TRANSMISSIONS.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
           <div>
             <label className="label">燃料</label>
-            <select name="fuel" className="input" defaultValue={listing?.fuel ?? ''}>
+            <select name="fuel" className="input" defaultValue={listing?.fuel ?? initial?.fuel ?? ''}>
               <option value="">指定なし</option>
               {FUELS.map((f) => <option key={f} value={f}>{f}</option>)}
             </select>
@@ -486,13 +519,13 @@ export function ListingForm({
             <input
               name="color"
               className="input"
-              defaultValue={listing?.color ?? ''}
+              defaultValue={listing?.color ?? initial?.color ?? ''}
               placeholder="パールホワイト"
             />
           </div>
           <div>
             <label className="label">地域 *</label>
-            <select name="prefecture" required className="input" defaultValue={listing?.prefecture ?? ''}>
+            <select name="prefecture" required className="input" defaultValue={listing?.prefecture ?? initial?.prefecture ?? ''}>
               <option value="">選択してください</option>
               {PREFECTURES.map((p) => <option key={p} value={p}>{p}</option>)}
             </select>
@@ -503,7 +536,7 @@ export function ListingForm({
           <input
             type="checkbox"
             name="repair_history"
-            defaultChecked={listing?.repair_history}
+            defaultChecked={listing?.repair_history ?? initial?.repair_history}
             className="h-4 w-4 rounded border-slate-300"
           />
           修復歴あり
@@ -537,7 +570,7 @@ export function ListingForm({
             <input
               name="vin"
               className="input font-mono uppercase tracking-wider"
-              defaultValue={listing?.vin ?? ''}
+              defaultValue={listing?.vin ?? initial?.vin ?? ''}
               placeholder="JTEBx3FJ900XXXXXX"
               maxLength={17}
             />

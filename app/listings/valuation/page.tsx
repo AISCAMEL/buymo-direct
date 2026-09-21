@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Calculator, TrendingDown, Loader2, CheckCircle2, ClipboardCheck } from 'lucide-react';
+import Link from 'next/link';
+import { Calculator, TrendingDown, Loader2, ClipboardCheck, ArrowRight } from 'lucide-react';
 import { VEHICLE_CATALOG, CATALOG_MAKERS } from '@/lib/vehicle-catalog';
-import { PREFECTURES } from '@/lib/constants';
 import { formatYen } from '@/lib/format';
 
 type ValuationResult = { lower: number; upper: number; est: number; source: 'ai' | 'formula'; reasoning?: string };
@@ -31,43 +31,6 @@ export default function ValuationPage() {
   const [result, setResult] = useState<ValuationResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // 正式査定フォーム
-  const [showFormal, setShowFormal] = useState(false);
-  const [fName, setFName] = useState('');
-  const [fPhone, setFPhone] = useState('');
-  const [fEmail, setFEmail] = useState('');
-  const [fPref, setFPref] = useState('');
-  const [fNotes, setFNotes] = useState('');
-  const [fLoading, setFLoading] = useState(false);
-  const [fError, setFError] = useState<string | null>(null);
-  const [fDone, setFDone] = useState(false);
-
-  async function submitFormal(e: React.FormEvent) {
-    e.preventDefault();
-    if (fLoading) return;
-    if (!fName.trim()) { setFError('お名前を入力してください。'); return; }
-    if (!fPhone.trim()) { setFError('電話番号を入力してください。'); return; }
-    setFLoading(true);
-    setFError(null);
-    try {
-      const res = await fetch('/api/appraisal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          maker, model: model.trim() || undefined, year, mileageKm: Number(mileage), condition,
-          prefecture: fPref, name: fName, phone: fPhone, email: fEmail.trim() || undefined, notes: fNotes,
-          aiLow: result?.lower, aiHigh: result?.upper,
-        }),
-      });
-      if (!res.ok) throw new Error();
-      setFDone(true);
-    } catch {
-      setFError('送信に失敗しました。時間をおいて再度お試しください。');
-    } finally {
-      setFLoading(false);
-    }
-  }
 
   // メーカー選択に応じて車名候補を取得（DB＋実出品＋AIで自動更新されるマスタ）
   useEffect(() => {
@@ -295,64 +258,31 @@ export default function ValuationPage() {
             </div>
           </div>
 
-          {/* 正式査定へ進む（担当が確定金額を提示） */}
+          {/* 正式査定へ進む（詳細情報を入力して担当が確定金額を提示） */}
           <div className="rounded-xl border-2 border-navy-500 bg-white p-4">
             <p className="flex items-center gap-1.5 text-sm font-black text-navy-800">
               <ClipboardCheck className="h-4 w-4 text-navy-500" /> この査定額から「正式査定」に進めます
             </p>
             <p className="mt-1 text-xs text-slate-600">
-              担当が車両を確認し、<span className="font-bold">確定金額</span>をご案内します（無料・キャンセル可）。上のAI査定額・車両情報を引き継ぐので、再入力は不要です。
+              次の画面で<span className="font-bold">車両の詳細と写真</span>をご入力いただくと、担当が<span className="font-bold">確定金額</span>をご案内します（無料・キャンセル可）。上のAI査定額・車両情報は引き継がれます。
             </p>
-
-            {!showFormal && !fDone && (
-              <button type="button" onClick={() => setShowFormal(true)} className="btn-accent mt-3 w-full py-2.5 text-sm">
-                正式査定を依頼する（無料）
-              </button>
-            )}
-
-            {showFormal && !fDone && (
-              <form onSubmit={submitFormal} className="mt-3 space-y-3">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div>
-                    <label className="label">お名前 *</label>
-                    <input className="input" value={fName} onChange={(e) => setFName(e.target.value)} placeholder="山田 太郎" />
-                  </div>
-                  <div>
-                    <label className="label">電話番号 *</label>
-                    <input className="input" type="tel" inputMode="tel" value={fPhone} onChange={(e) => setFPhone(e.target.value)} placeholder="09012345678" />
-                  </div>
-                  <div>
-                    <label className="label">メール（任意）</label>
-                    <input className="input" type="email" value={fEmail} onChange={(e) => setFEmail(e.target.value)} placeholder="任意" />
-                  </div>
-                  <div>
-                    <label className="label">所在地</label>
-                    <select className="input" value={fPref} onChange={(e) => setFPref(e.target.value)}>
-                      <option value="">選択してください</option>
-                      {PREFECTURES.map((p) => <option key={p} value={p}>{p}</option>)}
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label className="label">ご連絡希望・備考（任意）</label>
-                  <textarea rows={2} className="input" value={fNotes} onChange={(e) => setFNotes(e.target.value)} placeholder="ご連絡希望の時間帯、装備、気になる点など" />
-                </div>
-                {fError && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-bold text-red-700">{fError}</p>}
-                <button type="submit" disabled={fLoading} className="btn-accent w-full disabled:opacity-60">
-                  {fLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> 送信中...</> : 'この内容で正式査定を依頼する'}
-                </button>
-                <p className="text-center text-xs text-slate-400">
-                  車両情報とAI査定額（{formatYen(result.lower)}〜{formatYen(result.upper)}）を引き継いで送信します。
-                </p>
-              </form>
-            )}
-
-            {fDone && (
-              <div className="mt-3 flex items-start gap-2 rounded-lg bg-emerald-50 px-3 py-3 text-sm font-bold text-emerald-700">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-                正式査定のお申し込みを受け付けました。担当より確定金額をご案内します（通常1〜2営業日）。
-              </div>
-            )}
+            <Link
+              href={`/sell/appraisal?${new URLSearchParams({
+                maker,
+                model: otherModel ? '' : model,
+                year: String(year),
+                mileageKm: String(mileage || 0),
+                condition,
+                aiLow: String(result.lower),
+                aiHigh: String(result.upper),
+              }).toString()}`}
+              className="btn-accent mt-3 flex w-full items-center justify-center gap-1.5 py-2.5 text-sm"
+            >
+              正式査定に進む（詳細入力・無料） <ArrowRight className="h-4 w-4" />
+            </Link>
+            <p className="mt-2 text-center text-xs text-slate-400">
+              入力した情報は、あとで「ダイレクト販売」に切り替える際もそのまま使えます。
+            </p>
           </div>
 
           <div className="rounded-lg bg-amber-50 p-3 text-xs text-amber-700">

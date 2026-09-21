@@ -19,6 +19,21 @@ export async function POST(req: Request) {
     notes?: string;
     aiLow?: number;
     aiHigh?: number;
+    // 詳細情報
+    grade?: string;
+    typeCode?: string;
+    vin?: string;
+    transmission?: string;
+    fuel?: string;
+    bodyType?: string;
+    color?: string;
+    shakenUntil?: string;
+    repairDetail?: string;
+    equipment?: string;
+    oneOwner?: boolean;
+    hasRecords?: boolean;
+    nonSmoking?: boolean;
+    photos?: { url?: string; caption?: string }[];
   };
 
   const maker = String(body.maker ?? '').trim();
@@ -49,6 +64,18 @@ export async function POST(req: Request) {
     /* 未ログインでも可 */
   }
 
+  const str = (v: unknown, max = 500) => {
+    const s = String(v ?? '').trim();
+    return s ? s.slice(0, max) : null;
+  };
+  // 写真配列を検証（{url, caption} のみ・最大20枚）
+  const photos = Array.isArray(body.photos)
+    ? body.photos
+        .filter((p) => p && typeof p.url === 'string' && p.url.startsWith('http'))
+        .slice(0, 20)
+        .map((p) => ({ url: String(p.url), caption: p.caption ? String(p.caption).slice(0, 40) : null }))
+    : [];
+
   // DB保存（service role・ベストエフォート）
   try {
     const service = createServiceClient();
@@ -67,6 +94,21 @@ export async function POST(req: Request) {
       preferred_contact: String(body.preferredContact ?? '').trim() || null,
       ai_price_low: Number.isFinite(Number(body.aiLow)) ? Number(body.aiLow) : null,
       ai_price_high: Number.isFinite(Number(body.aiHigh)) ? Number(body.aiHigh) : null,
+      // 詳細情報
+      grade: str(body.grade, 60),
+      type_code: str(body.typeCode, 40),
+      vin: str(body.vin, 40),
+      transmission: str(body.transmission, 20),
+      fuel: str(body.fuel, 20),
+      body_type: str(body.bodyType, 20),
+      color: str(body.color, 40),
+      shaken_until: str(body.shakenUntil, 20),
+      repair_detail: str(body.repairDetail, 1000),
+      equipment: str(body.equipment, 2000),
+      one_owner: !!body.oneOwner,
+      has_records: !!body.hasRecords,
+      non_smoking: !!body.nonSmoking,
+      photos,
       source: 'valuation',
       status: 'pending',
     });

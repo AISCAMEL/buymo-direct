@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { requireAdmin } from '@/lib/admin';
 import { createServiceClient } from '@/lib/supabase/service';
 import { ClipboardCheck, Inbox, Phone, Mail, User } from 'lucide-react';
@@ -26,6 +27,23 @@ type Row = {
   user_id: string | null;
   source: string | null;
   created_at: string;
+  // 詳細情報
+  grade: string | null;
+  type_code: string | null;
+  vin: string | null;
+  transmission: string | null;
+  fuel: string | null;
+  body_type: string | null;
+  color: string | null;
+  shaken_until: string | null;
+  repair_detail: string | null;
+  equipment: string | null;
+  one_owner: boolean | null;
+  has_records: boolean | null;
+  non_smoking: boolean | null;
+  photos: { url: string; caption: string | null }[] | null;
+  listing_id: string | null;
+  converted_at: string | null;
 };
 
 const STATUS: Record<string, { label: string; cls: string }> = {
@@ -44,7 +62,7 @@ export default async function AdminAppraisalsPage() {
     const service = createServiceClient();
     const { data, error } = await service
       .from('appraisal_requests')
-      .select('id, maker, model, year, mileage_km, prefecture, condition, notes, status, price_low, price_high, ai_price_low, ai_price_high, contact_name, contact_phone, contact_email, user_id, source, created_at')
+      .select('*')
       .order('created_at', { ascending: false })
       .limit(200);
     if (error) tableMissing = true;
@@ -99,6 +117,56 @@ export default async function AdminAppraisalsPage() {
                   )}
                 </div>
                 {r.notes && <p className="mt-1 whitespace-pre-wrap text-sm text-slate-500">備考: {r.notes}</p>}
+
+                {/* 詳細情報 */}
+                {(r.grade || r.type_code || r.vin || r.transmission || r.fuel || r.body_type || r.color || r.shaken_until ||
+                  r.repair_detail || r.equipment || r.one_owner || r.has_records || r.non_smoking) && (
+                  <div className="mt-2 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
+                    <div className="flex flex-wrap gap-x-4 gap-y-1">
+                      {r.grade && <span>グレード: <b className="text-slate-800">{r.grade}</b></span>}
+                      {r.type_code && <span>型式: <b className="text-slate-800">{r.type_code}</b></span>}
+                      {r.vin && <span>車台番号: <b className="font-mono text-slate-800">{r.vin}</b></span>}
+                      {r.transmission && <span>MT/AT: <b className="text-slate-800">{r.transmission}</b></span>}
+                      {r.fuel && <span>燃料: <b className="text-slate-800">{r.fuel}</b></span>}
+                      {r.body_type && <span>ボディ: <b className="text-slate-800">{r.body_type}</b></span>}
+                      {r.color && <span>色: <b className="text-slate-800">{r.color}</b></span>}
+                      {r.shaken_until && <span>車検満了: <b className="text-slate-800">{r.shaken_until}</b></span>}
+                    </div>
+                    {(r.one_owner || r.has_records || r.non_smoking) && (
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        {r.one_owner && <span className="rounded-full bg-emerald-100 px-2 py-0.5 font-bold text-emerald-700">ワンオーナー</span>}
+                        {r.has_records && <span className="rounded-full bg-emerald-100 px-2 py-0.5 font-bold text-emerald-700">記録簿あり</span>}
+                        {r.non_smoking && <span className="rounded-full bg-emerald-100 px-2 py-0.5 font-bold text-emerald-700">禁煙車</span>}
+                      </div>
+                    )}
+                    {r.repair_detail && <p className="mt-1.5 text-amber-700">修復歴: {r.repair_detail}</p>}
+                    {r.equipment && <p className="mt-1.5 whitespace-pre-wrap">装備: {r.equipment}</p>}
+                  </div>
+                )}
+
+                {/* 写真 */}
+                {Array.isArray(r.photos) && r.photos.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {r.photos.map((p, i) => (
+                      <a key={i} href={p.url} target="_blank" rel="noreferrer" className="group relative">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={p.url} alt={p.caption ?? ''} className="h-20 w-24 rounded-lg border border-slate-200 object-cover" />
+                        {p.caption && <span className="absolute bottom-0.5 left-0.5 rounded bg-black/55 px-1 py-0.5 text-[9px] font-bold text-white">{p.caption}</span>}
+                      </a>
+                    ))}
+                  </div>
+                )}
+
+                {/* 買取→ダイレクト移行 */}
+                {r.listing_id ? (
+                  <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-500">
+                    ダイレクト出品済み
+                  </p>
+                ) : (
+                  <Link href={`/sell?fromAppraisal=${r.id}`} className="mt-2 inline-flex items-center gap-1 rounded-lg border border-gold-200 bg-gold-50 px-3 py-1.5 text-xs font-bold text-gold-600 hover:bg-gold-100">
+                    この情報でダイレクト出品を作成 →
+                  </Link>
+                )}
 
                 {/* 確定金額の入力 */}
                 <form action={updateAppraisalQuote} className="mt-3 flex flex-wrap items-end gap-2 border-t border-slate-100 pt-3">

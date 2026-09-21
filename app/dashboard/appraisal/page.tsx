@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { ClipboardList, CheckCircle2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { formatYen } from '@/lib/format';
@@ -125,6 +126,16 @@ export default async function AppraisalPage() {
                         </span>
                       </div>
                     </div>
+                  )}
+                  {/* 買取 → ダイレクトへの切り替え */}
+                  {r.listing_id ? (
+                    <Link href={`/listings/${r.listing_id}`} className="mt-2 inline-block text-xs font-bold text-navy-600 hover:underline">
+                      ダイレクト出品を見る →
+                    </Link>
+                  ) : (
+                    <Link href={`/sell?fromAppraisal=${r.id}`} className="mt-2 inline-flex items-center gap-1 rounded-lg border border-gold-200 bg-gold-50 px-3 py-1.5 text-xs font-bold text-gold-600 hover:bg-gold-100">
+                      この情報でダイレクト販売に出品する →
+                    </Link>
                   )}
                 </div>
                 <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${s.cls}`}>{s.label}</span>
