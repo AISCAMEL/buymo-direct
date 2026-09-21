@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronRight, Bot, ShieldCheck, Users, Sparkles } from 'lucide-react';
 import { VEHICLE_CATALOG, CATALOG_MAKERS } from '@/lib/vehicle-catalog';
+import { MILEAGE_OPTIONS } from '@/lib/mileage';
 import { formatYen } from '@/lib/format';
 
 // 西暦→和暦
@@ -77,7 +78,7 @@ export default function SellWizardPage() {
 
   const [step, setStep] = useState<Step>('info');
   const [info, setInfo] = useState<CarInfo>({
-    maker: '', model: '', year: currentYear - 3, mileage_km: 30000, condition: 'good',
+    maker: '', model: '', year: currentYear - 3, mileage_km: 0, condition: 'good',
   });
   const [estimate, setEstimate] = useState<Estimate | null>(null);
   const [listingType, setListingType] = useState<'direct' | 'proxy'>('direct');
@@ -217,24 +218,16 @@ export default function SellWizardPage() {
             </div>
             <div>
               <label className="label">走行距離 *</label>
-              <div className="relative">
-                <input
-                  className="input pr-8" type="number" min={0} step={1000} inputMode="numeric"
-                  value={info.mileage_km} onFocus={e => e.target.select()}
-                  onChange={e => setInfo({ ...info, mileage_km: Math.max(0, Number(e.target.value)) })}
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">km</span>
-              </div>
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
-                {[10000, 30000, 50000, 80000, 100000].map(km => (
-                  <button
-                    key={km} type="button" onClick={() => setInfo({ ...info, mileage_km: km })}
-                    className={`rounded-full border px-2.5 py-0.5 text-xs font-bold transition ${info.mileage_km === km ? 'border-navy-400 bg-navy-50 text-navy-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}
-                  >
-                    {km / 10000}万km
-                  </button>
+              <select
+                className="input"
+                value={info.mileage_km || ''}
+                onChange={e => setInfo({ ...info, mileage_km: Number(e.target.value) })}
+              >
+                <option value="">選択してください</option>
+                {MILEAGE_OPTIONS.map(o => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
-              </div>
+              </select>
             </div>
           </div>
 
