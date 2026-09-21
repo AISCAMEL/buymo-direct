@@ -3,6 +3,7 @@ import { requireAdmin } from '@/lib/admin';
 import { createServiceClient } from '@/lib/supabase/service';
 import { ClipboardCheck, Inbox, Phone, Mail, User } from 'lucide-react';
 import { formatYen } from '@/lib/format';
+import { diagnosisLabel, sellTimingLabel } from '@/lib/appraisal-diagnosis';
 import { updateAppraisalQuote } from './actions';
 
 export const dynamic = 'force-dynamic';
@@ -42,6 +43,8 @@ type Row = {
   has_records: boolean | null;
   non_smoking: boolean | null;
   photos: { url: string; caption: string | null }[] | null;
+  diagnosis: Record<string, string> | null;
+  sell_timing: string | null;
   listing_id: string | null;
   converted_at: string | null;
 };
@@ -141,6 +144,26 @@ export default async function AdminAppraisalsPage() {
                     )}
                     {r.repair_detail && <p className="mt-1.5 text-amber-700">修復歴: {r.repair_detail}</p>}
                     {r.equipment && <p className="mt-1.5 whitespace-pre-wrap">装備: {r.equipment}</p>}
+                  </div>
+                )}
+
+                {/* かんたん問診・売却時期 */}
+                {((r.diagnosis && Object.keys(r.diagnosis).length > 0) || r.sell_timing) && (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {r.sell_timing && (
+                      <span className="rounded-full bg-navy-100 px-2.5 py-0.5 text-xs font-bold text-navy-700">
+                        売却時期: {sellTimingLabel(r.sell_timing) ?? r.sell_timing}
+                      </span>
+                    )}
+                    {r.diagnosis && Object.entries(r.diagnosis).map(([k, v]) => {
+                      const d = diagnosisLabel(k, v);
+                      if (!d) return null;
+                      return (
+                        <span key={k} className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${d.warn ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
+                          {d.q.replace(/（.*）/, '')}: {d.label}
+                        </span>
+                      );
+                    })}
                   </div>
                 )}
 

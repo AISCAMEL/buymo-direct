@@ -4,6 +4,7 @@ import { Bot, ClipboardCheck } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
 import { ListingForm, type ListingInitial } from '@/components/ListingForm';
+import { PRIVATE_CAPTIONS } from '@/lib/photo-guide';
 import { Suspense } from 'react';
 
 export const dynamic = 'force-dynamic';
@@ -60,7 +61,7 @@ export default async function SellPage({
         };
         const photos = Array.isArray(a.photos) ? (a.photos as { url?: string; caption?: string }[]) : [];
         initialImages = photos
-          .filter((p) => p && typeof p.url === 'string')
+          .filter((p) => p && typeof p.url === 'string' && !PRIVATE_CAPTIONS.has(p.caption ?? ''))
           .map((p) => ({ url: p.url as string, caption: p.caption ?? null }));
         carriedFrom = true;
       }
@@ -91,6 +92,27 @@ export default async function SellPage({
           <span>査定でご入力いただいた<span className="font-bold">車両情報と写真を引き継ぎました</span>。内容を確認し、タイトルと価格を入れて出品してください。</span>
         </div>
       )}
+
+      {/* はじめての出品ガイド（初心者向け） */}
+      <div className="mb-4 rounded-2xl border border-slate-200 bg-white p-4">
+        <p className="text-sm font-black text-navy-800">はじめての出品 — 3ステップ</p>
+        <div className="mt-2 grid grid-cols-3 gap-2 text-center text-xs">
+          {[
+            { n: '1', t: '写真を撮る', d: 'ガイドに沿ってスマホで撮影・アップ' },
+            { n: '2', t: '情報を入れる', d: 'メーカー・年式・価格など（分かる範囲でOK）' },
+            { n: '3', t: '出品する', d: '手数料無料。売れなくても買取保証つき' },
+          ].map((s) => (
+            <div key={s.n} className="rounded-xl bg-slate-50 p-2.5">
+              <div className="mx-auto mb-1 grid h-6 w-6 place-items-center rounded-full bg-accent-500 text-[11px] font-black text-white">{s.n}</div>
+              <p className="font-bold text-navy-800">{s.t}</p>
+              <p className="mt-0.5 leading-tight text-slate-500">{s.d}</p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-2 text-[11px] text-slate-500">
+          迷ったら「AI相場診断から始める」を押すと、査定額の目安を見ながら出品できます。価格は後から変更できます。
+        </p>
+      </div>
 
       {/* 安心・導線バー */}
       <div className="mb-5 flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-xl bg-navy-50 px-4 py-2.5 text-xs font-bold text-navy-700">

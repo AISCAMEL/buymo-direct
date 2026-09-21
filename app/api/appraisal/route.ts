@@ -33,6 +33,8 @@ export async function POST(req: Request) {
     oneOwner?: boolean;
     hasRecords?: boolean;
     nonSmoking?: boolean;
+    diagnosis?: Record<string, string>;
+    sellTiming?: string;
     photos?: { url?: string; caption?: string }[];
   };
 
@@ -108,6 +110,8 @@ export async function POST(req: Request) {
       one_owner: !!body.oneOwner,
       has_records: !!body.hasRecords,
       non_smoking: !!body.nonSmoking,
+      diagnosis: body.diagnosis && typeof body.diagnosis === 'object' ? body.diagnosis : {},
+      sell_timing: str(body.sellTiming, 20),
       photos,
       source: 'valuation',
       status: 'pending',

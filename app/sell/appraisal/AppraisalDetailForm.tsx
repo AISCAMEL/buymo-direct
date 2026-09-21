@@ -6,7 +6,8 @@ import Link from 'next/link';
 import { ClipboardCheck, ImagePlus, X, Check, Loader2, CheckCircle2 } from 'lucide-react';
 import { CATALOG_MAKERS } from '@/lib/vehicle-catalog';
 import { PREFECTURES, TRANSMISSIONS, FUELS, BODY_TYPES } from '@/lib/constants';
-import { PHOTO_GUIDE, guideIndex } from '@/lib/photo-guide';
+import { APPRAISAL_PHOTO_GUIDE, appraisalGuideIndex } from '@/lib/photo-guide';
+import { DIAGNOSIS_QUESTIONS, SELL_TIMING_OPTIONS } from '@/lib/appraisal-diagnosis';
 import { formatYen } from '@/lib/format';
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -62,6 +63,10 @@ export function AppraisalDetailForm() {
   const [nonSmoking, setNonSmoking] = useState(false);
   const [equipment, setEquipment] = useState('');
   const [notes, setNotes] = useState('');
+
+  // かんたん問診・売却時期
+  const [diagnosis, setDiagnosis] = useState<Record<string, string>>({});
+  const [sellTiming, setSellTiming] = useState('');
 
   // 連絡先
   const [name, setName] = useState('');
@@ -131,6 +136,7 @@ export function AppraisalDetailForm() {
           repairDetail: repair === 'yes' ? repairDetail : '',
           equipment,
           oneOwner, hasRecords, nonSmoking,
+          diagnosis, sellTiming,
           photos: readyPhotos,
           aiLow, aiHigh,
         }),
@@ -147,7 +153,7 @@ export function AppraisalDetailForm() {
   }
 
   const orderedPhotos = useMemo(
-    () => [...photos].sort((a, b) => guideIndex(a.caption) - guideIndex(b.caption)),
+    () => [...photos].sort((a, b) => appraisalGuideIndex(a.caption) - appraisalGuideIndex(b.caption)),
     [photos],
   );
 
@@ -180,6 +186,27 @@ export function AppraisalDetailForm() {
         <p className="mt-1 text-sm text-slate-500">
           正確な査定のため、車両の詳細と写真をご入力ください。担当が確認し確定金額をご案内します（無料・キャンセル可）。
           {aiLow && aiHigh && <>　<span className="font-bold text-navy-700">AI概算：{formatYen(aiLow)}〜{formatYen(aiHigh)}</span></>}
+        </p>
+      </div>
+
+      {/* はじめての方へ（かんたん3ステップ） */}
+      <div className="rounded-2xl border border-navy-100 bg-navy-50/60 p-4">
+        <p className="text-sm font-black text-navy-800">はじめての方へ — かんたん3ステップ</p>
+        <div className="mt-2 grid grid-cols-3 gap-2 text-center text-xs">
+          {[
+            { n: '1', t: '入力', d: '分かる範囲でOK。空欄があっても大丈夫です' },
+            { n: '2', t: '写真', d: 'スマホで撮ってアップ。すべて任意です' },
+            { n: '3', t: '待つ', d: '担当が確認し金額をご連絡（1〜2営業日）' },
+          ].map((s) => (
+            <div key={s.n} className="rounded-xl bg-white p-2.5">
+              <div className="mx-auto mb-1 grid h-6 w-6 place-items-center rounded-full bg-navy-500 text-[11px] font-black text-white">{s.n}</div>
+              <p className="font-bold text-navy-800">{s.t}</p>
+              <p className="mt-0.5 leading-tight text-slate-500">{s.d}</p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-2 text-[11px] text-slate-500">
+          ※ 分からない項目は空欄のままで進めます。あとで担当がお電話・メールで確認します。
         </p>
       </div>
 
@@ -317,6 +344,65 @@ export function AppraisalDetailForm() {
         </div>
       </section>
 
+      {/* かんたん問診 */}
+      <section className="card space-y-4 p-5">
+        <div>
+          <h2 className="font-bold text-slate-700">かんたん問診</h2>
+          <p className="mt-0.5 text-xs text-slate-500">当てはまるものをタップするだけ。正確な査定に役立ちます。</p>
+        </div>
+        <div className="space-y-3">
+          {DIAGNOSIS_QUESTIONS.map((qq) => (
+            <div key={qq.key}>
+              <p className="text-sm font-bold text-slate-700">{qq.q}</p>
+              {qq.help && <p className="text-[11px] text-slate-400">{qq.help}</p>}
+              <div className="mt-1.5 flex flex-wrap gap-2">
+                {qq.options.map((o) => {
+                  const active = diagnosis[qq.key] === o.value;
+                  return (
+                    <button
+                      type="button"
+                      key={o.value}
+                      onClick={() => setDiagnosis((prev) => ({ ...prev, [qq.key]: o.value }))}
+                      className={`rounded-full border-2 px-4 py-1.5 text-sm font-bold transition ${
+                        active
+                          ? o.warn
+                            ? 'border-amber-400 bg-amber-50 text-amber-700'
+                            : 'border-navy-500 bg-navy-50 text-navy-700'
+                          : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                      }`}
+                    >
+                      {o.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 売却時期 */}
+      <section className="card space-y-2 p-5">
+        <h2 className="font-bold text-slate-700">売却をお考えの時期</h2>
+        <div className="flex flex-wrap gap-2">
+          {SELL_TIMING_OPTIONS.map((o) => {
+            const active = sellTiming === o.value;
+            return (
+              <button
+                type="button"
+                key={o.value}
+                onClick={() => setSellTiming(o.value)}
+                className={`rounded-full border-2 px-4 py-1.5 text-sm font-bold transition ${
+                  active ? 'border-navy-500 bg-navy-50 text-navy-700' : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                }`}
+              >
+                {o.label}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
       {/* 写真 */}
       <section className="card p-5">
         <h2 className="font-bold text-slate-700">車両写真</h2>
@@ -324,7 +410,7 @@ export function AppraisalDetailForm() {
           ガイドに沿って撮影・アップロードいただくと、より正確に査定できます。すべて任意です。
         </p>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {PHOTO_GUIDE.map((g) => {
+          {APPRAISAL_PHOTO_GUIDE.map((g) => {
             const p = photos.find((x) => x.caption === g.label);
             return (
               <div key={g.label} className="space-y-1">
@@ -366,7 +452,7 @@ export function AppraisalDetailForm() {
         <div className="mt-5 border-t border-slate-100 pt-4">
           <p className="mb-2 text-xs font-bold text-slate-600">その他の写真（自由）</p>
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
-            {orderedPhotos.filter((p) => guideIndex(p.caption) >= 100 && p.url).map((p) => (
+            {orderedPhotos.filter((p) => appraisalGuideIndex(p.caption) >= 100 && p.url).map((p) => (
               <div key={p.key} className="group relative aspect-square overflow-hidden rounded-lg border border-slate-200">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={p.url} alt="" className="h-full w-full object-cover" />
