@@ -51,6 +51,13 @@ export function ListingGallery({ images, title }: { images: ListingImage[]; titl
           priority={current === 0}
         />
 
+        {/* アングルラベル（フロント/リアなど） */}
+        {sorted[current].caption && (
+          <span className="absolute left-3 top-3 rounded-full bg-black/55 px-2.5 py-1 text-xs font-bold text-white">
+            {sorted[current].caption}
+          </span>
+        )}
+
         {/* 拡大ボタン */}
         <button
           onClick={() => setLightbox(true)}
@@ -126,6 +133,11 @@ export function ListingGallery({ images, title }: { images: ListingImage[]; titl
             className="max-h-[90vh] max-w-[95vw] object-contain"
             onClick={(e) => e.stopPropagation()}
           />
+          {sorted[current].caption && (
+            <span className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-white/15 px-3 py-1 text-sm font-bold text-white">
+              {sorted[current].caption}
+            </span>
+          )}
           {total > 1 && (
             <>
               <button
