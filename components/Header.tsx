@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { PlusCircle, Building2 } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { unreadConversationIds } from '@/lib/unread';
 import { pendingReviewCount } from '@/lib/pendingReviews';
@@ -44,9 +44,6 @@ export async function Header() {
         <nav className="flex items-center gap-1 sm:gap-2">
           <Link href="/listings" className="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100">
             車を探す
-          </Link>
-          <Link href="/dealers" className="hidden items-center gap-1 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 md:flex">
-            <Building2 className="h-4 w-4" /> 加盟店
           </Link>
           {user ? (
             <>
