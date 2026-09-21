@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { PlusCircle, MessageSquare, LayoutDashboard, Heart, ShieldAlert, Star, Building2 } from 'lucide-react';
+import { PlusCircle, Building2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { unreadConversationIds } from '@/lib/unread';
 import { pendingReviewCount } from '@/lib/pendingReviews';
 import { PushNotificationManager } from '@/components/PushNotificationManager';
 import { NotificationBell } from '@/components/NotificationBell';
+import { UserMenu } from '@/components/UserMenu';
 
 export async function Header() {
   const supabase = await createClient();
@@ -41,60 +42,29 @@ export async function Header() {
         </Link>
 
         <nav className="flex items-center gap-1 sm:gap-2">
-          <Link href="/listings" className="rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100">
+          <Link href="/listings" className="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100">
             車を探す
           </Link>
-          <Link href="/dealers" className="hidden rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 sm:flex items-center gap-1">
+          <Link href="/dealers" className="hidden items-center gap-1 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 md:flex">
             <Building2 className="h-4 w-4" /> 加盟店
           </Link>
           {user ? (
             <>
-              <Link href="/dashboard/favorites" className="hidden items-center gap-1 rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 sm:flex">
-                <Heart className="h-4 w-4" /> お気に入り
-              </Link>
-              <Link href="/messages" className="relative hidden items-center gap-1 rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 sm:flex">
-                <MessageSquare className="h-4 w-4" /> メッセージ
-                {unreadCount > 0 && (
-                  <span className="ml-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                )}
-              </Link>
-              <Link href="/dashboard/reviews" className="relative hidden items-center gap-1 rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 sm:flex">
-                <Star className="h-4 w-4" /> 評価
-                {pendingReviews > 0 && (
-                  <span className="ml-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-500 px-1.5 text-xs font-bold text-white">
-                    {pendingReviews}
-                  </span>
-                )}
-              </Link>
-              <Link href="/dashboard/listings" className="relative hidden items-center gap-1 rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 sm:flex">
-                <LayoutDashboard className="h-4 w-4" /> マイページ
-                {(pendingEscrows ?? 0) > 0 && (
-                  <span className="ml-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-xs font-bold text-white">
-                    {(pendingEscrows ?? 0) > 9 ? '9+' : pendingEscrows}
-                  </span>
-                )}
-              </Link>
-              {isAdmin && (
-                <Link href="/admin" className="hidden items-center gap-1 rounded-lg px-3 py-2 text-sm font-bold text-accent-600 hover:bg-accent-50 sm:flex">
-                  <ShieldAlert className="h-4 w-4" /> 管理
-                </Link>
-              )}
-              <PushNotificationManager />
               <NotificationBell userId={user?.id} />
-              <Link href="/sell" className="btn-accent">
+              <Link href="/sell" className="btn-accent whitespace-nowrap">
                 <PlusCircle className="h-4 w-4" /> 出品する
               </Link>
-              <form action="/auth/signout" method="post">
-                <button className="rounded-lg px-3 py-2 text-sm font-bold text-slate-500 hover:bg-slate-100">
-                  ログアウト
-                </button>
-              </form>
+              <UserMenu
+                unreadCount={unreadCount}
+                pendingReviews={pendingReviews}
+                pendingEscrows={pendingEscrows ?? 0}
+                isAdmin={isAdmin}
+              />
+              <span className="hidden lg:block"><PushNotificationManager /></span>
             </>
           ) : (
             <>
-              <Link href="/login" className="rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100">
+              <Link href="/login" className="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100">
                 ログイン
               </Link>
               <Link href="/signup" className="btn-primary whitespace-nowrap">
