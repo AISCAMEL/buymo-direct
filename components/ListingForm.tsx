@@ -1,8 +1,8 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { GripVertical, ImagePlus, X, Loader2, ShieldCheck, Users } from 'lucide-react';
+import { Camera, ImagePlus, X, Loader2, ShieldCheck, Users, Check } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { compressImage } from '@/lib/image';
 import { MAKERS, BODY_TYPES, TRANSMISSIONS, FUELS, PREFECTURES } from '@/lib/constants';
@@ -23,7 +23,26 @@ type ImageItem = {
   url: string;
   file?: File;
   dbId?: string;
+  caption?: string;
 };
+
+// 撮影ガイド（推奨アングル）
+const PHOTO_GUIDE: { label: string; hint: string }[] = [
+  { label: 'フロント（正面）', hint: '車の正面全体' },
+  { label: 'リア（背面）', hint: '車の後ろ全体' },
+  { label: '左サイド', hint: '左横から全体' },
+  { label: '右サイド', hint: '右横から全体' },
+  { label: '室内（前席）', hint: '運転席まわり' },
+  { label: '室内（後席）', hint: '後部座席' },
+  { label: 'メーター', hint: '走行距離が写るように' },
+  { label: 'エンジンルーム', hint: 'ボンネットを開けて' },
+  { label: '傷・気になる箇所', hint: 'あれば近くで' },
+];
+const GUIDE_LABELS = PHOTO_GUIDE.map((g) => g.label);
+function guideIndex(caption?: string): number {
+  const i = caption ? GUIDE_LABELS.indexOf(caption) : -1;
+  return i < 0 ? 100 : i;
+}
 
 export function ListingForm({
   userId,
@@ -56,18 +75,30 @@ export function ListingForm({
   const [images, setImages] = useState<ImageItem[]>(
     [...existingImages]
       .sort((a, b) => a.sort_order - b.sort_order)
-      .map((img) => ({ key: img.id, url: img.url, dbId: img.id }))
+      .map((img) => ({ key: img.id, url: img.url, dbId: img.id, caption: img.caption ?? undefined }))
   );
   const [removedIds, setRemovedIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const dragFromRef = useRef<number | null>(null);
+  // ガイドスロット（角度指定）にアップロード。既に同じ角度があれば差し替え。
+  function onPickSlot(e: React.ChangeEvent<HTMLInputElement>, label: string) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const existing = images.find((im) => im.caption === label);
+    if (existing?.dbId) setRemovedIds((prev) => [...prev, existing.dbId!]);
+    setImages((prev) => [
+      ...prev.filter((im) => im.caption !== label),
+      { key: `slot-${label}-${Date.now()}`, url: URL.createObjectURL(file), file, caption: label },
+    ]);
+    e.target.value = '';
+  }
 
+  // その他の写真（自由・角度指定なし）
   function onPick(e: React.ChangeEvent<HTMLInputElement>) {
-    const picked = Array.from(e.target.files ?? []).slice(0, 10 - images.length);
+    const picked = Array.from(e.target.files ?? []).slice(0, 15 - images.length);
     const items: ImageItem[] = picked.map((file, i) => ({
-      key: `new-${Date.now()}-${i}`,
+      key: `extra-${Date.now()}-${i}`,
       url: URL.createObjectURL(file),
       file,
     }));
@@ -75,31 +106,10 @@ export function ListingForm({
     e.target.value = '';
   }
 
-  function removeImage(idx: number) {
-    const img = images[idx];
-    if (img.dbId) setRemovedIds((prev) => [...prev, img.dbId!]);
-    setImages((prev) => prev.filter((_, i) => i !== idx));
-  }
-
-  function onDragStart(e: React.DragEvent, idx: number) {
-    dragFromRef.current = idx;
-    e.dataTransfer.effectAllowed = 'move';
-  }
-
-  function onDragEnter(idx: number) {
-    const from = dragFromRef.current;
-    if (from === null || from === idx) return;
-    setImages((prev) => {
-      const next = [...prev];
-      const [moved] = next.splice(from, 1);
-      next.splice(idx, 0, moved);
-      return next;
-    });
-    dragFromRef.current = idx;
-  }
-
-  function onDragEnd() {
-    dragFromRef.current = null;
+  function removeByKey(key: string) {
+    const img = images.find((im) => im.key === key);
+    if (img?.dbId) setRemovedIds((prev) => [...prev, img.dbId!]);
+    setImages((prev) => prev.filter((im) => im.key !== key));
   }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -171,13 +181,15 @@ export function ListingForm({
         }).catch(() => {});
       }
 
-      // 全画像を現在の並び順で保存（既存は sort_order 更新、新規はアップロード後に INSERT）
-      for (let sortOrder = 0; sortOrder < images.length; sortOrder++) {
-        const img = images[sortOrder];
+      // ガイド順（フロント→リア→…→その他）に並べて保存。
+      // 既存は sort_order / caption を更新、新規はアップロード後に INSERT。
+      const ordered = [...images].sort((a, b) => guideIndex(a.caption) - guideIndex(b.caption));
+      for (let sortOrder = 0; sortOrder < ordered.length; sortOrder++) {
+        const img = ordered[sortOrder];
         if (img.dbId) {
           await supabase
             .from('listing_images')
-            .update({ sort_order: sortOrder })
+            .update({ sort_order: sortOrder, caption: img.caption ?? null })
             .eq('id', img.dbId);
         } else if (img.file) {
           const file = await compressImage(img.file);
@@ -191,6 +203,7 @@ export function ListingForm({
             listing_id: listingId,
             url: pub.publicUrl,
             sort_order: sortOrder,
+            caption: img.caption ?? null,
           });
         }
       }
@@ -209,55 +222,104 @@ export function ListingForm({
     <form onSubmit={onSubmit} className="space-y-6">
       {/* 画像 */}
       <div className="card p-5">
-        <label className="label">
-          車両写真（最大10枚・ドラッグで並び替え・先頭がサムネイル）
-        </label>
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
-          {images.map((img, idx) => (
-            <div
-              key={img.key}
-              draggable
-              onDragStart={(e) => onDragStart(e, idx)}
-              onDragEnter={() => onDragEnter(idx)}
-              onDragOver={(e) => e.preventDefault()}
-              onDragEnd={onDragEnd}
-              className="group relative aspect-square cursor-grab overflow-hidden rounded-lg border border-slate-200 active:cursor-grabbing"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={img.url} alt="" className="h-full w-full object-cover" />
-
-              {/* グリップハンドル */}
-              <div className="absolute left-1 top-1 rounded bg-black/40 p-0.5 text-white opacity-0 transition group-hover:opacity-100">
-                <GripVertical className="h-3 w-3" />
-              </div>
-
-              {/* 削除ボタン */}
-              <button
-                type="button"
-                onClick={() => removeImage(idx)}
-                className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white opacity-0 transition group-hover:opacity-100"
-              >
-                <X className="h-3 w-3" />
-              </button>
-
-              {idx === 0 && (
-                <span className="badge absolute bottom-1 left-1 bg-navy-500 text-white">表紙</span>
-              )}
-            </div>
-          ))}
-          {images.length < 10 && (
-            <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 text-slate-400 hover:bg-slate-50">
-              <ImagePlus className="h-6 w-6" />
-              <span className="mt-1 text-xs">追加</span>
-              <input type="file" accept="image/*" multiple className="hidden" onChange={onPick} />
-            </label>
-          )}
+        <div className="mb-1 flex items-center gap-2">
+          <Camera className="h-4 w-4 text-navy-500" />
+          <label className="label mb-0">車両写真</label>
         </div>
-        {images.length > 1 && (
-          <p className="mt-2 text-xs text-slate-400">
-            ドラッグで並び替え可。先頭の画像がサムネイルになります。
-          </p>
-        )}
+        <p className="mb-4 text-xs text-slate-500">
+          下のガイドに沿って撮影・アップロードすると、購入者に伝わりやすくなります。
+          先頭（フロント）が一覧のサムネイルになります。すべて任意ですが、多いほど反応が上がります。
+        </p>
+
+        {/* 撮影ガイド スロット */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {PHOTO_GUIDE.map((g, i) => {
+            const img = images.find((im) => im.caption === g.label);
+            return (
+              <div key={g.label} className="space-y-1">
+                <label
+                  className={`group relative flex aspect-[4/3] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border-2 transition ${
+                    img
+                      ? 'border-navy-300'
+                      : 'border-dashed border-slate-300 hover:border-navy-300 hover:bg-slate-50'
+                  }`}
+                >
+                  {img ? (
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={img.url} alt={g.label} className="h-full w-full object-cover" />
+                      {i === 0 && (
+                        <span className="badge absolute bottom-1 left-1 bg-navy-500 text-white">表紙</span>
+                      )}
+                      <span className="absolute right-1 top-1 rounded-full bg-navy-500 p-0.5 text-white">
+                        <Check className="h-3 w-3" />
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="mb-1 grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-slate-400 group-hover:bg-navy-50 group-hover:text-navy-500">
+                        <ImagePlus className="h-4 w-4" />
+                      </span>
+                      <span className="px-1 text-center text-[11px] font-bold text-slate-600">{g.label}</span>
+                      <span className="px-1 text-center text-[10px] leading-tight text-slate-400">{g.hint}</span>
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => onPickSlot(e, g.label)}
+                  />
+                </label>
+                {img && (
+                  <div className="flex items-center justify-between px-0.5">
+                    <span className="truncate text-[11px] font-bold text-navy-700">{g.label}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeByKey(img.key)}
+                      className="rounded p-0.5 text-slate-400 hover:bg-red-50 hover:text-red-500"
+                      aria-label={`${g.label}を削除`}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* その他の写真（自由） */}
+        <div className="mt-5 border-t border-slate-100 pt-4">
+          <p className="mb-2 text-xs font-bold text-slate-600">その他の写真（自由・任意）</p>
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
+            {images
+              .filter((im) => guideIndex(im.caption) >= 100)
+              .map((img) => (
+                <div
+                  key={img.key}
+                  className="group relative aspect-square overflow-hidden rounded-lg border border-slate-200"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={img.url} alt="" className="h-full w-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removeByKey(img.key)}
+                    className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white opacity-0 transition group-hover:opacity-100"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            {images.length < 15 && (
+              <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-300 text-slate-400 hover:bg-slate-50">
+                <ImagePlus className="h-6 w-6" />
+                <span className="mt-1 text-xs">追加</span>
+                <input type="file" accept="image/*" multiple className="hidden" onChange={onPick} />
+              </label>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* 基本情報 */}

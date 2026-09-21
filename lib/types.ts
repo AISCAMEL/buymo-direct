@@ -242,6 +242,7 @@ export interface ListingImage {
   listing_id: string;
   url: string;
   sort_order: number;
+  caption?: string | null;
   created_at: string;
 }
 
