@@ -1,7 +1,7 @@
 // 車名マスタ（サーバー側）。
 // フォームには「curated（固定候補）＋ vehicle_models（DB）＋ 実際の出品」を統合して返す。
 // refreshVehicleModels() を Cron で回すと、実出品とAI（現行ラインナップ）から自動更新される。
-import { MAKERS } from '@/lib/constants';
+import { VEHICLE_CATALOG } from '@/lib/vehicle-catalog';
 import { generateWithClaude } from '@/lib/ai';
 import { createServiceClient } from '@/lib/supabase/service';
 
@@ -21,7 +21,7 @@ function dedupeSorted(list: string[]): string[] {
 
 /** メーカーの車名候補を返す（curated＋DB＋実出品を統合）。失敗時もcuratedは返す。 */
 export async function getModelSuggestions(maker: string): Promise<string[]> {
-  const curated = MAKERS[maker] ?? [];
+  const curated = VEHICLE_CATALOG[maker] ?? [];
   const collected: string[] = [...curated];
 
   try {
@@ -36,7 +36,7 @@ export async function getModelSuggestions(maker: string): Promise<string[]> {
     /* DB未整備でも curated は返す */
   }
 
-  return dedupeSorted(collected).slice(0, 60);
+  return dedupeSorted(collected).slice(0, 120);
 }
 
 /** AIに現行ラインナップを尋ねて車名配列を得る（キー無し・失敗時は空配列）。 */
@@ -44,12 +44,12 @@ async function fetchAiModels(maker: string): Promise<string[]> {
   if (!process.env.ANTHROPIC_API_KEY) return [];
   try {
     const year = new Date().getFullYear();
-    const prompt = `${year}年時点で日本国内で販売中または近年販売された「${maker}」の代表的な乗用車の車種名を最大15個、JSON配列のみで返してください（説明・前置き・コードブロック記号は不要、車種名のみの日本語配列）。例: ["プリウス","アクア"]`;
+    const prompt = `${year}年時点で日本国内で販売中または近年販売された「${maker}」の代表的な乗用車の車種名を最大30個、JSON配列のみで返してください（説明・前置き・コードブロック記号は不要、車種名のみの日本語配列）。例: ["プリウス","アクア"]`;
     const text = await generateWithClaude(prompt);
     const match = text.match(/\[[\s\S]*?\]/);
     if (!match) return [];
     const arr = JSON.parse(match[0]) as unknown[];
-    return arr.filter((x): x is string => typeof x === 'string' && x.trim().length > 0 && x.length <= 40).slice(0, 15);
+    return arr.filter((x): x is string => typeof x === 'string' && x.trim().length > 0 && x.length <= 40).slice(0, 30);
   } catch {
     return [];
   }
@@ -58,7 +58,7 @@ async function fetchAiModels(maker: string): Promise<string[]> {
 /** 車名マスタを更新（curatedをseed＋実出品＋AI現行ラインナップをupsert）。Cron/管理者用。 */
 export async function refreshVehicleModels(): Promise<{ makers: number; upserts: number; aiUsed: boolean }> {
   const s = createServiceClient();
-  const makers = Object.keys(MAKERS).filter((m) => m !== 'その他');
+  const makers = Object.keys(VEHICLE_CATALOG).filter((m) => m !== 'その他');
   let upserts = 0;
   let aiUsed = false;
 
@@ -67,7 +67,7 @@ export async function refreshVehicleModels(): Promise<{ makers: number; upserts:
     const now = new Date().toISOString();
 
     // 1) curated（固定候補）を seed として登録
-    for (const model of (MAKERS[maker] ?? []).filter((m) => m !== 'その他')) {
+    for (const model of (VEHICLE_CATALOG[maker] ?? []).filter((m) => m !== 'その他')) {
       rows.push({ maker, model, source: 'seed', active: true, updated_at: now });
     }
 

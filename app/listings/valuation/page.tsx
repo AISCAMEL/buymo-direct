@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Calculator, TrendingDown, Loader2 } from 'lucide-react';
-import { MAKERS } from '@/lib/constants';
+import { VEHICLE_CATALOG, CATALOG_MAKERS } from '@/lib/vehicle-catalog';
 import { formatYen } from '@/lib/format';
 
 type ValuationResult = { lower: number; upper: number; est: number; source: 'ai' | 'formula'; reasoning?: string };
@@ -33,7 +33,7 @@ export default function ValuationPage() {
   // メーカー選択に応じて車名候補を取得（DB＋実出品＋AIで自動更新されるマスタ）
   useEffect(() => {
     if (!maker) { setModelOptions([]); return; }
-    const fallback = (MAKERS[maker] ?? []).filter((m) => m !== 'その他');
+    const fallback = (VEHICLE_CATALOG[maker] ?? []).filter((m) => m !== 'その他');
     setModelOptions(fallback);
     let cancelled = false;
     fetch(`/api/models?maker=${encodeURIComponent(maker)}`)
@@ -89,7 +89,7 @@ export default function ValuationPage() {
               <label className="label">メーカー *</label>
               <select required className="input" value={maker} onChange={(e) => { setMaker(e.target.value); setModel(''); }}>
                 <option value="">選択してください</option>
-                {Object.keys(MAKERS).map((m) => <option key={m} value={m}>{m}</option>)}
+                {CATALOG_MAKERS.map((m) => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
             <div>
