@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Calculator, TrendingDown, Loader2 } from 'lucide-react';
 import { MAKERS } from '@/lib/constants';
 import { formatYen } from '@/lib/format';
@@ -20,6 +20,7 @@ const YEAR_OPTIONS = Array.from({ length: CURRENT_YEAR - 1990 + 1 }, (_, i) => C
 export default function ValuationPage() {
   const [maker, setMaker] = useState('');
   const [model, setModel] = useState('');
+  const [modelOptions, setModelOptions] = useState<string[]>([]);
   const [year, setYear] = useState(CURRENT_YEAR - 5);
   const [mileage, setMileage] = useState<number | ''>('');
   const [condition, setCondition] = useState('good');
@@ -28,6 +29,21 @@ export default function ValuationPage() {
   const [result, setResult] = useState<ValuationResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // メーカー選択に応じて車名候補を取得（DB＋実出品＋AIで自動更新されるマスタ）
+  useEffect(() => {
+    if (!maker) { setModelOptions([]); return; }
+    const fallback = (MAKERS[maker] ?? []).filter((m) => m !== 'その他');
+    setModelOptions(fallback);
+    let cancelled = false;
+    fetch(`/api/models?maker=${encodeURIComponent(maker)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { models?: string[] } | null) => {
+        if (!cancelled && d?.models?.length) setModelOptions(d.models);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [maker]);
 
   async function calc(e: React.FormEvent) {
     e.preventDefault();
@@ -89,7 +105,7 @@ export default function ValuationPage() {
                 autoComplete="off"
               />
               <datalist id="model-options">
-                {(MAKERS[maker] ?? []).filter((m) => m !== 'その他').map((m) => (
+                {modelOptions.map((m) => (
                   <option key={m} value={m} />
                 ))}
               </datalist>

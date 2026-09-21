@@ -6,6 +6,10 @@
     {
       "path": "/api/alert-check",
       "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/models/refresh",
+      "schedule": "0 3 * * 1"
     }
   ],
   "functions": {
