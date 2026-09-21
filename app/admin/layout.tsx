@@ -10,6 +10,7 @@ const NAV = [
   { href: '/admin/listings', label: '出品モデレーション' },
   { href: '/admin/escrow', label: '取引監視' },
   { href: '/admin/buyback', label: '買取保証審査' },
+  { href: '/admin/appraisals', label: '査定依頼' },
   { href: '/admin/valuations', label: '査定履歴' },
   { href: '/admin/loans', label: 'ローン審査' },
   { href: '/admin/messages', label: 'チャット監視' },

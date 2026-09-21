@@ -3,12 +3,13 @@ import { ClipboardList, CheckCircle2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { formatYen } from '@/lib/format';
 import { PREFECTURES } from '@/lib/constants';
+import { CATALOG_MAKERS } from '@/lib/vehicle-catalog';
 import { requestAppraisal } from './actions';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: '無料車両査定 | BUYMO' };
 
-const MAKERS = ['トヨタ', 'ホンダ', '日産', 'マツダ', 'スバル', 'スズキ', 'ダイハツ', '三菱', 'レクサス', 'BMW', 'メルセデス・ベンツ', 'アウディ', 'その他'];
+const MAKERS = CATALOG_MAKERS;
 const CONDITIONS = [
   { value: 'excellent', label: '極上（無傷・無修復）' },
   { value: 'good', label: '良好（小傷あり）' },

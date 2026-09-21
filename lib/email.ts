@@ -251,6 +251,49 @@ export async function sendContactEmails(opts: {
   });
 }
 
+/** 正式査定の申込：運営通知＋申込者への自動返信。ベストエフォート。 */
+export async function sendFormalAppraisalEmails(opts: {
+  name: string;
+  email?: string;
+  phone: string;
+  vehicle: string;
+  aiLow?: number;
+  aiHigh?: number;
+}): Promise<void> {
+  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const aiRange = opts.aiLow && opts.aiHigh
+    ? `<p style="margin:8px 0;color:#475569;font-size:14px">AI概算: <strong>¥${opts.aiLow.toLocaleString()} 〜 ¥${opts.aiHigh.toLocaleString()}</strong></p>`
+    : '';
+  const body = `
+    ${_p(`お名前: ${_strong(esc(opts.name))}`)}
+    ${_p(`電話: ${_strong(esc(opts.phone))}`)}
+    ${opts.email ? _p(`メール: ${_strong(esc(opts.email))}`) : ''}
+    ${_p(`車両: ${_strong(esc(opts.vehicle))}`)}
+    ${aiRange}
+  `;
+
+  const ops = opsEmail();
+  if (ops) {
+    await sendEmail({
+      to: ops,
+      subject: `【BUYMO】正式査定の依頼 — ${opts.name}様（${opts.vehicle}）`,
+      html: emailLayout('正式査定の依頼が届きました', body),
+    });
+  }
+  if (opts.email) {
+    await sendEmail({
+      to: opts.email,
+      subject: '【BUYMO】正式査定のお申し込みを受け付けました',
+      html: emailLayout(
+        '正式査定のお申し込みを受け付けました',
+        `${_p(`${_strong(esc(opts.name))} 様`)}
+         ${_p('この度は正式査定をお申し込みいただきありがとうございます。担当より確定金額のご案内をご連絡いたします（通常1〜2営業日）。')}
+         ${body}`,
+      ),
+    });
+  }
+}
+
 /** 車両査定結果メール。 */
 export async function sendAppraisalResultEmail(
   to: string,
