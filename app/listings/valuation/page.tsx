@@ -20,6 +20,7 @@ const YEAR_OPTIONS = Array.from({ length: CURRENT_YEAR - 1990 + 1 }, (_, i) => C
 export default function ValuationPage() {
   const [maker, setMaker] = useState('');
   const [model, setModel] = useState('');
+  const [otherModel, setOtherModel] = useState(false);
   const [modelOptions, setModelOptions] = useState<string[]>([]);
   const [year, setYear] = useState(CURRENT_YEAR - 5);
   const [mileage, setMileage] = useState<number | ''>('');
@@ -87,28 +88,37 @@ export default function ValuationPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="label">メーカー *</label>
-              <select required className="input" value={maker} onChange={(e) => { setMaker(e.target.value); setModel(''); }}>
+              <select required className="input" value={maker} onChange={(e) => { setMaker(e.target.value); setModel(''); setOtherModel(false); }}>
                 <option value="">選択してください</option>
                 {CATALOG_MAKERS.map((m) => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
             <div>
               <label className="label">車名（車種）</label>
-              <input
-                type="text"
-                list="model-options"
+              <select
                 className="input"
-                value={model}
-                onChange={(e) => setModel(e.target.value)}
-                placeholder={maker ? '例）プリウス' : '先にメーカーを選択'}
+                value={otherModel ? '__other__' : model}
                 disabled={!maker}
-                autoComplete="off"
-              />
-              <datalist id="model-options">
-                {modelOptions.map((m) => (
-                  <option key={m} value={m} />
-                ))}
-              </datalist>
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === '__other__') { setOtherModel(true); setModel(''); }
+                  else { setOtherModel(false); setModel(v); }
+                }}
+              >
+                <option value="">{maker ? '選択してください' : '先にメーカーを選択'}</option>
+                {modelOptions.map((m) => <option key={m} value={m}>{m}</option>)}
+                {maker && <option value="__other__">その他（一覧にない）</option>}
+              </select>
+              {otherModel && (
+                <input
+                  type="text"
+                  className="input mt-2"
+                  value={model}
+                  onChange={(e) => setModel(e.target.value)}
+                  placeholder="車名を入力"
+                  autoComplete="off"
+                />
+              )}
             </div>
           </div>
 
