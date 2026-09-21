@@ -19,6 +19,7 @@ const YEAR_OPTIONS = Array.from({ length: CURRENT_YEAR - 1990 + 1 }, (_, i) => C
 
 export default function ValuationPage() {
   const [maker, setMaker] = useState('');
+  const [model, setModel] = useState('');
   const [year, setYear] = useState(CURRENT_YEAR - 5);
   const [mileage, setMileage] = useState<number | ''>('');
   const [condition, setCondition] = useState('good');
@@ -38,7 +39,7 @@ export default function ValuationPage() {
       const res = await fetch('/api/valuation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ maker, year, mileageKm: Number(mileage), condition, shaken, accident }),
+        body: JSON.stringify({ maker, model: model.trim() || undefined, year, mileageKm: Number(mileage), condition, shaken, accident }),
       });
       if (!res.ok) throw new Error('failed');
       setResult((await res.json()) as ValuationResult);
@@ -67,12 +68,32 @@ export default function ValuationPage() {
         </p>
 
         <form onSubmit={calc} className="space-y-4">
-          <div>
-            <label className="label">メーカー *</label>
-            <select required className="input" value={maker} onChange={(e) => setMaker(e.target.value)}>
-              <option value="">選択してください</option>
-              {Object.keys(MAKERS).map((m) => <option key={m} value={m}>{m}</option>)}
-            </select>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="label">メーカー *</label>
+              <select required className="input" value={maker} onChange={(e) => { setMaker(e.target.value); setModel(''); }}>
+                <option value="">選択してください</option>
+                {Object.keys(MAKERS).map((m) => <option key={m} value={m}>{m}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="label">車名（車種）</label>
+              <input
+                type="text"
+                list="model-options"
+                className="input"
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                placeholder={maker ? '例）プリウス' : '先にメーカーを選択'}
+                disabled={!maker}
+                autoComplete="off"
+              />
+              <datalist id="model-options">
+                {(MAKERS[maker] ?? []).filter((m) => m !== 'その他').map((m) => (
+                  <option key={m} value={m} />
+                ))}
+              </datalist>
+            </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
