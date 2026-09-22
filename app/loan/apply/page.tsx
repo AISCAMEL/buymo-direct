@@ -21,15 +21,18 @@ export default async function LoanApplyPage({ searchParams }: { searchParams: Se
 
   let listingTitle: string | undefined;
   let defaultPrice = 0;
+  let vehicle: { year?: number; mileageKm?: number; maker?: string; bodyType?: string } = {};
   if (listingId) {
     const { data } = await supabase
       .from('listings')
-      .select('title, price')
+      .select('title, price, year, mileage_km, maker, body_type')
       .eq('id', listingId)
       .maybeSingle();
     if (data) {
-      listingTitle = (data as any).title;
-      defaultPrice = (data as any).price ?? 0;
+      const d = data as any;
+      listingTitle = d.title;
+      defaultPrice = d.price ?? 0;
+      vehicle = { year: d.year, mileageKm: d.mileage_km, maker: d.maker, bodyType: d.body_type };
     }
   }
 
@@ -42,6 +45,7 @@ export default async function LoanApplyPage({ searchParams }: { searchParams: Se
         listingTitle={listingTitle}
         defaultPrice={defaultPrice}
         defaultEmail={user!.email ?? ''}
+        vehicle={vehicle}
       />
     </div>
   );

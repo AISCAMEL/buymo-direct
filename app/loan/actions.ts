@@ -18,6 +18,9 @@ export interface LoanApplyInput {
   vehiclePrice: number;
   downPayment: number;
   termMonths: number;
+  escrowFee?: number;
+  optionsTotal?: number;
+  loanFee?: number;
   note?: string;
 }
 
@@ -35,7 +38,10 @@ export async function submitLoanApplication(
     return { error: '氏名・電話・メールは必須です' };
   }
   const term = LOAN_TERMS.includes(input.termMonths) ? input.termMonths : 60;
-  const financed = Math.max(0, input.vehiclePrice - Math.max(0, input.downPayment));
+  // ローン購入：車両価格＋エスクロー＋OP＋ローン手数料 − 頭金 が融資額
+  const addOns = Math.max(0, input.escrowFee ?? 0) + Math.max(0, input.optionsTotal ?? 0) + Math.max(0, input.loanFee ?? 0);
+  const grandTotal = Math.max(0, input.vehiclePrice) + addOns;
+  const financed = Math.max(0, grandTotal - Math.max(0, input.downPayment));
   const est = monthlyPayment(financed, LOAN_APR_FROM, term);
 
   const { data, error } = await supabase
