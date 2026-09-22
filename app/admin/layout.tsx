@@ -13,6 +13,7 @@ const NAV = [
   { href: '/admin/appraisals', label: '査定依頼' },
   { href: '/admin/valuations', label: '査定履歴' },
   { href: '/admin/loans', label: 'ローン審査' },
+  { href: '/admin/transport', label: '陸送申込' },
   { href: '/admin/messages', label: 'チャット監視' },
   { href: '/admin/contact', label: 'お問い合わせ' },
   { href: '/admin/reports', label: '通報' },
