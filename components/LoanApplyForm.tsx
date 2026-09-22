@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { CheckCircle2, Loader2, ShieldCheck, Info } from 'lucide-react';
 import { submitLoanApplication } from '@/app/loan/actions';
 import { LOAN_APR_FROM } from '@/lib/constants';
 import { LOAN_TERMS } from '@/lib/loan';
 import { computeQuote } from '@/lib/fees';
-import { estimateWarranty, WARRANTY_MONTHS } from '@/lib/warranty';
+import { WarrantyPicker } from '@/components/WarrantyPicker';
 import { PRICING_DEFAULTS, type PricingConfig } from '@/lib/pricing-config';
 import { formatYen } from '@/lib/format';
 
@@ -38,20 +38,17 @@ export function LoanApplyForm({
   const isKei = !!vehicle.bodyType && vehicle.bodyType.includes('軽');
   const transferPrice = isKei ? pricing.transferKei : pricing.transferNormal;
   // 選択オプション
-  const [optWarranty, setOptWarranty] = useState(false);
-  const [warrantyMonths, setWarrantyMonths] = useState<number>(12);
+  const [warrantyFee, setWarrantyFee] = useState(0);   // 税込（WarrantyPickerから）
+  const [warrantyLabel, setWarrantyLabel] = useState('');
   const [optTransport, setOptTransport] = useState(false);
   const [transportFee, setTransportFee] = useState(0);
 
-  const canWarranty = !!(vehicle.year && vehicle.mileageKm);
-  const warrantyPrice = optWarranty && canWarranty
-    ? (estimateWarranty({ ...vehicle, months: warrantyMonths }, pricing) ?? 0)
-    : 0;
+  const onWarranty = useCallback((fee: number, label: string) => { setWarrantyFee(fee); setWarrantyLabel(label); }, []);
 
   // 名義変更（必須）＋選択OPの合計
   const optionsTotal =
     transferPrice +
-    (optWarranty ? warrantyPrice : 0) +
+    warrantyFee +
     (optTransport ? Math.max(0, transportFee) : 0);
 
   const quote = computeQuote({ price, downPayment: down, optionsTotal, useLoan: true, aprPercent: LOAN_APR_FROM, months: term }, pricing);
@@ -67,7 +64,7 @@ export function LoanApplyForm({
       `エスクロー・取引手数料: ${formatYen(quote.escrow)}`,
       `名義変更代行${isKei ? '（軽）' : '（普通車）'}: ${formatYen(transferPrice)}`,
     ];
-    if (optWarranty && warrantyPrice) lines.push(`保証(${warrantyMonths}ヶ月): ${formatYen(warrantyPrice)}`);
+    if (warrantyFee > 0) lines.push(`${warrantyLabel || '保証'}: ${formatYen(warrantyFee)}`);
     lines.push(optTransport ? `陸送でお届け: ${formatYen(Math.max(0, transportFee))}` : '受け取り: 自分で引き取り（陸送なし）');
     lines.push(`ローン手数料(3.6%): ${formatYen(quote.loanFee)}`);
     lines.push(`お支払い総額: ${formatYen(quote.grandTotal)}`);
@@ -174,29 +171,8 @@ export function LoanApplyForm({
 
         <h2 className="pt-2 font-bold">オプション（必要に応じて選択）</h2>
         <div className="space-y-2">
-          {/* 保証 */}
-          <div className={`rounded-xl border-2 p-3 transition ${optWarranty ? 'border-navy-400 bg-navy-50' : 'border-slate-200'}`}>
-            <label className="flex cursor-pointer items-start gap-3">
-              <input type="checkbox" className="mt-0.5 h-4 w-4 rounded border-slate-300" checked={optWarranty} disabled={!canWarranty} onChange={(e) => setOptWarranty(e.target.checked)} />
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-navy-800">故障保証（年式・走行距離で自動計算）</span>
-                  {optWarranty && canWarranty && <span className="text-sm font-bold text-accent-600">{formatYen(warrantyPrice)}</span>}
-                </div>
-                {!canWarranty && <p className="mt-0.5 text-xs text-slate-400">※ 車両を選択して申し込むと保証を追加できます</p>}
-              </div>
-            </label>
-            {optWarranty && canWarranty && (
-              <div className="mt-2 flex flex-wrap gap-2 pl-7">
-                {WARRANTY_MONTHS.map((m) => (
-                  <button type="button" key={m} onClick={() => setWarrantyMonths(m)}
-                    className={`rounded-full border-2 px-3 py-1 text-xs font-bold transition ${warrantyMonths === m ? 'border-navy-500 bg-white text-navy-700' : 'border-slate-200 text-slate-500'}`}>
-                    {m}ヶ月
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* 保証（国産料金表・自動計算） */}
+          <WarrantyPicker vehicle={vehicle} onChange={onWarranty} />
 
           {/* 受け取り方法（引き取り or 陸送でお届け） */}
           <div className="rounded-xl border-2 border-slate-200 p-3">
@@ -234,7 +210,7 @@ export function LoanApplyForm({
           <div className="flex justify-between"><dt className="text-slate-500">車両価格</dt><dd className="font-bold">{formatYen(price)}</dd></div>
           <div className="flex justify-between"><dt className="text-slate-500 inline-flex items-center gap-1">エスクロー・取引手数料<Info className="h-3 w-3 text-slate-400" /></dt><dd className="font-bold">{formatYen(quote.escrow)}</dd></div>
           <div className="flex justify-between"><dt className="text-slate-500">名義変更代行{isKei ? '（軽）' : '（普通車）'}</dt><dd className="font-bold">{formatYen(transferPrice)}</dd></div>
-          {optWarranty && canWarranty && <div className="flex justify-between"><dt className="text-slate-500">保証（{warrantyMonths}ヶ月）</dt><dd>{formatYen(warrantyPrice)}</dd></div>}
+          {warrantyFee > 0 && <div className="flex justify-between"><dt className="text-slate-500">{warrantyLabel || '保証'}</dt><dd>{formatYen(warrantyFee)}</dd></div>}
           {optTransport && transportFee > 0 && <div className="flex justify-between"><dt className="text-slate-500">陸送でお届け</dt><dd>{formatYen(transportFee)}</dd></div>}
           <div className="flex justify-between"><dt className="text-slate-500">ローン手数料（3.6%）</dt><dd className="font-bold">{formatYen(quote.loanFee)}</dd></div>
           <div className="mt-1 flex justify-between border-t border-slate-100 pt-2 text-base">

@@ -15,6 +15,11 @@ export function warrantyBase(maker: string | null | undefined, bodyType: string 
   return cfg.warrantyBaseDomestic;
 }
 
+/** 輸入車ブランドかどうか。 */
+export function isImportMaker(maker: string | null | undefined): boolean {
+  return !!maker && IMPORT_MAKERS.has(maker);
+}
+
 /** 保証料 = 基本料 × 年式係数 × 走行距離係数 × 期間係数（1,000円丸め・上限） */
 export function estimateWarranty(
   opts: { year?: number | null; mileageKm?: number | null; maker?: string | null; bodyType?: string | null; months: number },
