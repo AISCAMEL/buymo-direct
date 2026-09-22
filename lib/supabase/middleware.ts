@@ -32,11 +32,15 @@ export async function updateSession(request: NextRequest) {
 
   // 認証必須のパス
   const protectedPaths = ['/sell', '/dashboard', '/messages', '/escrow', '/admin', '/loan', '/dealer'];
-  // 未ログインでも利用できる例外（正式査定の詳細入力など）
+  // 未ログインでも利用できる例外（前方一致）：正式査定の詳細入力など
   const publicExceptions = ['/sell/appraisal'];
+  // 未ログインでも利用できる例外（完全一致）：サービス紹介ページ（/escrow は取引ページ /escrow/[id] と区別）
+  const exactPublic = ['/escrow'];
   const path = request.nextUrl.pathname;
   const needsAuth =
-    protectedPaths.some((p) => path.startsWith(p)) && !publicExceptions.some((p) => path.startsWith(p));
+    protectedPaths.some((p) => path.startsWith(p)) &&
+    !publicExceptions.some((p) => path.startsWith(p)) &&
+    !exactPublic.includes(path);
 
   if (!user && needsAuth) {
     const url = request.nextUrl.clone();

@@ -24,8 +24,8 @@ const FOOTER_LINKS = [
   {
     heading: 'サービス',
     links: [
-      { label: 'エスクロー決済', href: '/listings' },
-      { label: '名義変更代行', href: '/listings' },
+      { label: 'エスクロー決済', href: '/escrow' },
+      { label: '名義変更代行', href: '/transfer' },
       { label: '陸送手配', href: '/transport' },
       { label: '加盟店申請', href: '/dealer/register' },
     ],
