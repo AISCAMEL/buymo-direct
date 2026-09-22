@@ -34,8 +34,8 @@ export async function submitLoanApplication(
   } = await supabase.auth.getUser();
   if (!user) return { error: '申込にはログインが必要です' };
 
-  if (!input.fullName.trim() || !input.phone.trim() || !input.email.trim()) {
-    return { error: '氏名・電話・メールは必須です' };
+  if (!input.fullName.trim() || !input.email.trim()) {
+    return { error: 'お名前とメールアドレスは必須です' };
   }
   const term = LOAN_TERMS.includes(input.termMonths) ? input.termMonths : 60;
   // ローン購入：車両価格＋エスクロー＋OP＋ローン手数料 − 頭金 が融資額

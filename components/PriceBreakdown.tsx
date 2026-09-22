@@ -3,16 +3,17 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Receipt } from 'lucide-react';
-import { computeQuote, OPTION_PRICES } from '@/lib/fees';
+import { computeQuote } from '@/lib/fees';
 import { estimateWarranty, WARRANTY_MONTHS } from '@/lib/warranty';
+import { PRICING_DEFAULTS, type PricingConfig } from '@/lib/pricing-config';
 import { formatYen } from '@/lib/format';
 
 type Vehicle = { year?: number | null; mileageKm?: number | null; maker?: string | null; bodyType?: string | null };
 
 /** 商品詳細に置く「現金でのお支払い目安」。エスクロー＋名義変更（必須）＋保証(任意)＋受け取り方法。 */
-export function PriceBreakdown({ price, vehicle }: { price: number; vehicle: Vehicle }) {
+export function PriceBreakdown({ price, vehicle, pricing = PRICING_DEFAULTS }: { price: number; vehicle: Vehicle; pricing?: PricingConfig }) {
   const isKei = !!vehicle.bodyType && vehicle.bodyType.includes('軽');
-  const transferPrice = isKei ? OPTION_PRICES.transferKei : OPTION_PRICES.transferNormal;
+  const transferPrice = isKei ? pricing.transferKei : pricing.transferNormal;
 
   const [optWarranty, setOptWarranty] = useState(false);
   const [warrantyMonths, setWarrantyMonths] = useState<number>(12);
@@ -20,10 +21,10 @@ export function PriceBreakdown({ price, vehicle }: { price: number; vehicle: Veh
   const [transportFee, setTransportFee] = useState(0);
 
   const canWarranty = !!(vehicle.year && vehicle.mileageKm);
-  const warrantyPrice = optWarranty && canWarranty ? (estimateWarranty({ ...vehicle, months: warrantyMonths }) ?? 0) : 0;
+  const warrantyPrice = optWarranty && canWarranty ? (estimateWarranty({ ...vehicle, months: warrantyMonths }, pricing) ?? 0) : 0;
 
   const optionsTotal = transferPrice + (optWarranty ? warrantyPrice : 0) + (delivery ? Math.max(0, transportFee) : 0);
-  const quote = computeQuote({ price, downPayment: 0, optionsTotal, useLoan: false, aprPercent: 0, months: 0 });
+  const quote = computeQuote({ price, downPayment: 0, optionsTotal, useLoan: false, aprPercent: 0, months: 0 }, pricing);
 
   return (
     <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">

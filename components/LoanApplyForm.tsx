@@ -6,8 +6,9 @@ import { CheckCircle2, Loader2, ShieldCheck, Info } from 'lucide-react';
 import { submitLoanApplication } from '@/app/loan/actions';
 import { LOAN_APR_FROM } from '@/lib/constants';
 import { LOAN_TERMS } from '@/lib/loan';
-import { computeQuote, OPTION_PRICES } from '@/lib/fees';
+import { computeQuote } from '@/lib/fees';
 import { estimateWarranty, WARRANTY_MONTHS } from '@/lib/warranty';
+import { PRICING_DEFAULTS, type PricingConfig } from '@/lib/pricing-config';
 import { formatYen } from '@/lib/format';
 
 const EMPLOYMENTS = ['正社員', '契約・派遣', '自営業', 'パート・アルバイト', '年金', 'その他'];
@@ -20,12 +21,14 @@ export function LoanApplyForm({
   defaultPrice,
   defaultEmail,
   vehicle = {},
+  pricing = PRICING_DEFAULTS,
 }: {
   listingId?: string;
   listingTitle?: string;
   defaultPrice: number;
   defaultEmail: string;
   vehicle?: Vehicle;
+  pricing?: PricingConfig;
 }) {
   const [price, setPrice] = useState(defaultPrice);
   const [down, setDown] = useState(0);
@@ -33,7 +36,7 @@ export function LoanApplyForm({
 
   // 名義変更は必須（自動加算）。軽/普通車で金額が変わる。
   const isKei = !!vehicle.bodyType && vehicle.bodyType.includes('軽');
-  const transferPrice = isKei ? OPTION_PRICES.transferKei : OPTION_PRICES.transferNormal;
+  const transferPrice = isKei ? pricing.transferKei : pricing.transferNormal;
   // 選択オプション
   const [optWarranty, setOptWarranty] = useState(false);
   const [warrantyMonths, setWarrantyMonths] = useState<number>(12);
@@ -42,7 +45,7 @@ export function LoanApplyForm({
 
   const canWarranty = !!(vehicle.year && vehicle.mileageKm);
   const warrantyPrice = optWarranty && canWarranty
-    ? (estimateWarranty({ ...vehicle, months: warrantyMonths }) ?? 0)
+    ? (estimateWarranty({ ...vehicle, months: warrantyMonths }, pricing) ?? 0)
     : 0;
 
   // 名義変更（必須）＋選択OPの合計
@@ -51,7 +54,7 @@ export function LoanApplyForm({
     (optWarranty ? warrantyPrice : 0) +
     (optTransport ? Math.max(0, transportFee) : 0);
 
-  const quote = computeQuote({ price, downPayment: down, optionsTotal, useLoan: true, aprPercent: LOAN_APR_FROM, months: term });
+  const quote = computeQuote({ price, downPayment: down, optionsTotal, useLoan: true, aprPercent: LOAN_APR_FROM, months: term }, pricing);
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -107,9 +110,10 @@ export function LoanApplyForm({
     return (
       <div className="card space-y-3 p-8 text-center">
         <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-500" />
-        <h2 className="text-xl font-black">仮審査の申込を受け付けました</h2>
+        <h2 className="text-xl font-black">お申し込みを受け付けました</h2>
         <p className="text-sm text-slate-600">
-          提携ローン会社の審査結果は、メール・お電話でご連絡します。審査状況はマイページでも確認できます。
+          この内容で受付しました。<strong>担当が正式な申請フォームをメールでお送りします</strong>ので、
+          ご記入・ご返送ください。審査状況はマイページでも確認できます。
         </p>
         <div className="flex justify-center gap-2 pt-2">
           <Link href="/dashboard/loans" className="btn-primary">申込状況を見る</Link>
@@ -255,8 +259,8 @@ export function LoanApplyForm({
             <input name="full_name" required className="input" placeholder="山田 太郎" />
           </div>
           <div>
-            <label className="label">電話番号 *</label>
-            <input name="phone" required type="tel" className="input" placeholder="09012345678" />
+            <label className="label">電話番号</label>
+            <input name="phone" type="tel" className="input" placeholder="09012345678（任意）" />
           </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -291,11 +295,12 @@ export function LoanApplyForm({
       {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</p>}
 
       <p className="text-xs text-slate-400">
-        ※ これは提携ローン会社への仮審査申込です。最終的な金利・借入可否は審査により決定します。入力内容は審査目的で提携先に提供されます。
+        ※ まずはお名前・メールアドレスで受付します。受付後、担当が<strong>正式な申請フォーム</strong>をメールでお送りします。
+        金利・借入可否は提携ローン会社の審査により決定します。
       </p>
 
       <button type="submit" disabled={busy} className="btn-accent w-full py-3 text-base">
-        {busy && <Loader2 className="h-4 w-4 animate-spin" />} この内容で仮審査を申し込む
+        {busy && <Loader2 className="h-4 w-4 animate-spin" />} この内容で申し込む（無料）
       </button>
     </form>
   );

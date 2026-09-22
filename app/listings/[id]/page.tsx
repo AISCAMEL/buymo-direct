@@ -17,6 +17,7 @@ import { LOAN_APR_FROM } from '@/lib/constants';
 import { monthlyPayment } from '@/lib/loan';
 import { MakeOfferButton } from '@/components/MakeOfferButton';
 import { PriceBreakdown } from '@/components/PriceBreakdown';
+import { getPricingConfig } from '@/lib/settings';
 import { PriceAlertButton } from '@/components/PriceAlertButton';
 import { InsuranceSimulator } from '@/components/InsuranceSimulatorLazy';
 import type { ListingWithImages, MaintenanceRecord } from '@/lib/types';
@@ -92,6 +93,7 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
 
   if (!data) notFound();
   const listing = data as unknown as ListingWithImages;
+  const pricing = await getPricingConfig();
   const images = [...(listing.listing_images ?? [])].sort((a, b) => a.sort_order - b.sort_order);
   const isOwner = user?.id === listing.seller_id;
 
@@ -334,6 +336,7 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
           <PriceBreakdown
             price={listing.price}
             vehicle={{ year: listing.year, mileageKm: listing.mileage_km, maker: listing.maker, bodyType: listing.body_type }}
+            pricing={pricing}
           />
 
           {/* 安心バナー（買取保証・エスクロー） */}

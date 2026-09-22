@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { getPricingConfig } from '@/lib/settings';
 import { LoanApplyForm } from '@/components/LoanApplyForm';
 
 export const dynamic = 'force-dynamic';
@@ -36,6 +37,8 @@ export default async function LoanApplyPage({ searchParams }: { searchParams: Se
     }
   }
 
+  const pricing = await getPricingConfig();
+
   return (
     <div className="mx-auto max-w-2xl">
       <h1 className="mb-1 text-2xl font-black">ローン仮審査のお申込み</h1>
@@ -46,6 +49,7 @@ export default async function LoanApplyPage({ searchParams }: { searchParams: Se
         defaultPrice={defaultPrice}
         defaultEmail={user!.email ?? ''}
         vehicle={vehicle}
+        pricing={pricing}
       />
     </div>
   );

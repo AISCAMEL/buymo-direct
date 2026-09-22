@@ -22,6 +22,7 @@ const NAV = [
   { href: '/admin/coupons', label: 'クーポン管理' },
   { href: '/admin/dealers', label: '加盟店管理' },
   { href: '/admin/audit', label: '監査ログ' },
+  { href: '/admin/settings', label: '料金設定' },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
