@@ -16,6 +16,7 @@ import { favoritedSet } from '@/lib/favorites';
 import { LOAN_APR_FROM } from '@/lib/constants';
 import { monthlyPayment } from '@/lib/loan';
 import { MakeOfferButton } from '@/components/MakeOfferButton';
+import { PriceBreakdown } from '@/components/PriceBreakdown';
 import { PriceAlertButton } from '@/components/PriceAlertButton';
 import { InsuranceSimulator } from '@/components/InsuranceSimulatorLazy';
 import type { ListingWithImages, MaintenanceRecord } from '@/lib/types';
@@ -328,6 +329,12 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
           >
             ローン仮審査を申し込む →
           </Link>
+
+          {/* 現金でのお支払い目安（エスクロー＋名義変更＋任意の保証・受け取り方法） */}
+          <PriceBreakdown
+            price={listing.price}
+            vehicle={{ year: listing.year, mileageKm: listing.mileage_km, maker: listing.maker, bodyType: listing.body_type }}
+          />
 
           {/* 安心バナー（買取保証・エスクロー） */}
           <div className="mt-4 flex items-center gap-2 rounded-xl bg-gold-50 px-3 py-2.5 text-xs font-bold text-gold-600">
