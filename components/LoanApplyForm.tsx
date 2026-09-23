@@ -171,8 +171,8 @@ export function LoanApplyForm({
 
         <h2 className="pt-2 font-bold">オプション（必要に応じて選択）</h2>
         <div className="space-y-2">
-          {/* 保証（国産料金表・自動計算） */}
-          <WarrantyPicker vehicle={vehicle} onChange={onWarranty} />
+          {/* 保証（料金表・自動計算） */}
+          <WarrantyPicker vehicle={vehicle} onChange={onWarranty} adjustPercent={pricing.warrantyAdjustPercent} />
 
           {/* 受け取り方法（引き取り or 陸送でお届け） */}
           <div className="rounded-xl border-2 border-slate-200 p-3">

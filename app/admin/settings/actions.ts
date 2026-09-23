@@ -9,6 +9,11 @@ const n = (fd: FormData, key: string, fallback: number): number => {
   const v = Number(fd.get(key));
   return Number.isFinite(v) && v >= 0 ? v : fallback;
 };
+// 符号あり（割引でマイナス可）
+const sn = (fd: FormData, key: string, fallback: number): number => {
+  const v = Number(fd.get(key));
+  return Number.isFinite(v) ? v : fallback;
+};
 
 /** 料金・係数設定を保存（管理者のみ）。%入力は小数に変換して保存。 */
 export async function savePricingConfig(formData: FormData): Promise<void> {
@@ -33,6 +38,7 @@ export async function savePricingConfig(formData: FormData): Promise<void> {
     warrantyMileageFreeKm: n(formData, 'w_km_free', 50000),
     warrantyMileageStep: n(formData, 'w_km_step_pct', 5) / 100,
     warrantyCap: n(formData, 'w_cap', 150000),
+    warrantyAdjustPercent: sn(formData, 'w_adjust_pct', 0),
   });
 
   try {

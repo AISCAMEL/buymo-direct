@@ -31,8 +31,8 @@ export function PriceBreakdown({ price, vehicle, pricing = PRICING_DEFAULTS }: {
         <h3 className="text-sm font-black text-navy-800">現金でのお支払い目安</h3>
       </div>
 
-      {/* 保証（国産料金表・自動計算） */}
-      <WarrantyPicker vehicle={vehicle} onChange={onWarranty} />
+      {/* 保証（料金表・自動計算） */}
+      <WarrantyPicker vehicle={vehicle} onChange={onWarranty} adjustPercent={pricing.warrantyAdjustPercent} />
 
       {/* 受け取り方法 */}
       <div className="mt-2 grid grid-cols-2 gap-1.5">

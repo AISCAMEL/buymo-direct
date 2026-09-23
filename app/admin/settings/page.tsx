@@ -64,9 +64,26 @@ export default async function AdminSettingsPage() {
           </div>
         </section>
 
-        {/* 保証 */}
+        {/* 保証（PDF料金表の調整） */}
         <section className="card space-y-3 p-5">
-          <h2 className="font-bold text-slate-700">故障保証（計算式）</h2>
+          <h2 className="font-bold text-slate-700">故障保証（料金表の調整）</h2>
+          <p className="text-xs text-slate-500">
+            保証料は国産・輸入車のPDF料金表（税込）で自動計算されます。ここでは全体に対する<strong>上乗せ／割引（％）</strong>だけを調整できます。
+            例）<strong>+10</strong>＝1割上乗せ、<strong>-5</strong>＝5%割引、<strong>0</strong>＝料金表どおり。
+          </p>
+          <label className="block max-w-xs">
+            <span className="mb-1 block text-xs font-bold text-slate-600">保証料の調整</span>
+            <div className="flex items-center gap-1">
+              <input name="w_adjust_pct" type="number" step="0.5" min={-100} max={1000} defaultValue={c.warrantyAdjustPercent} className="input h-9 text-sm" />
+              <span className="text-xs text-slate-400">%（マイナスで割引）</span>
+            </div>
+          </label>
+        </section>
+
+        {/* 保証（旧・計算式フォールバック） */}
+        <section className="card space-y-3 p-5">
+          <h2 className="font-bold text-slate-700">故障保証（旧・計算式フォールバック）</h2>
+          <p className="text-xs text-slate-400">※ 料金表に該当が無い場合の予備計算です。通常は上の「料金表の調整」を使います。</p>
           <div className="grid gap-3 sm:grid-cols-3">
             <Field name="w_base_kei" label="基本料 軽（6ヶ月）" defaultValue={c.warrantyBaseKei} suffix="円" />
             <Field name="w_base_dom" label="基本料 国産（6ヶ月）" defaultValue={c.warrantyBaseDomestic} suffix="円" />

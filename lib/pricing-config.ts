@@ -19,6 +19,8 @@ export interface PricingConfig {
   warrantyMileageFreeKm: number; // 何kmまで係数1.0
   warrantyMileageStep: number;   // 1万kmごとの加算（例 0.05 = +5%）
   warrantyCap: number;           // 上限
+  // 保証の全体調整（％）。PDF料金表の税込価格に対して加算/割引。正=上乗せ, 負=割引。0=そのまま。
+  warrantyAdjustPercent: number;
 }
 
 export const PRICING_DEFAULTS: PricingConfig = {
@@ -40,7 +42,15 @@ export const PRICING_DEFAULTS: PricingConfig = {
   warrantyMileageFreeKm: 50000,
   warrantyMileageStep: 0.05,
   warrantyCap: 150000,
+  warrantyAdjustPercent: 0,
 };
+
+/** 保証の税込価格に本部調整（％）を適用。 */
+export function applyWarrantyAdjust(taxInclFee: number, adjustPercent?: number): number {
+  const pct = typeof adjustPercent === 'number' && Number.isFinite(adjustPercent) ? adjustPercent : 0;
+  if (!pct) return taxInclFee;
+  return Math.max(0, Math.round(taxInclFee * (1 + pct / 100)));
+}
 
 // 期間係数は固定（6/12/24ヶ月）。
 export const WARRANTY_PERIOD_FACTOR: Record<number, number> = { 6: 1.0, 12: 1.7, 24: 2.4 };
@@ -50,6 +60,8 @@ export const WARRANTY_MONTHS = [6, 12, 24] as const;
 export function mergePricingConfig(partial?: Partial<PricingConfig> | null): PricingConfig {
   if (!partial || typeof partial !== 'object') return PRICING_DEFAULTS;
   const num = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : d);
+  // 符号あり（割引でマイナス可）。-100〜1000% に制限。
+  const signed = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) && v >= -100 && v <= 1000 ? v : d);
   const tiers = Array.isArray(partial.escrowTiers) && partial.escrowTiers.length
     ? partial.escrowTiers
         .filter((t) => t && typeof t.fee === 'number')
@@ -69,5 +81,6 @@ export function mergePricingConfig(partial?: Partial<PricingConfig> | null): Pri
     warrantyMileageFreeKm: num(partial.warrantyMileageFreeKm, PRICING_DEFAULTS.warrantyMileageFreeKm),
     warrantyMileageStep: num(partial.warrantyMileageStep, PRICING_DEFAULTS.warrantyMileageStep),
     warrantyCap: num(partial.warrantyCap, PRICING_DEFAULTS.warrantyCap),
+    warrantyAdjustPercent: signed(partial.warrantyAdjustPercent, PRICING_DEFAULTS.warrantyAdjustPercent),
   };
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { formatYen } from '@/lib/format';
+import { applyWarrantyAdjust } from '@/lib/pricing-config';
 import { isImportMaker } from '@/lib/warranty';
 import {
   DISPLACEMENTS, WARRANTY_PLANS, domesticWarrantyFee, ageTier, kmTier,
@@ -29,7 +30,7 @@ function guessImportDisp(cc?: number | null): ImportDispKey {
 }
 
 /** 故障保証を選ぶUI（国産＝プラン料金表 / 輸入車＝クラス料金表）。onChange で税込価格とラベルを親に通知。 */
-export function WarrantyPicker({ vehicle, onChange }: { vehicle: Vehicle; onChange: (taxInclFee: number, label: string) => void }) {
+export function WarrantyPicker({ vehicle, onChange, adjustPercent = 0 }: { vehicle: Vehicle; onChange: (taxInclFee: number, label: string) => void; adjustPercent?: number }) {
   const isKei = !!vehicle.bodyType && vehicle.bodyType.includes('軽');
   const isImport = isImportMaker(vehicle.maker);
   const [enabled, setEnabled] = useState(false);
@@ -49,8 +50,8 @@ export function WarrantyPicker({ vehicle, onChange }: { vehicle: Vehicle; onChan
       {enabled && (
         <div className="mt-3 pl-7">
           {isImport
-            ? <ImportPicker vehicle={vehicle} onChange={onChange} />
-            : <DomesticPicker vehicle={vehicle} isKei={isKei} onChange={onChange} />}
+            ? <ImportPicker vehicle={vehicle} onChange={onChange} adjustPercent={adjustPercent} />
+            : <DomesticPicker vehicle={vehicle} isKei={isKei} onChange={onChange} adjustPercent={adjustPercent} />}
         </div>
       )}
       {!enabled && <ResetOnDisable onChange={onChange} />}
@@ -65,7 +66,7 @@ function ResetOnDisable({ onChange }: { onChange: (fee: number, label: string) =
 }
 
 /* ------------------------------ 国産 ------------------------------ */
-function DomesticPicker({ vehicle, isKei, onChange }: { vehicle: Vehicle; isKei: boolean; onChange: (fee: number, label: string) => void }) {
+function DomesticPicker({ vehicle, isKei, onChange, adjustPercent = 0 }: { vehicle: Vehicle; isKei: boolean; onChange: (fee: number, label: string) => void; adjustPercent?: number }) {
   const eligible = ageTier(vehicle.year) != null && kmTier(vehicle.mileageKm) != null;
   const [disp, setDisp] = useState<DisplacementKey>(isKei ? 'kei' : 'cc2000');
   const [plan, setPlan] = useState<WarrantyPlan>('basic');
@@ -74,7 +75,7 @@ function DomesticPicker({ vehicle, isKei, onChange }: { vehicle: Vehicle; isKei:
   const effDisp: DisplacementKey = isKei ? 'kei' : disp;
   const effMonths = plan === 'simple' ? 12 : months;
   const feeExcl = eligible ? domesticWarrantyFee(effDisp, vehicle.year, vehicle.mileageKm, plan, effMonths) : null;
-  const feeIncl = feeExcl != null ? Math.round(feeExcl * TAX) : null;
+  const feeIncl = feeExcl != null ? applyWarrantyAdjust(Math.round(feeExcl * TAX), adjustPercent) : null;
   const planLabel = WARRANTY_PLANS.find((p) => p.key === plan)?.label ?? '';
 
   useEffect(() => {
@@ -112,7 +113,7 @@ function DomesticPicker({ vehicle, isKei, onChange }: { vehicle: Vehicle; isKei:
 }
 
 /* ------------------------------ 輸入車 ------------------------------ */
-function ImportPicker({ vehicle, onChange }: { vehicle: Vehicle; onChange: (fee: number, label: string) => void }) {
+function ImportPicker({ vehicle, onChange, adjustPercent = 0 }: { vehicle: Vehicle; onChange: (fee: number, label: string) => void; adjustPercent?: number }) {
   const models = useMemo(() => importModelsForMaker(vehicle.maker), [vehicle.maker]);
   const ineligibleMaker = isImportWarrantyIneligible(vehicle.maker);
   const eligible = !ineligibleMaker && importAgeTier(vehicle.year, vehicle.mileageKm) != null;
@@ -127,7 +128,7 @@ function ImportPicker({ vehicle, onChange }: { vehicle: Vehicle; onChange: (fee:
   }, [modelIdx, models]);
 
   const feeExcl = eligible ? importWarrantyFee(cls, disp, vehicle.year, vehicle.mileageKm, months) : null;
-  const feeIncl = feeExcl != null ? Math.round(feeExcl * TAX) : null;
+  const feeIncl = feeExcl != null ? applyWarrantyAdjust(Math.round(feeExcl * TAX), adjustPercent) : null;
 
   useEffect(() => {
     if (feeIncl) onChange(feeIncl, `保証 クラス${cls}・${months >= 12 ? '1年' : '6ヶ月'}`);
