@@ -68,16 +68,19 @@ export function SocialLoginButtons({ redirectPath = '/', mode = 'login' }: Props
 
   async function handleOAuth(provider: 'google' | 'line') {
     setLoading(provider);
+
+    // LINE は Supabase 標準プロバイダーではないため、独自の OAuth ルートへ遷移。
+    if (provider === 'line') {
+      window.location.href = `/api/auth/line?redirect=${encodeURIComponent(redirectPath)}`;
+      return;
+    }
+
+    // Google は Supabase OAuth を使用。
     const supabase = createClient();
     const redirectTo = `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirectPath)}`;
-
     const { error } = await supabase.auth.signInWithOAuth({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      provider: provider as any,
-      options: {
-        redirectTo,
-        ...(provider === 'line' ? { scopes: 'profile openid email' } : {}),
-      },
+      provider: 'google',
+      options: { redirectTo },
     });
 
     if (error) {

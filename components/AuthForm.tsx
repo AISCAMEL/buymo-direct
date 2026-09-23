@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -17,6 +17,21 @@ export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // OAuthコールバックからのエラーを日本語で表示
+  useEffect(() => {
+    const e = params.get('error');
+    if (!e) return;
+    const MAP: Record<string, string> = {
+      line_not_configured: 'LINEログインは現在準備中です（設定が未完了）。メールでのログインをご利用ください。',
+      line_config: 'LINEログインは現在準備中です（設定が未完了）。',
+      line_state: 'LINEログインの認証に失敗しました。もう一度お試しください。',
+      line_token: 'LINE認証に失敗しました。時間をおいて再度お試しください。',
+      line_profile: 'LINEのプロフィール取得に失敗しました。',
+      line_auth: 'ログイン処理に失敗しました。もう一度お試しください。',
+    };
+    setError(MAP[e] ?? 'ログインに失敗しました。もう一度お試しください。');
+  }, [params]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
