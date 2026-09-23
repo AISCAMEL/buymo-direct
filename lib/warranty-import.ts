@@ -62,6 +62,13 @@ export function importModelsForMaker(maker?: string | null): { model: string; cl
   return IMPORT_CLASS_TABLE[brand] ?? [];
 }
 
+/** 保証対象外のメーカー（電気自動車専業など。クラス表・約款で申込不可）。 */
+export const IMPORT_WARRANTY_INELIGIBLE = new Set(['テスラ']);
+/** 電気自動車専業などで保証申込不可か。 */
+export function isImportWarrantyIneligible(maker?: string | null): boolean {
+  return !!maker && IMPORT_WARRANTY_INELIGIBLE.has(maker);
+}
+
 /** 経過年数・走行距離から適用区分（両方を満たす最小区分）。超過は null（対象外）。 */
 export function importAgeTier(year?: number | null, mileageKm?: number | null): ImportAgeKey | null {
   if (!year) return null;

@@ -9,6 +9,7 @@ import {
 } from '@/lib/warranty-domestic';
 import {
   IMPORT_CLASSES, IMPORT_DISPLACEMENTS, importWarrantyFee, importAgeTier, importModelsForMaker,
+  isImportWarrantyIneligible,
   type ImportClass, type ImportDispKey,
 } from '@/lib/warranty-import';
 
@@ -113,7 +114,8 @@ function DomesticPicker({ vehicle, isKei, onChange }: { vehicle: Vehicle; isKei:
 /* ------------------------------ 輸入車 ------------------------------ */
 function ImportPicker({ vehicle, onChange }: { vehicle: Vehicle; onChange: (fee: number, label: string) => void }) {
   const models = useMemo(() => importModelsForMaker(vehicle.maker), [vehicle.maker]);
-  const eligible = importAgeTier(vehicle.year, vehicle.mileageKm) != null;
+  const ineligibleMaker = isImportWarrantyIneligible(vehicle.maker);
+  const eligible = !ineligibleMaker && importAgeTier(vehicle.year, vehicle.mileageKm) != null;
   const [modelIdx, setModelIdx] = useState<number>(-1);
   const [cls, setCls] = useState<ImportClass>(3);
   const [disp, setDisp] = useState<ImportDispKey>(guessImportDisp(vehicle.displacementCc));
@@ -132,6 +134,7 @@ function ImportPicker({ vehicle, onChange }: { vehicle: Vehicle; onChange: (fee:
     else onChange(0, '');
   }, [feeIncl, cls, months, onChange]);
 
+  if (ineligibleMaker) return <p className="rounded-lg bg-amber-50 p-2 text-xs text-amber-700">電気自動車（EV）は故障保証の対象外です。</p>;
   if (!eligible) return <p className="rounded-lg bg-amber-50 p-2 text-xs text-amber-700">この車両は保証対象外です（10年超 または 8.1万km超）。輸入車は初度登録10年・走行8.1万kmまでが対象です。</p>;
 
   return (
@@ -140,6 +143,12 @@ function ImportPicker({ vehicle, onChange }: { vehicle: Vehicle; onChange: (fee:
         <span className="text-[11px] font-bold text-slate-500">料金（税込）</span>
         {feeIncl != null && <span className="text-sm font-bold text-accent-600">{formatYen(feeIncl)}</span>}
       </div>
+
+      {models.length === 0 && (
+        <p className="rounded-lg bg-slate-50 p-2 text-[11px] text-slate-500">
+          このメーカーはクラス表に定型の該当がありません。下でクラスを直接お選びください（お見積り扱い）。ご不明な場合はお問い合わせください。
+        </p>
+      )}
 
       {/* 車種（クラスを自動判定） */}
       {models.length > 0 && (
