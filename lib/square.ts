@@ -64,11 +64,13 @@ export async function createPaymentLink(
   amount: number,
   orderId: string,
   description: string
-): Promise<{ url: string; paymentId: string }> {
+): Promise<{ url: string; paymentId: string; squareOrderId: string }> {
   if (!isSquareConfigured()) {
+    const demoId = `demo-${Date.now()}`;
     return {
       url: `/escrow/${orderId}?demo=payment`,
-      paymentId: `demo-${Date.now()}`,
+      paymentId: demoId,
+      squareOrderId: demoId,
     };
   }
 
@@ -106,6 +108,8 @@ export async function createPaymentLink(
   return {
     url: json.payment_link.url as string,
     paymentId: json.payment_link.id as string,
+    // 決済完了 Webhook の payment.order_id と突き合わせるための Order ID
+    squareOrderId: (json.payment_link.order_id as string) ?? (json.payment_link.id as string),
   };
 }
 

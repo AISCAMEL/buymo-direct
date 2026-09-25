@@ -25,7 +25,7 @@ export async function POST(req: Request) {
 
   const { data: tx } = await supabase
     .from('escrow_transactions')
-    .select('id, amount, escrow_fee, title_fee, installment_fee, buyer_id, status, listing_id')
+    .select('id, amount, escrow_fee, title_fee, installment_fee, coupon_discount, buyer_id, status, listing_id')
     .eq('id', escrow_id)
     .maybeSingle();
 
@@ -39,16 +39,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'この取引はすでに入金済みです' }, { status: 400 });
   }
 
-  const total = tx.amount + tx.escrow_fee + tx.title_fee + (tx.installment_fee ?? 0);
+  // クーポン割引を反映した実請求額（画面表示と一致させる）
+  const total = Math.max(
+    0,
+    tx.amount + tx.escrow_fee + tx.title_fee + (tx.installment_fee ?? 0) - (tx.coupon_discount ?? 0)
+  );
 
   let url: string;
-  let paymentId: string;
+  // 決済完了 Webhook と突き合わせる識別子（Square の order_id、デモ時はダミーID）
+  let matchId: string;
 
   if (!isSquareConfigured()) {
     // Square 未設定時はモック URL（開発・サンドボックス用）
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? '';
     url = `${siteUrl}/escrow/${escrow_id}?demo=payment`;
-    paymentId = `demo-${Date.now()}`;
+    matchId = `demo-${Date.now()}`;
   } else {
     const { data: listing } = await supabase
       .from('listings')
@@ -62,17 +67,18 @@ export async function POST(req: Request) {
     try {
       const result = await createPaymentLink(total, escrow_id, description);
       url = result.url;
-      paymentId = result.paymentId;
+      // Webhook では payment.order_id と突き合わせるため Order ID を保存する
+      matchId = result.squareOrderId;
     } catch (err) {
       const msg = err instanceof Error ? err.message : '決済リンクの生成に失敗しました';
       return NextResponse.json({ error: msg }, { status: 500 });
     }
   }
 
-  // 生成した payment link ID をエスクローレコードに保存
+  // 決済完了 Webhook で突き合わせる識別子（Square Order ID）を保存
   await supabase
     .from('escrow_transactions')
-    .update({ square_payment_id: paymentId })
+    .update({ square_payment_id: matchId })
     .eq('id', escrow_id);
 
   return NextResponse.json({ url });

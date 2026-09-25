@@ -46,25 +46,26 @@ export async function POST(req: Request) {
   // payment.completed — 冪等に funds_held へ遷移させる
   if (eventType === 'payment.completed') {
     const payment = (data?.object as Record<string, unknown>)?.payment as Record<string, unknown> | undefined;
-    const squarePaymentId = payment?.id as string | undefined;
-    if (squarePaymentId) {
+    // 決済リンク経由では order_id が保存済みの識別子。payment.id もフォールバックで照合。
+    const matchIds = [payment?.order_id as string | undefined, payment?.id as string | undefined].filter(Boolean) as string[];
+    if (matchIds.length) {
       await supabase
         .from('escrow_transactions')
         .update({ status: 'funds_held' })
-        .eq('square_payment_id', squarePaymentId)
+        .in('square_payment_id', matchIds)
         .eq('status', 'initiated'); // 冪等：既に funds_held なら更新なし
     }
   }
 
-  // payment.failed — initiated に戻して buyer に再入金を促す
+  // payment.failed — 識別子をクリアして buyer に再入金を促す
   if (eventType === 'payment.failed') {
     const payment = (data?.object as Record<string, unknown>)?.payment as Record<string, unknown> | undefined;
-    const squarePaymentId = payment?.id as string | undefined;
-    if (squarePaymentId) {
+    const matchIds = [payment?.order_id as string | undefined, payment?.id as string | undefined].filter(Boolean) as string[];
+    if (matchIds.length) {
       await supabase
         .from('escrow_transactions')
         .update({ square_payment_id: null })
-        .eq('square_payment_id', squarePaymentId)
+        .in('square_payment_id', matchIds)
         .eq('status', 'initiated');
     }
   }

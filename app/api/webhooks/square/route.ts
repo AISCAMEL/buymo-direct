@@ -46,13 +46,16 @@ export async function POST(req: Request) {
     const payment = (data?.object as Record<string, unknown>)?.payment as
       | Record<string, unknown>
       | undefined;
+    // 決済リンク経由では order_id が保存済みの識別子。念のため payment.id もフォールバックで照合。
+    const orderId = payment?.order_id as string | undefined;
     const squarePaymentId = payment?.id as string | undefined;
+    const matchIds = [orderId, squarePaymentId].filter(Boolean) as string[];
 
-    if (squarePaymentId) {
+    if (matchIds.length) {
       const { data: updated } = await supabase
         .from('escrow_transactions')
         .update({ status: 'funds_held' })
-        .eq('square_payment_id', squarePaymentId)
+        .in('square_payment_id', matchIds)
         .eq('status', 'initiated') // 冪等：既に funds_held なら更新なし
         .select('id')
         .maybeSingle();
