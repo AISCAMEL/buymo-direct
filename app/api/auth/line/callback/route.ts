@@ -89,18 +89,18 @@ export async function GET(request: Request) {
     },
   });
 
-  // マジックリンクを生成してリダイレクト
+  // マジックリンクを生成し、token_hash をサーバー側の /auth/callback で検証する。
+  // （action_link を直接ブラウザで開くと PKCE/implicit の不一致でセッション化に失敗するため）
   const { data: linkData, error: linkError } = await service.auth.admin.generateLink({
     type: 'magiclink',
     email,
-    options: {
-      redirectTo: `${SITE_URL}/auth/callback?redirect=${encodeURIComponent(redirectTo)}`,
-    },
   });
 
-  if (linkError || !linkData?.properties?.action_link) {
+  const hashedToken = linkData?.properties?.hashed_token;
+  if (linkError || !hashedToken) {
     return clearCookies(NextResponse.redirect(`${SITE_URL}/login?error=line_auth`));
   }
 
-  return clearCookies(NextResponse.redirect(linkData.properties.action_link));
+  const verifyUrl = `${SITE_URL}/auth/callback?token_hash=${encodeURIComponent(hashedToken)}&type=magiclink&redirect=${encodeURIComponent(redirectTo)}`;
+  return clearCookies(NextResponse.redirect(verifyUrl));
 }
