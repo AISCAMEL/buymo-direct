@@ -1,28 +1,28 @@
 // 運営者（事業者）情報の一元管理。
 // 特商法・会社概要・プライバシー・利用規約など各ページはここを参照する。
-// 情報源: 合同会社アイズ 確定情報（同運営の既存事業ドキュメントより引用）。
+// ★★★ 公開前に［  ］のプレースホルダーを BUYMO の正式情報に置き換えてください ★★★
 
 export const OPERATOR = {
   /** 事業者名（法人名） */
-  companyName: '合同会社アイズ',
-  /** 法人番号 */
-  corporateNumber: '9380003004349',
-  /** インボイス登録番号 */
-  invoiceNumber: 'T9380003004349',
-  /** 古物商許可番号 */
-  antiqueDealerLicense: '第25121A010859号',
+  companyName: '［事業者名を記載］',
+  /** 法人番号（任意） */
+  corporateNumber: '',
+  /** インボイス登録番号（任意） */
+  invoiceNumber: '',
+  /** 古物商許可番号（中古車販売は必須） */
+  antiqueDealerLicense: '［古物商許可番号を記載］',
   /** サービス名 */
   serviceName: 'BUYMO ダイレクト',
   /** 代表者・運営統括責任者 */
-  representative: '代表社員 吉田 一平',
+  representative: '［代表者名を記載］',
   /** 所在地 */
-  address: '〒979-0204 福島県いわき市四倉町細谷字大町1番',
+  address: '［所在地を記載］',
   /** 電話番号 */
-  phone: '050-1722-3365',
+  phone: '［電話番号を記載］',
   /** 公開用メールアドレス */
-  email: 'info@aisjaltd.com',
+  email: '［連絡先メールを記載］',
   /** 営業時間 */
-  businessHours: '平日 8:00〜17:00（オンラインは24時間受付）',
+  businessHours: '［営業時間を記載］',
   /** 公開サイトURL */
   url: 'https://buymo-direct.vercel.app',
   /** 設立年月（任意・会社概要用） */
@@ -33,5 +33,5 @@ export const OPERATOR = {
 
 /** 値がまだプレースホルダーかどうか（未確定バナー表示などに使用）。 */
 export function isPlaceholder(value: string): boolean {
-  return value.includes('［') || value.includes('例）') || value.includes('.example');
+  return value.includes('［') || value.includes('例）') || value.includes('.example') || value === '';
 }
