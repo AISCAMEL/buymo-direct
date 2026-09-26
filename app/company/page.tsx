@@ -5,11 +5,15 @@ export const metadata = { title: '会社概要 | BUYMO ダイレクト' };
 
 const ROWS: { label: string; value: string }[] = [
   { label: '会社名', value: OPERATOR.companyName },
+  { label: '法人番号', value: OPERATOR.corporateNumber },
   { label: '代表者', value: OPERATOR.representative },
   { label: '所在地', value: OPERATOR.address },
   { label: '電話番号', value: OPERATOR.phone },
   { label: 'メールアドレス', value: OPERATOR.email },
-  { label: '設立', value: OPERATOR.established },
+  { label: '営業時間', value: OPERATOR.businessHours },
+  { label: '古物商許可番号', value: OPERATOR.antiqueDealerLicense },
+  { label: 'インボイス登録番号', value: OPERATOR.invoiceNumber },
+  ...(OPERATOR.established ? [{ label: '設立', value: OPERATOR.established }] : []),
   { label: '事業内容', value: OPERATOR.business },
   { label: '運営サービス', value: `${OPERATOR.serviceName}（${OPERATOR.url}）` },
 ];

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Mail, MessageCircle, Phone, CheckCircle2, Banknote, Tag, Loader2 } from 'lucide-react';
 import { submitContact } from './actions';
+import { OPERATOR } from '@/lib/operator';
 type Category = 'general' | 'buyback' | 'listing' | 'payment' | 'account' | 'dealer' | 'other';
 
 const CATEGORIES: { value: Category; label: string }[] = [
@@ -107,9 +108,9 @@ export default function ContactPage() {
       {/* 連絡手段 */}
       <div className="grid gap-3 sm:grid-cols-3">
         {[
-          { icon: Mail, label: 'メール', value: 'support@buymo.me', note: '2営業日以内に返信' },
+          { icon: Mail, label: 'メール', value: OPERATOR.email, note: '2営業日以内に返信' },
           { icon: MessageCircle, label: 'チャット', value: 'アプリ内AIチャット', note: '24時間対応（AI）' },
-          { icon: Phone, label: '電話', value: '03-XXXX-XXXX', note: '平日 10:00〜18:00' },
+          { icon: Phone, label: '電話', value: OPERATOR.phone, note: '平日 8:00〜17:00' },
         ].map(({ icon: Icon, label, value, note }) => (
           <div key={label} className="card flex items-start gap-3 p-4">
             <div className="rounded-lg bg-navy-50 p-2">

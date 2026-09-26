@@ -1,4 +1,5 @@
 import { LegalLayout, LegalSection } from '@/components/LegalLayout';
+import { OPERATOR } from '@/lib/operator';
 
 export const metadata = { title: '利用規約 | BUYMO ダイレクト' };
 
@@ -51,7 +52,7 @@ export default function TermsPage() {
         <p>本規約は日本法に準拠し、当サービスに関して紛争が生じた場合、当社所在地を管轄する裁判所を専属的合意管轄とします。</p>
       </LegalSection>
 
-      <p className="text-xs text-slate-400">［事業者名・連絡先等は公開前に確定してください］</p>
+      <p className="text-xs text-slate-400">{OPERATOR.companyName}（{OPERATOR.serviceName} 運営）／{OPERATOR.address}／{OPERATOR.email}</p>
     </LegalLayout>
   );
 }

@@ -1,4 +1,5 @@
 import { LegalLayout, LegalSection } from '@/components/LegalLayout';
+import { OPERATOR } from '@/lib/operator';
 
 export const metadata = { title: 'プライバシーポリシー | BUYMO ダイレクト' };
 
@@ -36,7 +37,7 @@ export default function PrivacyPage() {
       </LegalSection>
 
       <LegalSection heading="8. お問い合わせ窓口">
-        <p>個人情報の取扱いに関するお問い合わせは、当サービスのお問い合わせ窓口までご連絡ください。［窓口・連絡先は公開前に確定してください］</p>
+        <p>個人情報の取扱いに関するお問い合わせは、下記の窓口までご連絡ください。<br />{OPERATOR.companyName}（{OPERATOR.serviceName} 運営）／所在地：{OPERATOR.address}／電話：{OPERATOR.phone}／メール：{OPERATOR.email}</p>
       </LegalSection>
 
       <LegalSection heading="9. 改定">
