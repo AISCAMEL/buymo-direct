@@ -64,8 +64,17 @@ export async function verifyDocumentWithEkyc(
   const apiKey = process.env.TRUSTDOCK_API_KEY;
   const customerId = process.env.TRUSTDOCK_CUSTOMER_ID;
 
-  // ── モードモード（API キー未設定） ──────────────────────────────────────
+  // ── API キー未設定時 ──────────────────────────────────────
   if (!apiKey || !customerId) {
+    // 本番では「合格させない」（デモ合格の無効化・セキュリティ）
+    if (process.env.NODE_ENV === 'production') {
+      return {
+        verified: false,
+        confidence: 0,
+        documentType,
+        error: '本人確認サービスが未設定です。運営までお問い合わせください。',
+      };
+    }
     // 開発用スタブ: 常に成功を返す
     await new Promise((resolve) => setTimeout(resolve, 500)); // レイテンシ模倣
     return {

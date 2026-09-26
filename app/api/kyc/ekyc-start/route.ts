@@ -32,7 +32,9 @@ export async function POST(req: NextRequest) {
     process.env.NEXT_PUBLIC_APP_URL ??
     'http://localhost:3000';
 
-  const callbackUrl = `${origin}/api/kyc/ekyc-callback`;
+  // コールバック改ざん防止のワンタイムトークン（本人による自己承認を防ぐ）
+  const callbackToken = crypto.randomUUID();
+  const callbackUrl = `${origin}/api/kyc/ekyc-callback?token=${callbackToken}`;
   const redirectUrl = body.redirect_url ?? `${origin}/dashboard/kyc`;
 
   // TRUSTDOCK セッション URL 取得
@@ -55,6 +57,7 @@ export async function POST(req: NextRequest) {
       user_id: user.id,
       status: 'pending',
       redirect_url: redirectUrl,
+      callback_token: callbackToken,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },

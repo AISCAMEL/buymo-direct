@@ -221,8 +221,11 @@ export async function confirmEscrowPayment(
       });
       if (!result.ok) return { error: `決済に失敗しました：${result.error ?? ''}` };
       squarePaymentId = result.paymentId ?? null;
+    } else if (process.env.NODE_ENV === 'production') {
+      // 本番で決済未設定なら無課金確定を拒否（デモ合格の無効化）
+      return { error: '決済サービスが未設定のため、現在お支払いを受け付けられません。運営までお問い合わせください。' };
     }
-    // Square 未設定時はデモ（無課金）で続行
+    // 開発時のみ Square 未設定でデモ（無課金）続行
   }
 
   const discount = couponDiscount ?? 0;

@@ -50,7 +50,11 @@ export async function POST(req: Request) {
   let matchId: string;
 
   if (!isSquareConfigured()) {
-    // Square 未設定時はモック URL（開発・サンドボックス用）
+    // 本番で決済未設定ならデモURLを返さず拒否（デモ合格の無効化）
+    if (process.env.NODE_ENV === 'production') {
+      return NextResponse.json({ error: '決済サービスが未設定です。運営までお問い合わせください。' }, { status: 503 });
+    }
+    // 開発時のみモック URL
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? '';
     url = `${siteUrl}/escrow/${escrow_id}?demo=payment`;
     matchId = `demo-${Date.now()}`;

@@ -31,7 +31,9 @@ export interface SquarePaymentResult {
 /**
  * Webhook 署名を検証する。
  * Square は HMAC-SHA256(key, url + body) を Base64 エンコードして送信する。
- * SQUARE_WEBHOOK_SIGNATURE_KEY が未設定の場合は検証をスキップ（開発用）。
+ * SQUARE_WEBHOOK_SIGNATURE_KEY が未設定の場合：
+ *   - 本番(NODE_ENV=production)では検証失敗として拒否（fail-closed・セキュリティ）
+ *   - 開発時のみスキップを許可
  */
 export async function verifySquareWebhook(
   body: string,
@@ -39,7 +41,13 @@ export async function verifySquareWebhook(
   url: string
 ): Promise<boolean> {
   const sigKey = process.env.SQUARE_WEBHOOK_SIGNATURE_KEY;
-  if (!sigKey) return true; // キー未設定はローカル開発用にスキップ
+  if (!sigKey) {
+    if (process.env.NODE_ENV === 'production') {
+      console.error('[Square webhook] SQUARE_WEBHOOK_SIGNATURE_KEY 未設定のため本番では検証を拒否します');
+      return false; // fail-closed
+    }
+    return true; // 開発時のみスキップ
+  }
 
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(

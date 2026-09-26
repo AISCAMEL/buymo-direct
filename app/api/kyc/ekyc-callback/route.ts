@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const sessionId = searchParams.get('session_id');
   const rawStatus = searchParams.get('status') ?? 'pending';
+  const token = searchParams.get('token');
 
   // フォールバック先
   const fallbackRedirect = '/dashboard/kyc';
@@ -45,10 +46,27 @@ export async function GET(req: NextRequest) {
     user_id?: string;
     status?: string;
     redirect_url?: string;
+    callback_token?: string;
   } | null;
 
   const userId = record?.user_id;
   const redirectBase = record?.redirect_url ?? fallbackRedirect;
+
+  // セキュリティ: ワンタイムトークン照合＋pendingのみ承認可（自己承認・リプレイ防止）
+  if (!record || !record.callback_token || token !== record.callback_token) {
+    console.error('[eKYC callback] トークン不一致のため拒否 session=', sessionId);
+    return NextResponse.redirect(new URL(`${fallbackRedirect}?result=failed&reason=invalid_token`, req.url));
+  }
+  if (record.status !== 'pending') {
+    // 既に処理済み（リプレイ）→ そのまま結果ページへ
+    return NextResponse.redirect(new URL(`${redirectBase}?result=${record.status === 'verified' ? 'success' : 'failed'}`, req.url));
+  }
+  // 本番で TRUSTDOCK 未設定なら承認しない（デモ合格の無効化）
+  const trustdockConfigured = !!(process.env.TRUSTDOCK_API_KEY && process.env.TRUSTDOCK_CUSTOMER_ID);
+  if (process.env.NODE_ENV === 'production' && !trustdockConfigured) {
+    console.error('[eKYC callback] 本番で TRUSTDOCK 未設定のため承認を拒否');
+    return NextResponse.redirect(new URL(`${fallbackRedirect}?result=failed&reason=provider_unconfigured`, req.url));
+  }
 
   const isApproved = rawStatus === 'approved';
   const newStatus = isApproved ? 'verified' : rawStatus === 'error' ? 'failed' : 'declined';
