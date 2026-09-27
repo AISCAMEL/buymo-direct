@@ -551,6 +551,7 @@ export function ListingForm({
               year={year}
               mileage_km={mileageKm}
               condition="普通"
+              currentText={description}
               onGenerated={(s) => setDescription(s)}
             />
           </div>

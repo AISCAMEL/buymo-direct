@@ -1,18 +1,40 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { MessageCircle, X, Send, Loader2, Sparkles } from 'lucide-react';
 import { QUICK_REPLIES } from '@/lib/faq';
 
 type Message = { role: 'user' | 'assistant'; content: string };
 
-const GREETING =
-  'こんにちは！BUYMO サポートです🚗\n買取・ダイレクト販売・エスクロー・手数料など、お気軽にご質問ください。';
+/** 現在のページからAIの文脈（ラベル・あいさつ・質問例）を決める。 */
+function pageContext(path: string): { label: string; greeting: string; quick: string[] } {
+  const p = path || '/';
+  if (p.startsWith('/sell') || p.includes('appraisal') || p.includes('valuation'))
+    return { label: '車を売る・査定ページ', greeting: '車の売却・査定についてサポートします🚗\n「査定の流れ」「写真のコツ」などお気軽にどうぞ。',
+      quick: ['車検証はどこを撮ればいい？', '査定方法の違いは？（オンライン/出張/店舗）', '修復歴ってなに？', 'だいたいいくらで売れる？'] };
+  if (p.startsWith('/loan'))
+    return { label: 'ローンページ', greeting: 'ローン（仮審査）についてサポートします。',
+      quick: ['審査の流れは？', '必要なものは？', '月々いくらになる？', '頭金は必要？'] };
+  if (p.startsWith('/dealer') || p.startsWith('/dealers'))
+    return { label: '加盟店・車のプロページ', greeting: '加盟店（車のプロ）についてサポートします。',
+      quick: ['加盟店になるには？', '案件はどう受ける？', '費用・報酬は？', '自分の店舗ページは作れる？'] };
+  if (p.startsWith('/escrow') || p.startsWith('/transfer') || p.startsWith('/transport'))
+    return { label: 'サービス（エスクロー/名義変更/陸送）ページ', greeting: 'エスクロー・名義変更・陸送についてサポートします。',
+      quick: ['エスクローって安全？', '名義変更の費用は？', '陸送はいくら？', '手続きの流れは？'] };
+  if (p.startsWith('/listings') || p === '/genre' || p === '/area')
+    return { label: '車を買うページ', greeting: '車探し・購入についてサポートします🚗',
+      quick: ['総額の内訳を教えて', '保証は付く？', 'ローンの月々は？', '名義変更や陸送は？'] };
+  return { label: 'トップ/一般', greeting: 'こんにちは！BUYMO サポートです🚗\n買取・販売・エスクロー・手数料など、お気軽にご質問ください。',
+    quick: QUICK_REPLIES };
+}
 
 export function AiChatWidget() {
+  const pathname = usePathname() || '/';
+  const ctx = useMemo(() => pageContext(pathname), [pathname]);
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([{ role: 'assistant', content: GREETING }]);
+  const [messages, setMessages] = useState<Message[]>([{ role: 'assistant', content: ctx.greeting }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -20,6 +42,11 @@ export function AiChatWidget() {
   useEffect(() => {
     if (open) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, open]);
+
+  // まだ会話していなければ、ページ移動であいさつ・質問例を文脈に合わせて更新
+  useEffect(() => {
+    setMessages((prev) => (prev.length === 1 && prev[0].role === 'assistant' ? [{ role: 'assistant', content: ctx.greeting }] : prev));
+  }, [ctx.greeting]);
 
   async function send(text?: string) {
     const msg = (text ?? input).trim();
@@ -34,7 +61,7 @@ export function AiChatWidget() {
       const res = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: msg, history }),
+        body: JSON.stringify({ message: msg, history, context: ctx.label }),
       });
       const data = (await res.json()) as { reply?: string };
       setMessages((prev) => [
@@ -96,8 +123,8 @@ export function AiChatWidget() {
             {/* クイック返信 */}
             {showQuickReplies && !loading && (
               <div className="space-y-1.5 pt-1">
-                <p className="text-[11px] font-bold text-slate-400">よくある質問</p>
-                {QUICK_REPLIES.map((q) => (
+                <p className="text-[11px] font-bold text-slate-400">このページのよくある質問</p>
+                {ctx.quick.map((q) => (
                   <button key={q} onClick={() => void send(q)} className="block w-full rounded-xl border border-navy-200 bg-white px-3 py-2 text-left text-xs font-bold text-navy-700 transition hover:border-navy-400 hover:bg-navy-50">
                     {q}
                   </button>
