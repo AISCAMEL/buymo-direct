@@ -118,6 +118,16 @@ export async function adminDeleteAnnouncement(id: string) {
   revalidatePath('/announcements');
 }
 
+/** お知らせのピン留めを切替。 */
+export async function adminSetAnnouncementPinned(id: string, pinned: boolean) {
+  const ctx = await adminContext();
+  if (!ctx) return;
+  await ctx.supabase.from('announcements').update({ pinned }).eq('id', id);
+  await logAdminAction(ctx, `announcement.${pinned ? 'pin' : 'unpin'}`, 'announcement', id);
+  revalidatePath('/admin/announcements');
+  revalidatePath('/announcements');
+}
+
 /** KYC 書類を承認。profiles.kyc_status を 'verified' に更新。 */
 export async function adminApproveKyc(userId: string) {
   const ctx = await adminContext();

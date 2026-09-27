@@ -42,89 +42,6 @@ const TARGET_HREF: Record<string, (id: string) => string | null> = {
 
 type LogWithActor = AuditLog & { actor?: { display_name: string } };
 
-const DEMO_LOGS: LogWithActor[] = [
-  {
-    id: 'al-1',
-    actor_id: 'admin-1',
-    action: 'report.status.resolved',
-    target_type: 'report',
-    target_id: 'rpt-004',
-    detail: '虚偽レビューを確認・削除済み',
-    created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-    actor: { display_name: '管理者A' },
-  },
-  {
-    id: 'al-2',
-    actor_id: 'admin-1',
-    action: 'user.warn',
-    target_type: 'user',
-    target_id: 'u-999',
-    detail: '外部決済誘導の疑い。警告メールを送付',
-    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    actor: { display_name: '管理者A' },
-  },
-  {
-    id: 'al-3',
-    actor_id: 'admin-2',
-    action: 'loan.status.approved',
-    target_type: 'loan',
-    target_id: 'loan-012',
-    detail: null,
-    created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-    actor: { display_name: '管理者B' },
-  },
-  {
-    id: 'al-4',
-    actor_id: 'admin-1',
-    action: 'coupon.create',
-    target_type: 'coupon',
-    target_id: 'coupon-007',
-    detail: 'SUMMER10 — 夏キャンペーン10%割引',
-    created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    actor: { display_name: '管理者A' },
-  },
-  {
-    id: 'al-5',
-    actor_id: 'admin-2',
-    action: 'listing.status.closed',
-    target_type: 'listing',
-    target_id: 'lst-088',
-    detail: '利用規約違反の出品を非公開化',
-    created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    actor: { display_name: '管理者B' },
-  },
-  {
-    id: 'al-6',
-    actor_id: 'admin-1',
-    action: 'announcement.publish',
-    target_type: 'announcement',
-    target_id: 'ann-002',
-    detail: 'eKYC必須化のお知らせを公開',
-    created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-    actor: { display_name: '管理者A' },
-  },
-  {
-    id: 'al-7',
-    actor_id: 'admin-2',
-    action: 'loan.status.rejected',
-    target_type: 'loan',
-    target_id: 'loan-009',
-    detail: '審査NGのため否決',
-    created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    actor: { display_name: '管理者B' },
-  },
-  {
-    id: 'al-8',
-    actor_id: 'admin-1',
-    action: 'escrow.status.cancelled',
-    target_type: 'escrow',
-    target_id: 'esc-033',
-    detail: '双方合意のもとキャンセル。全額返金処理済み',
-    created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-    actor: { display_name: '管理者A' },
-  },
-];
-
 export default async function AdminAuditPage() {
   const supabase = await createClient();
   const { data } = await supabase
@@ -133,7 +50,7 @@ export default async function AdminAuditPage() {
     .order('created_at', { ascending: false })
     .limit(300);
 
-  const logs: LogWithActor[] = data && data.length > 0 ? (data as LogWithActor[]) : DEMO_LOGS;
+  const logs: LogWithActor[] = (data ?? []) as LogWithActor[];
 
   return (
     <div>
