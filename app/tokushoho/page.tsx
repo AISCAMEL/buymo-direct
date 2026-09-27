@@ -9,11 +9,13 @@ const ROWS: { label: string; value: string }[] = [
   { label: '販売事業者', value: OPERATOR.corporateNumber ? `${OPERATOR.companyName}（法人番号 ${OPERATOR.corporateNumber}）` : OPERATOR.companyName },
   { label: '運営統括責任者', value: OPERATOR.representative },
   { label: '所在地', value: OPERATOR.address },
+  { label: '買取センター', value: OPERATOR.centerAddress },
   { label: '電話番号', value: OPERATOR.phone },
   { label: 'メールアドレス', value: OPERATOR.email },
   { label: '古物商許可番号', value: OPERATOR.antiqueDealerLicense },
   ...(OPERATOR.invoiceNumber ? [{ label: 'インボイス登録番号', value: OPERATOR.invoiceNumber }] : []),
   { label: '営業時間', value: OPERATOR.businessHours },
+  { label: '定休日', value: OPERATOR.closedDays },
   { label: '販売URL', value: OPERATOR.url },
   {
     label: '販売価格',

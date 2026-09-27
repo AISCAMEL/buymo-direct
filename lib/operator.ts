@@ -1,37 +1,40 @@
 // 運営者（事業者）情報の一元管理。
 // 特商法・会社概要・プライバシー・利用規約など各ページはここを参照する。
-// ★★★ 公開前に［  ］のプレースホルダーを BUYMO の正式情報に置き換えてください ★★★
+// 情報源: BUYMO 公式（合同会社アイズ）確定情報。
 
 export const OPERATOR = {
-  /** 事業者名（法人名） */
-  companyName: '［事業者名を記載］',
-  /** 法人番号（任意） */
-  corporateNumber: '',
-  /** インボイス登録番号（任意） */
-  invoiceNumber: '',
-  /** 古物商許可番号（中古車販売は必須） */
-  antiqueDealerLicense: '［古物商許可番号を記載］',
-  /** サービス名 */
+  /** サービス／ブランド名 */
   serviceName: 'BUYMO ダイレクト',
-  /** 代表者・運営統括責任者 */
-  representative: '［代表者名を記載］',
-  /** 所在地 */
-  address: '［所在地を記載］',
-  /** 電話番号 */
-  phone: '［電話番号を記載］',
+  brandName: 'BUYMO（バイモ）買取センター',
+  /** 運営会社（法人名） */
+  companyName: '合同会社アイズ',
+  /** 運営会社 所在地 */
+  address: '〒979-0204 福島県いわき市四倉町細谷字大町1番',
+  /** 買取センター 所在地 */
+  centerAddress: '〒971-8138 福島県いわき市若葉台1丁目31-11',
+  /** 代表者 */
+  representative: '吉田 一平',
   /** 公開用メールアドレス */
-  email: '［連絡先メールを記載］',
+  email: 'kaitori@buymo.me',
+  /** 電話（番号は非公開・請求により開示の運用） */
+  phone: '請求により遅滞なく開示（お問い合わせはメール・フォームにて受付）',
   /** 営業時間 */
-  businessHours: '［営業時間を記載］',
+  businessHours: '査定はオンラインで24時間・365日受付',
+  /** 定休日 */
+  closedDays: '年中無休（365日・24時間受付）',
+  /** 事業内容 */
+  business: '自動車買取・販売業／フランチャイズ事業',
+  /** 古物商許可 */
+  antiqueDealerLicense: '福島県公安委員会許可 第25121A010859号',
   /** 公開サイトURL */
-  url: 'https://buymo-direct.vercel.app',
-  /** 設立年月（任意・会社概要用） */
+  url: 'https://buymo.me',
+  /** 任意項目（未確定なら空） */
+  corporateNumber: '',
+  invoiceNumber: '',
   established: '',
-  /** 事業内容（会社概要用） */
-  business: '中古車のダイレクト販売プラットフォーム運営、買取保証、エスクロー決済・名義変更代行等の付帯サービス提供',
 } as const;
 
-/** 値がまだプレースホルダーかどうか（未確定バナー表示などに使用）。 */
+/** 値がまだプレースホルダーかどうか。 */
 export function isPlaceholder(value: string): boolean {
   return value.includes('［') || value.includes('例）') || value.includes('.example') || value === '';
 }

@@ -110,7 +110,7 @@ export default function ContactPage() {
         {[
           { icon: Mail, label: 'メール', value: OPERATOR.email, note: '2営業日以内に返信' },
           { icon: MessageCircle, label: 'チャット', value: 'アプリ内AIチャット', note: '24時間対応（AI）' },
-          { icon: Phone, label: '電話', value: OPERATOR.phone, note: '平日 8:00〜17:00' },
+          { icon: Phone, label: '電話', value: '請求により開示', note: 'お問い合わせはメールへ' },
         ].map(({ icon: Icon, label, value, note }) => (
           <div key={label} className="card flex items-start gap-3 p-4">
             <div className="rounded-lg bg-navy-50 p-2">
