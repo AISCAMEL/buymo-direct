@@ -1,9 +1,14 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { Building2, MapPin, Globe, Phone, Package } from 'lucide-react';
+import { Building2, MapPin, Globe, Phone, Package, Wrench } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ListingCard } from '@/components/ListingCard';
+import { RequestPartnerForm } from '@/components/RequestPartnerForm';
+import { skillLabel } from '@/lib/cases';
+import { formatYen } from '@/lib/format';
 import type { ListingWithImages } from '@/lib/types';
+
+type PartnerSkill = { skill_key: string; price_from: number | null; area: string | null; note: string | null };
 
 export const dynamic = 'force-dynamic';
 
@@ -69,6 +74,15 @@ export default async function DealerShopPage({ params }: { params: Promise<{ id:
     .eq('dealer_id', id)
     .eq('status', 'sold');
 
+  // 提供スキル（スキルマーケット）
+  const { data: skillRows } = await s
+    .from('partner_skills')
+    .select('skill_key, price_from, area, note')
+    .eq('dealer_id', id)
+    .eq('active', true);
+  const skills = (skillRows ?? []) as PartnerSkill[];
+  const skillKeys = skills.map((sk) => sk.skill_key);
+
   return (
     <div className="space-y-8">
       {/* Dealer header */}
@@ -123,6 +137,33 @@ export default async function DealerShopPage({ params }: { params: Promise<{ id:
               <p className="text-xs text-slate-400">成約</p>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* 提供サービス（スキルマーケット）＋依頼CTA */}
+      <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+        <div className="card p-6">
+          <div className="mb-3 flex items-center gap-2">
+            <Wrench className="h-5 w-5 text-navy-400" />
+            <h2 className="font-black text-navy-800">対応サービス</h2>
+          </div>
+          {skills.length === 0 ? (
+            <p className="text-sm text-slate-400">登録されているサービスはまだありません。査定・整備などのご相談は「このプロに依頼」からどうぞ。</p>
+          ) : (
+            <div className="grid gap-2 sm:grid-cols-2">
+              {skills.map((sk) => (
+                <div key={sk.skill_key} className="rounded-xl border border-slate-200 p-3">
+                  <p className="font-bold text-navy-800">{skillLabel(sk.skill_key)}</p>
+                  <p className="mt-0.5 text-sm text-accent-600">{sk.price_from != null ? `${formatYen(sk.price_from)}〜` : '要見積り'}</p>
+                  {sk.area && <p className="text-xs text-slate-400">対応エリア: {sk.area}</p>}
+                  {sk.note && <p className="mt-1 text-xs text-slate-500">{sk.note}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="lg:pt-10">
+          <RequestPartnerForm dealerId={dealer.id} skillKeys={skillKeys} />
         </div>
       </div>
 

@@ -8,11 +8,21 @@ export const metadata = { title: '加盟店一覧 | BUYMO' };
 export default async function DealersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ prefecture?: string }>;
+  searchParams: Promise<{ prefecture?: string; skill?: string }>;
 }) {
-  const { prefecture } = await searchParams;
+  const { prefecture, skill } = await searchParams;
   const supabase = await createClient();
   const s = supabase as any;
+
+  // スキル絞り込み：該当スキルを提供する加盟店IDを取得
+  let skillDealerIds: string[] | null = null;
+  if (skill) {
+    const { data: ps } = await s.from('partner_skills').select('dealer_id').eq('skill_key', skill).eq('active', true);
+    skillDealerIds = Array.from(new Set((ps ?? []).map((r: any) => r.dealer_id)));
+  }
+
+  // スキルマスタ（絞り込みチップ用）
+  const { data: skillMaster } = await s.from('skills').select('key, name, sort').order('sort', { ascending: true });
 
   let query = s
     .from('dealers')
@@ -21,6 +31,7 @@ export default async function DealersPage({
     .order('name', { ascending: true });
 
   if (prefecture) query = query.eq('prefecture', prefecture);
+  if (skillDealerIds) query = query.in('id', skillDealerIds.length ? skillDealerIds : ['00000000-0000-0000-0000-000000000000']);
 
   const { data: dealers } = await query;
 
@@ -44,8 +55,30 @@ export default async function DealersPage({
       <div className="flex items-center gap-3">
         <Building2 className="h-6 w-6 text-navy-500" />
         <div>
-          <h1 className="text-2xl font-black">認定加盟店一覧</h1>
-          <p className="text-sm text-slate-500">BUYMO 認定の販売店から安心して購入できます</p>
+          <h1 className="text-2xl font-black">車のプロを探す</h1>
+          <p className="text-sm text-slate-500">BUYMO 認定の販売店・整備・査定などのプロに、購入も依頼もできます</p>
+        </div>
+      </div>
+
+      {/* Skill filter */}
+      <div>
+        <p className="mb-1.5 text-xs font-bold text-slate-400">サービスで探す</p>
+        <div className="flex flex-wrap gap-2">
+          <a href={prefecture ? `/dealers?prefecture=${encodeURIComponent(prefecture)}` : '/dealers'}
+            className={`rounded-full border px-3 py-1 text-xs font-bold ${!skill ? 'border-accent-500 bg-accent-50 text-accent-600' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}>
+            すべて
+          </a>
+          {(skillMaster ?? []).map((sk: any) => {
+            const qp = new URLSearchParams();
+            if (prefecture) qp.set('prefecture', prefecture);
+            qp.set('skill', sk.key);
+            return (
+              <a key={sk.key} href={`/dealers?${qp.toString()}`}
+                className={`rounded-full border px-3 py-1 text-xs font-bold ${skill === sk.key ? 'border-accent-500 bg-accent-50 text-accent-600' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}>
+                {sk.name}
+              </a>
+            );
+          })}
         </div>
       </div>
 
