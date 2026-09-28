@@ -8,6 +8,7 @@ import { ESCROW_FEE, TITLE_OPTIONS, installmentFeeFor } from '@/lib/constants';
 import { createSquarePayment, refundSquarePayment, isSquareConfigured } from '@/lib/square';
 import type { EscrowStatus, TitleTransferOption, PaymentMethod } from '@/lib/types';
 import { dispatchWebhook } from '@/lib/dealer';
+import { recordDealerSaleCommission } from '@/lib/sale-commission';
 import { sendPaymentConfirmedEmail, sendDealCompletedEmail } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
 
@@ -80,6 +81,9 @@ export async function advanceEscrow(escrowId: string) {
   await supabase.from('escrow_transactions').update({ status: next }).eq('id', escrowId);
   if (next === 'completed') {
     await supabase.from('listings').update({ status: 'sold' }).eq('id', tx.listing_id);
+
+    // 加盟店の自社在庫が売れた場合は成果報酬（販売手数料）を記録
+    await recordDealerSaleCommission(escrowId);
 
     // Dispatch webhook if listing belongs to a dealer
     const { data: listing } = await supabase

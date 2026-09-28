@@ -93,13 +93,13 @@ export async function seedDemoData(): Promise<{ ok: boolean; message: string }> 
     // --- 出品車両（プロが出品） ---
     const { data: listingRows } = await svc.from('listings').insert([
       {
-        seller_id: proId, title: 'ホンダ フィット 13G・Fパッケージ', maker: 'ホンダ', model: 'フィット',
+        seller_id: proId, dealer_id: dealerId, title: 'ホンダ フィット 13G・Fパッケージ', maker: 'ホンダ', model: 'フィット',
         year: 2019, mileage_km: 42000, price: 1180000, body_type: 'コンパクト', transmission: 'CVT',
         fuel: 'ガソリン', color: 'ホワイト', prefecture: '福島県', repair_history: false,
         description: 'ワンオーナー・記録簿あり。内外装きれいです。', status: 'active',
       },
       {
-        seller_id: proId, title: 'トヨタ アクア S', maker: 'トヨタ', model: 'アクア',
+        seller_id: proId, dealer_id: dealerId, title: 'トヨタ アクア S', maker: 'トヨタ', model: 'アクア',
         year: 2020, mileage_km: 31000, price: 1350000, body_type: 'コンパクト', transmission: 'CVT',
         fuel: 'ハイブリッド', color: 'ブラック', prefecture: '福島県', repair_history: false,
         description: '低燃費のハイブリッド。人気のSグレードでETC・ナビ付き。', status: 'active',

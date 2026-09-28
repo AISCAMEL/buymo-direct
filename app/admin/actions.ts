@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { adminContext, logAdminAction } from '@/lib/admin';
 import { createServiceClient } from '@/lib/supabase/service';
+import { recordDealerSaleCommission } from '@/lib/sale-commission';
 import { sendEmail, emailLayout } from '@/lib/email';
 import type { ListingStatus, EscrowStatus, LoanAppStatus, ReportStatus, AnnouncementLevel } from '@/lib/types';
 
@@ -33,6 +34,10 @@ export async function adminSetEscrowStatus(escrowId: string, status: EscrowStatu
   const ctx = await adminContext();
   if (!ctx) return;
   await ctx.supabase.from('escrow_transactions').update({ status }).eq('id', escrowId);
+  // 完了に変更した場合、加盟店の自社在庫なら成果報酬を記録
+  if (status === 'completed') {
+    await recordDealerSaleCommission(escrowId);
+  }
   await logAdminAction(ctx, `escrow.status.${status}`, 'escrow', escrowId);
   revalidatePath('/admin/escrow');
 }
@@ -211,5 +216,18 @@ export async function adminSetChargeStatus(chargeId: string, status: string) {
     .eq('id', chargeId);
 
   await logAdminAction(ctx, `charge.status.${status}`, 'case_charge', chargeId);
+  revalidatePath('/admin/billing');
+}
+
+/** 販売手数料（成果報酬）の請求ステータスを変更。 */
+export async function adminSetSaleCommissionStatus(commissionId: string, status: string) {
+  const ctx = await adminContext();
+  if (!ctx) return;
+  const service = createServiceClient();
+  await service
+    .from('sale_commissions')
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq('id', commissionId);
+  await logAdminAction(ctx, `sale_commission.status.${status}`, 'sale_commission', commissionId);
   revalidatePath('/admin/billing');
 }
