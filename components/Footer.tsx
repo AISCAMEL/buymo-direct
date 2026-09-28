@@ -27,7 +27,7 @@ const FOOTER_LINKS = [
       { label: 'エスクロー決済', href: '/escrow' },
       { label: '名義変更代行', href: '/transfer' },
       { label: '陸送手配', href: '/transport' },
-      { label: '加盟店申請', href: '/dealer/register' },
+      { label: '加盟店・プロ登録（無料）', href: '/join' },
     ],
   },
   {

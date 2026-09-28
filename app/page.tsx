@@ -432,8 +432,8 @@ export default async function HomePage() {
                   ))}
                 </ul>
                 <div>
-                  <Link href="/dealer/register" className="btn-primary px-6 py-3 text-sm">
-                    加盟店申請する
+                  <Link href="/join" className="btn-primary px-6 py-3 text-sm">
+                    加盟店・プロ登録（無料）
                     <ChevronRight className="h-4 w-4" />
                   </Link>
                 </div>
@@ -448,7 +448,7 @@ export default async function HomePage() {
                   個人出品より優遇された手数料でご利用いただけます。
                 </p>
                 <div>
-                  <Link href="/dealer/register" className="btn-primary px-6 py-3 text-sm">加盟店として申請する</Link>
+                  <Link href="/join" className="btn-primary px-6 py-3 text-sm">まずは無料で登録・相談する</Link>
                 </div>
               </div>
             </div>

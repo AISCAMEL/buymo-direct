@@ -21,6 +21,9 @@ import { getPricingConfig } from '@/lib/settings';
 import { sellerKind, SELLER_KIND_LABEL, SELLER_KIND_CLS, SELLER_KIND_NOTE } from '@/lib/listing-kind';
 import { businessDisplayName, invoiceLabel, BUSINESS_TYPE_LABEL, TAX_STATUS_LABEL, type BusinessType, type TaxStatus } from '@/lib/business';
 import { totalPayment, hasBreakdown } from '@/lib/listing-pricing';
+import { getDealerForUser } from '@/lib/dealer';
+import { canSeePremium } from '@/lib/membership';
+import { PremiumGate } from '@/components/PremiumGate';
 import { PriceAlertButton } from '@/components/PriceAlertButton';
 import { InsuranceSimulator } from '@/components/InsuranceSimulatorLazy';
 import type { ListingWithImages, MaintenanceRecord } from '@/lib/types';
@@ -117,6 +120,18 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
   }
   const images = [...(listing.listing_images ?? [])].sort((a, b) => a.sort_order - b.sort_order);
   const isOwner = user?.id === listing.seller_id;
+
+  // プレミアム（会員限定）領域の閲覧可否
+  let viewerTier: string | null = null;
+  let viewerIsAdmin = false;
+  let viewerIsDealer = false;
+  if (user) {
+    const { data: vp } = await supabase.from('profiles').select('member_tier, role').eq('id', user.id).maybeSingle();
+    viewerTier = (vp as { member_tier?: string } | null)?.member_tier ?? 'free';
+    viewerIsAdmin = (vp as { role?: string } | null)?.role === 'admin';
+    viewerIsDealer = (await getDealerForUser(user.id)) !== null;
+  }
+  const premiumUnlocked = canSeePremium({ tier: viewerTier, isDealer: viewerIsDealer, isAdmin: viewerIsAdmin });
 
   // 閲覧数カウント（自分の出品は除く）
   if (!isOwner) {
@@ -414,6 +429,27 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
             <li className="rounded-lg bg-slate-50 px-1 py-1.5">チャットで<br />納得してから</li>
             <li className="rounded-lg bg-slate-50 px-1 py-1.5">名義変更<br />まで代行</li>
           </ul>
+
+          {/* プロ向け情報（会員限定） */}
+          <div className="mt-4">
+            <p className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-slate-500">
+              <span className="rounded bg-navy-100 px-1.5 py-0.5 text-[10px] text-navy-700">PRO</span>
+              プロ向け情報（相場・仕入れ）
+            </p>
+            <PremiumGate unlocked={premiumUnlocked} loggedIn={!!user} source={`listing:${listing.id}`}
+              title="プロ向けの相場情報は会員限定です"
+              note="AI相場レンジや仕入れの目安は、加盟店・有料会員のみ閲覧できます。無料のプロ登録で解放されます。">
+              <div className="rounded-xl border border-slate-200 p-3 text-sm">
+                <dl className="space-y-1 text-slate-600">
+                  <div className="flex justify-between"><dt className="text-slate-400">AI相場レンジ</dt>
+                    <dd className="font-bold">{formatYen(listing.ai_price_min ?? listing.price)} 〜 {formatYen(listing.ai_price_max ?? listing.price)}</dd></div>
+                  <div className="flex justify-between"><dt className="text-slate-400">掲載価格との差</dt>
+                    <dd className="font-bold">{formatYen(listing.price)}</dd></div>
+                </dl>
+                <p className="mt-2 text-xs text-slate-400">※ 相場は参考値です。仕入れ・業販のご相談は本部・加盟店窓口へ。</p>
+              </div>
+            </PremiumGate>
+          </div>
 
           {/* 販売店（加盟店ダイレクト販売）の事業者・インボイス情報 */}
           {dealerBiz ? (

@@ -219,6 +219,25 @@ export async function adminSetChargeStatus(chargeId: string, status: string) {
   revalidatePath('/admin/billing');
 }
 
+/** 加盟店・プロ希望リードのステータスを変更。 */
+export async function adminSetLeadStatus(leadId: string, status: string) {
+  const ctx = await adminContext();
+  if (!ctx) return;
+  await ctx.supabase.from('dealer_leads').update({ status, updated_at: new Date().toISOString() }).eq('id', leadId);
+  await logAdminAction(ctx, `lead.status.${status}`, 'dealer_lead', leadId);
+  revalidatePath('/admin/leads');
+}
+
+/** 会員の有料/無料を切替。 */
+export async function adminSetMemberTier(userId: string, tier: string) {
+  const ctx = await adminContext();
+  if (!ctx) return;
+  const t = tier === 'paid' ? 'paid' : 'free';
+  await ctx.supabase.from('profiles').update({ member_tier: t }).eq('id', userId);
+  await logAdminAction(ctx, `member.tier.${t}`, 'user', userId);
+  revalidatePath('/admin/leads');
+}
+
 /** 販売手数料（成果報酬）の請求ステータスを変更。 */
 export async function adminSetSaleCommissionStatus(commissionId: string, status: string) {
   const ctx = await adminContext();
