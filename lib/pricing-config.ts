@@ -26,6 +26,8 @@ export interface PricingConfig {
   matchingFeeDefaultRate: number;                     // 個別未設定時の既定料率（例 0.10）
   matchingFeeMinFee: number;                          // 最低手数料（税抜, 例 1100）
   matchingFeeTaxRate: number;                         // 消費税率（例 0.10）
+  // 消費税マスター（見積・請求で使用。将来変更可能）
+  consumptionTaxRate: number;                         // 標準税率（例 0.10）
 }
 
 export const PRICING_DEFAULTS: PricingConfig = {
@@ -60,6 +62,7 @@ export const PRICING_DEFAULTS: PricingConfig = {
   matchingFeeDefaultRate: 0.10,
   matchingFeeMinFee: 1100,
   matchingFeeTaxRate: 0.10,
+  consumptionTaxRate: 0.10,
 };
 
 /** 保証の税込価格に本部調整（％）を適用。 */
@@ -103,6 +106,7 @@ export function mergePricingConfig(partial?: Partial<PricingConfig> | null): Pri
     matchingFeeDefaultRate: rate(partial.matchingFeeDefaultRate, PRICING_DEFAULTS.matchingFeeDefaultRate),
     matchingFeeMinFee: num(partial.matchingFeeMinFee, PRICING_DEFAULTS.matchingFeeMinFee),
     matchingFeeTaxRate: rate(partial.matchingFeeTaxRate, PRICING_DEFAULTS.matchingFeeTaxRate),
+    consumptionTaxRate: rate(partial.consumptionTaxRate, PRICING_DEFAULTS.consumptionTaxRate),
   };
 }
 

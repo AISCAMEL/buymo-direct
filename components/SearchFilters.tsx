@@ -148,6 +148,32 @@ export function SearchFilters() {
         <h2 className="mb-4 font-bold">絞り込み</h2>
 
         <div className="space-y-4">
+          {/* 販売者区分 */}
+          <div>
+            <label className="label">販売者</label>
+            <div className="grid grid-cols-3 gap-1 rounded-lg bg-slate-100 p-1">
+              {[
+                { v: '', label: 'すべて' },
+                { v: 'user', label: '個人' },
+                { v: 'dealer', label: '販売店' },
+              ].map((o) => {
+                const active = (params.get('seller') ?? '') === o.v;
+                return (
+                  <button
+                    key={o.v || 'all'}
+                    type="button"
+                    onClick={() => update({ seller: o.v || null })}
+                    className={`rounded-md px-2 py-1.5 text-sm font-bold transition ${
+                      active ? 'bg-white text-navy-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                  >
+                    {o.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* メーカー・モデル */}
           <div>
             <label className="label">メーカー</label>

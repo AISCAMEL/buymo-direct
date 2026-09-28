@@ -48,6 +48,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
     pref: get('pref'),
     prefs: get('prefs'),
     norepair: get('norepair'),
+    seller: get('seller'),
     // 旧インデックス方式（後方互換）
     price: get('price'),
     year: get('year'),

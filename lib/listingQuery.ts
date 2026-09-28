@@ -27,6 +27,10 @@ export function applyListingFilters(
   if (p.body) query = query.eq('body_type', p.body);
   if (p.norepair === '1') query = query.eq('repair_history', false);
 
+  // 販売者区分（dealer=加盟店 / user=個人）
+  if (p.seller === 'dealer') query = query.not('dealer_id', 'is', null);
+  else if (p.seller === 'user') query = query.is('dealer_id', null);
+
   // 地域（単一または複数）
   if (p.prefs) {
     const list = p.prefs.split(',').map((s) => s.trim()).filter(Boolean);
