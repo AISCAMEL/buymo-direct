@@ -339,10 +339,10 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
             pricing={pricing}
           />
 
-          {/* 安心バナー（買取保証・エスクロー） */}
+          {/* 安心バナー（エスクロー） */}
           <div className="mt-4 flex items-center gap-2 rounded-xl bg-gold-50 px-3 py-2.5 text-xs font-bold text-gold-600">
             <ShieldCheck className="h-4 w-4 shrink-0" />
-            買取保証つき／エスクロー決済で安全に取引
+            エスクロー決済で安全に取引
           </div>
           <ul className="mt-2 grid grid-cols-3 gap-1.5 text-center text-[10px] font-bold text-slate-600">
             <li className="rounded-lg bg-slate-50 px-1 py-1.5">代金は<br />第三者保全</li>
@@ -466,7 +466,7 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
         <span className="inline-block rounded-full bg-gold-500 px-3 py-1 text-xs font-black text-[#2E2408]">買取＋ダイレクト 完全1本化</span>
         <h2 className="mt-3 text-xl font-black sm:text-2xl">お乗り換え・ご売却をお考えの方へ</h2>
         <p className="mt-1 max-w-2xl text-sm text-white/85">
-          BUYMO なら「すぐ現金化の買取（手数料0円）」も「より高く売るダイレクト販売（買取保証つき）」も選べます。査定は無料・全国オンライン完結です。
+          BUYMO なら「すぐ現金化の買取（手数料0円）」も「より高く売るダイレクト販売」も選べます。査定は無料・全国オンライン完結です。
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Link href="/listings/valuation" className="inline-flex items-center gap-1.5 rounded-xl bg-gold-500 px-5 py-2.5 text-sm font-black text-[#2E2408] transition hover:bg-gold-600">
