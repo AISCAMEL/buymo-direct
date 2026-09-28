@@ -9,7 +9,8 @@ import { SocialLoginButtons } from '@/components/SocialLoginButtons';
 export function AuthForm({ mode }: { mode: 'login' | 'signup' }) {
   const router = useRouter();
   const params = useSearchParams();
-  const redirectTo = params.get('redirect') ?? '/';
+  // ログイン後は会員のマイページへ（redirect 指定があればそれを優先）。
+  const redirectTo = params.get('redirect') ?? (mode === 'login' ? '/dashboard' : '/');
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
