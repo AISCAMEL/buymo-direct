@@ -5,6 +5,7 @@ import { requireDealer } from '@/lib/dealer';
 import { PrintButton } from '@/components/PrintButton';
 import { QuoteDocument } from '@/components/QuoteDocument';
 import { updateQuoteStatus } from '@/app/dealer/quotes/actions';
+import { createInvoiceFromQuote } from '@/app/dealer/invoices/actions';
 import { type QuoteStatus } from '@/lib/quotes';
 
 export const dynamic = 'force-dynamic';
@@ -52,14 +53,19 @@ export default async function QuoteDetailPage({ params }: { params: Promise<{ id
       <QuoteDocument q={q} items={items} biz={biz} />
 
       {/* 操作 */}
-      <div className="no-print flex flex-wrap gap-2">
-        {NEXT.map((n) => (
-          <form key={n.status} action={updateQuoteStatus.bind(null, q.id, n.status)}>
-            <button disabled={q.status === n.status} className={`rounded-md border px-3 py-1.5 text-xs font-bold transition disabled:opacity-30 ${n.cls}`}>
-              {n.label}
-            </button>
-          </form>
-        ))}
+      <div className="no-print space-y-3">
+        <form action={createInvoiceFromQuote.bind(null, q.id)}>
+          <button className="btn-accent w-full">この見積から請求書を作成する →</button>
+        </form>
+        <div className="flex flex-wrap gap-2">
+          {NEXT.map((n) => (
+            <form key={n.status} action={updateQuoteStatus.bind(null, q.id, n.status)}>
+              <button disabled={q.status === n.status} className={`rounded-md border px-3 py-1.5 text-xs font-bold transition disabled:opacity-30 ${n.cls}`}>
+                {n.label}
+              </button>
+            </form>
+          ))}
+        </div>
       </div>
     </div>
   );
