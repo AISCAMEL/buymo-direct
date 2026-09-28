@@ -37,7 +37,7 @@ export default async function EditListingPage({ params }: { params: Params }) {
       </Link>
       <h1 className="mb-1 text-2xl font-black">出品を編集する</h1>
       <p className="mb-6 text-sm text-slate-500">内容を更新します。写真の追加・削除も可能です。</p>
-      <ListingForm userId={user.id} listing={listing} existingImages={listing.listing_images ?? []} />
+      <ListingForm userId={user.id} listing={listing} existingImages={listing.listing_images ?? []} dealerId={(listing as unknown as { dealer_id?: string | null }).dealer_id ?? null} />
     </div>
   );
 }

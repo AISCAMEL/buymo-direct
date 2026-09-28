@@ -19,6 +19,11 @@ function pathFromUrl(url: string): string | null {
   return i >= 0 ? url.slice(i + STORAGE_MARKER.length) : null;
 }
 
+function numOrNull(v: FormDataEntryValue | null): number | null {
+  const n = Number(String(v ?? '').replace(/[^\d.-]/g, ''));
+  return Number.isFinite(n) && n > 0 ? Math.round(n) : null;
+}
+
 type ImageItem = {
   key: string;
   url: string;
@@ -52,6 +57,7 @@ export function ListingForm({
   initial,
   initialImages = [],
   fromAppraisalId,
+  dealerId = null,
 }: {
   userId: string;
   listing?: Listing;
@@ -59,6 +65,7 @@ export function ListingForm({
   initial?: ListingInitial;
   initialImages?: { url: string; caption?: string | null }[];
   fromAppraisalId?: string;
+  dealerId?: string | null;
 }) {
   const router = useRouter();
   const sp = useSearchParams();
@@ -157,6 +164,19 @@ export function ListingForm({
       fee_rate: listingType === 'proxy' ? 7.00 : 3.00,
       ai_price_min: wizardAiMin,
       ai_price_max: wizardAiMax,
+      // 加盟店の出品なら販売店(B2C)として分類。ダイレクト販売の価格内訳も保存。
+      ...(dealerId
+        ? {
+            dealer_id: dealerId,
+            registration_fee: numOrNull(fd.get('registration_fee')),
+            recycle_fee: numOrNull(fd.get('recycle_fee')),
+            warranty_fee: numOrNull(fd.get('warranty_fee')),
+            delivery_fee: numOrNull(fd.get('delivery_fee')),
+            misc_fees: numOrNull(fd.get('misc_fees')),
+            tax_amount: numOrNull(fd.get('tax_amount')),
+            sale_terms: String(fd.get('sale_terms') || '').trim() || null,
+          }
+        : {}),
     };
 
     try {
@@ -445,8 +465,51 @@ export function ListingForm({
               className="input"
               placeholder="1500000"
             />
+            {dealerId && <p className="mt-1 text-xs text-slate-400">※ ここは「車両本体価格」です。諸費用は下記に入力してください。</p>}
           </div>
         </div>
+
+        {/* ダイレクト販売の価格内訳（加盟店のみ） */}
+        {dealerId && (
+          <div className="rounded-xl border border-navy-100 bg-navy-50/40 p-4">
+            <p className="mb-1 font-bold text-navy-700">ダイレクト販売の価格内訳（任意）</p>
+            <p className="mb-3 text-xs text-slate-500">
+              入力すると車両ページに「お支払い総額」として表示されます。税務判断はシステムでは行いません。
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {([
+                ['registration_fee', '登録費用'],
+                ['recycle_fee', 'リサイクル料金'],
+                ['warranty_fee', '保証料'],
+                ['delivery_fee', '納車費用'],
+                ['misc_fees', '諸費用（その他）'],
+                ['tax_amount', 'うち消費税（表示用）'],
+              ] as const).map(([key, label]) => (
+                <div key={key}>
+                  <label className="label">{label}（円）</label>
+                  <input
+                    name={key}
+                    type="number"
+                    min={0}
+                    defaultValue={(listing as unknown as Record<string, number | null>)?.[key] ?? undefined}
+                    className="input"
+                    placeholder="0"
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="mt-3">
+              <label className="label">販売条件（保証内容・納車条件など）</label>
+              <textarea
+                name="sale_terms"
+                rows={2}
+                defaultValue={(listing as unknown as Record<string, string | null>)?.sale_terms ?? undefined}
+                className="input"
+                placeholder="例）1年保証付き。県外納車は別途ご相談。"
+              />
+            </div>
+          </div>
+        )}
 
         {/* 出品方法 */}
         <div>

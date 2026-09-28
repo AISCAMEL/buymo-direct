@@ -20,6 +20,7 @@ import { PriceBreakdown } from '@/components/PriceBreakdown';
 import { getPricingConfig } from '@/lib/settings';
 import { sellerKind, SELLER_KIND_LABEL, SELLER_KIND_CLS, SELLER_KIND_NOTE } from '@/lib/listing-kind';
 import { businessDisplayName, invoiceLabel, BUSINESS_TYPE_LABEL, TAX_STATUS_LABEL, type BusinessType, type TaxStatus } from '@/lib/business';
+import { totalPayment, hasBreakdown } from '@/lib/listing-pricing';
 import { PriceAlertButton } from '@/components/PriceAlertButton';
 import { InsuranceSimulator } from '@/components/InsuranceSimulatorLazy';
 import type { ListingWithImages, MaintenanceRecord } from '@/lib/types';
@@ -358,12 +359,47 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
             ローン仮審査を申し込む →
           </Link>
 
-          {/* 現金でのお支払い目安（エスクロー＋名義変更＋任意の保証・受け取り方法） */}
-          <PriceBreakdown
-            price={listing.price}
-            vehicle={{ year: listing.year, mileageKm: listing.mileage_km, maker: listing.maker, bodyType: listing.body_type }}
-            pricing={pricing}
-          />
+          {(() => {
+            const lp = listing as unknown as {
+              price: number; registration_fee?: number | null; recycle_fee?: number | null;
+              warranty_fee?: number | null; delivery_fee?: number | null; misc_fees?: number | null;
+              tax_amount?: number | null; sale_terms?: string | null;
+            };
+            // 加盟店ダイレクト販売で価格内訳が入力済みなら「お支払い総額」を表示
+            if (dealerBiz && hasBreakdown(lp)) {
+              const rows: [string, number | null | undefined][] = [
+                ['車両本体価格', lp.price],
+                ['登録費用', lp.registration_fee],
+                ['リサイクル料金', lp.recycle_fee],
+                ['保証料', lp.warranty_fee],
+                ['納車費用', lp.delivery_fee],
+                ['諸費用', lp.misc_fees],
+              ];
+              return (
+                <div className="mt-4 rounded-xl border border-navy-100 p-3">
+                  <p className="mb-2 text-xs font-bold text-slate-500">お支払い総額（税込）</p>
+                  <p className="mb-2 text-2xl font-black text-navy-700">{formatYen(totalPayment(lp))}</p>
+                  <dl className="space-y-1 text-xs text-slate-600">
+                    {rows.filter(([, v]) => typeof v === 'number' && v > 0).map(([label, v]) => (
+                      <div key={label} className="flex justify-between"><dt className="text-slate-400">{label}</dt><dd className="font-bold">{formatYen(v as number)}</dd></div>
+                    ))}
+                    {typeof lp.tax_amount === 'number' && lp.tax_amount > 0 && (
+                      <div className="flex justify-between text-slate-400"><dt>（うち消費税）</dt><dd>{formatYen(lp.tax_amount)}</dd></div>
+                    )}
+                  </dl>
+                  {lp.sale_terms && <p className="mt-2 rounded-lg bg-slate-50 p-2 text-xs text-slate-600">販売条件: {lp.sale_terms}</p>}
+                </div>
+              );
+            }
+            // 個人出品：現金でのお支払い目安（エスクロー＋名義変更 等）
+            return (
+              <PriceBreakdown
+                price={listing.price}
+                vehicle={{ year: listing.year, mileageKm: listing.mileage_km, maker: listing.maker, bodyType: listing.body_type }}
+                pricing={pricing}
+              />
+            );
+          })()}
 
           {/* 安心バナー（チャットで納得 → エスクロー） */}
           <div className="mt-4 flex items-center gap-2 rounded-xl bg-gold-50 px-3 py-2.5 text-xs font-bold text-gold-600">

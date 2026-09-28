@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Bot, ClipboardCheck } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
+import { getDealerForUser } from '@/lib/dealer';
 import { ListingForm, type ListingInitial } from '@/components/ListingForm';
 import { PRIVATE_CAPTIONS } from '@/lib/photo-guide';
 import { Suspense } from 'react';
@@ -22,6 +23,10 @@ export default async function SellPage({
 
   const sp = await searchParams;
   const fromAppraisalId = sp.fromAppraisal;
+
+  // 加盟店オーナー/スタッフなら販売店(B2C)出品として dealer_id を付与
+  const dealerCtx = await getDealerForUser(user.id);
+  const dealerId = dealerCtx?.dealerId ?? null;
 
   // 査定からの引き継ぎ（本人の査定 or 管理者のみ）
   let initial: ListingInitial | undefined;
@@ -126,7 +131,7 @@ export default async function SellPage({
       </div>
 
       <Suspense>
-        <ListingForm userId={user.id} initial={initial} initialImages={initialImages} fromAppraisalId={carriedFrom ? fromAppraisalId : undefined} />
+        <ListingForm userId={user.id} initial={initial} initialImages={initialImages} fromAppraisalId={carriedFrom ? fromAppraisalId : undefined} dealerId={dealerId} />
       </Suspense>
     </div>
   );
