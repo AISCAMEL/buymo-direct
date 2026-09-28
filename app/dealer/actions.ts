@@ -85,6 +85,16 @@ export async function updateDealerProfile(formData: FormData): Promise<void> {
       instagram_url: str('instagram_url'),
       line_url: str('line_url'),
       gallery,
+      // 事業者情報・インボイス
+      business_type: String(formData.get('business_type') || 'corporation') === 'sole_proprietor' ? 'sole_proprietor' : 'corporation',
+      corporate_number: str('corporate_number'),
+      trade_name: str('trade_name'),
+      representative: str('representative'),
+      antique_license_no: str('antique_license_no'),
+      tax_status: String(formData.get('tax_status') || 'taxable') === 'exempt' ? 'exempt' : 'taxable',
+      invoice_registered: ['on', 'true'].includes(String(formData.get('invoice_registered') || '')),
+      invoice_number: str('invoice_number'),
+      bank_info: str('bank_info'),
       updated_at: new Date().toISOString(),
     })
     .eq('id', dealer.dealerId);

@@ -69,6 +69,58 @@ export function DealerSettingsForm({ d, isOwner }: { d: (Dealer & Record<string,
         </div>
       </section>
 
+      {/* 事業者情報・インボイス */}
+      <section className="card space-y-4 p-6">
+        <h2 className="font-bold text-slate-700">事業者情報・インボイス</h2>
+        <p className="text-xs text-slate-500">
+          見積書・請求書に反映されます。税務判断はシステムでは行わず、ご登録内容に基づいて表示します。
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="label">事業者区分</label>
+            <select name="business_type" className="input" defaultValue={val('business_type') || 'corporation'}>
+              <option value="corporation">法人</option>
+              <option value="sole_proprietor">個人事業主</option>
+            </select>
+          </div>
+          <div>
+            <label className="label">代表者</label>
+            <input name="representative" className="input" defaultValue={val('representative')} placeholder="例）代表取締役 山田 太郎" />
+          </div>
+          <div>
+            <label className="label">法人番号（法人の場合・13桁）</label>
+            <input name="corporate_number" className="input" defaultValue={val('corporate_number')} placeholder="1234567890123" />
+          </div>
+          <div>
+            <label className="label">屋号（個人事業主の場合）</label>
+            <input name="trade_name" className="input" defaultValue={val('trade_name')} placeholder="例）やまだ自動車" />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="label">古物商許可番号</label>
+            <input name="antique_license_no" className="input" defaultValue={val('antique_license_no')} placeholder="例）福島県公安委員会許可 第000000000000号" />
+          </div>
+          <div>
+            <label className="label">消費税区分</label>
+            <select name="tax_status" className="input" defaultValue={val('tax_status') || 'taxable'}>
+              <option value="taxable">課税事業者</option>
+              <option value="exempt">免税事業者</option>
+            </select>
+          </div>
+          <div>
+            <label className="label">適格請求書 登録番号（インボイス）</label>
+            <input name="invoice_number" className="input" defaultValue={val('invoice_number')} placeholder="T1234567890123" />
+          </div>
+          <label className="flex items-center gap-2 sm:col-span-2">
+            <input type="checkbox" name="invoice_registered" defaultChecked={!!d?.invoice_registered} className="h-4 w-4" />
+            <span className="text-sm font-bold text-slate-700">インボイス制度（適格請求書発行事業者）に登録している</span>
+          </label>
+          <div className="sm:col-span-2">
+            <label className="label">振込先（請求書に記載）</label>
+            <textarea name="bank_info" rows={2} className="input" defaultValue={val('bank_info')} placeholder="例）○○銀行 ○○支店 普通 1234567 カ）ヤマダジドウシャ" />
+          </div>
+        </div>
+      </section>
+
       {!isOwner && <p className="text-xs text-slate-400">※ 設定変更はオーナーのみ可能です。</p>}
       <button type="submit" disabled={!isOwner} className="btn-accent w-full disabled:opacity-50">保存する</button>
     </form>

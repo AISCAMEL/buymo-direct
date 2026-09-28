@@ -19,6 +19,7 @@ import { MakeOfferButton } from '@/components/MakeOfferButton';
 import { PriceBreakdown } from '@/components/PriceBreakdown';
 import { getPricingConfig } from '@/lib/settings';
 import { sellerKind, SELLER_KIND_LABEL, SELLER_KIND_CLS, SELLER_KIND_NOTE } from '@/lib/listing-kind';
+import { businessDisplayName, invoiceLabel, BUSINESS_TYPE_LABEL, TAX_STATUS_LABEL, type BusinessType, type TaxStatus } from '@/lib/business';
 import { PriceAlertButton } from '@/components/PriceAlertButton';
 import { InsuranceSimulator } from '@/components/InsuranceSimulatorLazy';
 import type { ListingWithImages, MaintenanceRecord } from '@/lib/types';
@@ -95,6 +96,24 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
   if (!data) notFound();
   const listing = data as unknown as ListingWithImages;
   const pricing = await getPricingConfig();
+
+  // 販売店（加盟店）の事業者・インボイス情報（ダイレクト販売時に表示）
+  type DealerBiz = {
+    id: string; name: string | null; business_type: string | null; company_name: string | null;
+    trade_name: string | null; representative: string | null; corporate_number: string | null;
+    antique_license_no: string | null; tax_status: string | null;
+    invoice_registered: boolean | null; invoice_number: string | null;
+  };
+  const listingDealerId = (listing as unknown as { dealer_id?: string | null }).dealer_id ?? null;
+  let dealerBiz: DealerBiz | null = null;
+  if (listingDealerId) {
+    const { data: dz } = await supabase
+      .from('dealers')
+      .select('id, name, business_type, company_name, trade_name, representative, corporate_number, antique_license_no, tax_status, invoice_registered, invoice_number')
+      .eq('id', listingDealerId)
+      .maybeSingle();
+    dealerBiz = (dz as DealerBiz | null) ?? null;
+  }
   const images = [...(listing.listing_images ?? [])].sort((a, b) => a.sort_order - b.sort_order);
   const isOwner = user?.id === listing.seller_id;
 
@@ -359,6 +378,29 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
             <li className="rounded-lg bg-slate-50 px-1 py-1.5">チャットで<br />納得してから</li>
             <li className="rounded-lg bg-slate-50 px-1 py-1.5">名義変更<br />まで代行</li>
           </ul>
+
+          {/* 販売店（加盟店ダイレクト販売）の事業者・インボイス情報 */}
+          {dealerBiz ? (
+            <div className="mt-4 rounded-xl border border-navy-100 bg-navy-50/40 p-3 text-xs">
+              <p className="mb-1.5 flex items-center gap-1.5 font-bold text-navy-700">
+                <span className="badge bg-navy-500 text-white">販売店</span>
+                販売店から購入（B2C）
+              </p>
+              <dl className="space-y-0.5 text-slate-600">
+                <div className="flex justify-between gap-2"><dt className="text-slate-400">販売者</dt><dd className="text-right font-bold">{businessDisplayName(dealerBiz)}</dd></div>
+                <div className="flex justify-between gap-2"><dt className="text-slate-400">事業者区分</dt><dd className="text-right">{BUSINESS_TYPE_LABEL[(dealerBiz.business_type as BusinessType) ?? 'corporation']}{dealerBiz.representative ? `／代表 ${dealerBiz.representative}` : ''}</dd></div>
+                <div className="flex justify-between gap-2"><dt className="text-slate-400">消費税</dt><dd className="text-right">{TAX_STATUS_LABEL[(dealerBiz.tax_status as TaxStatus) ?? 'taxable']}</dd></div>
+                <div className="flex justify-between gap-2"><dt className="text-slate-400">インボイス</dt><dd className="text-right">{invoiceLabel(dealerBiz)}</dd></div>
+                {dealerBiz.antique_license_no && (
+                  <div className="flex justify-between gap-2"><dt className="text-slate-400">古物商許可</dt><dd className="text-right">{dealerBiz.antique_license_no}</dd></div>
+                )}
+              </dl>
+            </div>
+          ) : (
+            <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-[11px] font-bold text-emerald-700">
+              個人オーナーによる出品（個人間売買）です。消費税・インボイスの対象外です。
+            </p>
+          )}
 
           {isOwner ? (
             <div className="mt-5 space-y-3">

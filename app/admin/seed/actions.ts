@@ -77,6 +77,15 @@ export async function seedDemoData(): Promise<{ ok: boolean; message: string }> 
       holidays: '日曜・祝日',
       established: '1994年',
       service_area: '福島県浜通り一円',
+      // 事業者情報・インボイス（デモ）
+      business_type: 'corporation',
+      representative: '佐藤 健',
+      corporate_number: '1234567890123',
+      antique_license_no: '福島県公安委員会許可 第123456789012号',
+      tax_status: 'taxable',
+      invoice_registered: true,
+      invoice_number: 'T1234567890123',
+      bank_info: '福島銀行 いわき支店 普通 1234567 カ）サトウオート',
     }).select('id').single();
     const dealerId = (dealerRow as { id: string }).id;
     log.push('加盟店（佐藤オートサービス）を承認済みで作成');
