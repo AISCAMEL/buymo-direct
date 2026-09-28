@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { MessageThread } from '@/components/MessageThread';
 import { createEscrow } from '@/app/escrow/actions';
 import { formatYen } from '@/lib/format';
+import { skillLabel, formatCaseNo, CASE_STATUS_LABEL, CASE_STATUS_CLS, type CaseStatus } from '@/lib/cases';
 import type { Message } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -23,7 +24,7 @@ export default async function ThreadPage({ params }: { params: Params }) {
 
   const { data: conv } = await supabase
     .from('conversations')
-    .select('*, listings(id, title, maker, model, price, status, seller_id)')
+    .select('*, listings(id, title, maker, model, price, status, seller_id), case:cases(id, case_no, type, title, status)')
     .eq('id', id)
     .maybeSingle();
 
@@ -34,6 +35,9 @@ export default async function ThreadPage({ params }: { params: Params }) {
   await supabase.rpc('mark_conversation_read', { p_conversation_id: id });
 
   const listing = (conv as any).listings;
+  const kase = (conv as any).case as
+    | { id: string; case_no: number; type: string; title: string | null; status: CaseStatus }
+    | null;
   const isBuyer = conv.buyer_id === user.id;
 
   const { data: msgs } = await supabase
@@ -57,28 +61,47 @@ export default async function ThreadPage({ params }: { params: Params }) {
         <ArrowLeft className="h-4 w-4" /> メッセージ一覧
       </Link>
 
-      {/* 取引対象の車両 */}
-      <div className="card mb-3 flex items-center justify-between gap-3 p-4">
-        <div className="min-w-0">
-          <Link href={`/listings/${listing?.id}`} className="truncate font-bold hover:underline">
-            {listing?.title}
+      {/* ヘッダー：案件チャット or 車両の取引 */}
+      {kase ? (
+        <div className="card mb-3 flex items-center justify-between gap-3 p-4">
+          <div className="min-w-0">
+            <p className="flex flex-wrap items-center gap-2 font-bold">
+              <span className="font-mono text-xs text-slate-400">{formatCaseNo(kase.case_no)}</span>
+              {kase.title ?? `${skillLabel(kase.type)}のご依頼`}
+              <span className={`badge ${CASE_STATUS_CLS[kase.status]}`}>{CASE_STATUS_LABEL[kase.status]}</span>
+            </p>
+            <p className="mt-0.5 text-sm text-slate-500">{skillLabel(kase.type)} の案件に関するチャット</p>
+          </div>
+          <Link
+            href={isBuyer ? '/dashboard/cases' : '/dealer/cases'}
+            className="btn-primary shrink-0"
+          >
+            案件を見る
           </Link>
-          <p className="text-sm text-slate-500">
-            {listing?.maker} {listing?.model} ・ <span className="font-bold text-navy-600">{formatYen(listing?.price ?? 0)}</span>
-          </p>
         </div>
-        {escrow ? (
-          <Link href={`/escrow/${escrow.id}`} className="btn-primary shrink-0">
-            <ShieldCheck className="h-4 w-4" /> 取引を見る
-          </Link>
-        ) : isBuyer && listing?.status === 'active' ? (
-          <form action={createEscrowBound}>
-            <button className="btn-accent shrink-0">
-              <ShieldCheck className="h-4 w-4" /> 購入手続きへ
-            </button>
-          </form>
-        ) : null}
-      </div>
+      ) : (
+        <div className="card mb-3 flex items-center justify-between gap-3 p-4">
+          <div className="min-w-0">
+            <Link href={`/listings/${listing?.id}`} className="truncate font-bold hover:underline">
+              {listing?.title}
+            </Link>
+            <p className="text-sm text-slate-500">
+              {listing?.maker} {listing?.model} ・ <span className="font-bold text-navy-600">{formatYen(listing?.price ?? 0)}</span>
+            </p>
+          </div>
+          {escrow ? (
+            <Link href={`/escrow/${escrow.id}`} className="btn-primary shrink-0">
+              <ShieldCheck className="h-4 w-4" /> 取引を見る
+            </Link>
+          ) : isBuyer && listing?.status === 'active' ? (
+            <form action={createEscrowBound}>
+              <button className="btn-accent shrink-0">
+                <ShieldCheck className="h-4 w-4" /> 購入手続きへ
+              </button>
+            </form>
+          ) : null}
+        </div>
+      )}
 
       {/* 通報ボタン */}
       <div className="mb-3 flex justify-end">

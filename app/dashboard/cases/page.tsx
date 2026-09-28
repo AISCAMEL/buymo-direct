@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { ClipboardList, CheckCircle2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { formatDateTime } from '@/lib/format';
-import { cancelCase } from '@/app/cases/actions';
+import { cancelCase, openCaseConversation } from '@/app/cases/actions';
 import {
   CASE_STATUS_LABEL, CASE_STATUS_CLS, CASE_SOURCE_LABEL, skillLabel, formatCaseNo,
   type CaseStatus, type CaseSource,
@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 
 type CaseRow = {
   id: string; case_no: number; type: string; source: CaseSource; status: CaseStatus;
-  title: string | null; detail: string | null; created_at: string;
+  title: string | null; detail: string | null; created_at: string; partner_id: string | null;
   partner?: { name?: string | null } | null;
 };
 
@@ -25,7 +25,7 @@ export default async function DashboardCasesPage({ searchParams }: { searchParam
 
   const { data } = await supabase
     .from('cases')
-    .select('id, case_no, type, source, status, title, detail, created_at, partner:dealers(name)')
+    .select('id, case_no, type, source, status, title, detail, created_at, partner_id, partner:dealers(name)')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
   const cases = (data ?? []) as unknown as CaseRow[];
@@ -64,11 +64,18 @@ export default async function DashboardCasesPage({ searchParams }: { searchParam
                   {c.detail && <p className="mt-1 text-sm text-slate-500">{c.detail}</p>}
                   <p className="mt-1 text-xs text-slate-400">{formatDateTime(c.created_at)}</p>
                 </div>
-                {['new', 'accepted'].includes(c.status) && (
-                  <form action={cancelCase.bind(null, c.id)}>
-                    <button className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-500 hover:bg-slate-50">取り下げ</button>
-                  </form>
-                )}
+                <div className="flex shrink-0 flex-col items-end gap-2">
+                  {c.partner_id && !['declined', 'closed'].includes(c.status) && (
+                    <form action={openCaseConversation.bind(null, c.id)}>
+                      <button className="rounded-md border border-navy-300 px-3 py-1.5 text-xs font-bold text-navy-700 hover:bg-navy-50">チャットで相談</button>
+                    </form>
+                  )}
+                  {['new', 'accepted'].includes(c.status) && (
+                    <form action={cancelCase.bind(null, c.id)}>
+                      <button className="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-500 hover:bg-slate-50">取り下げ</button>
+                    </form>
+                  )}
+                </div>
               </div>
             </li>
           ))}

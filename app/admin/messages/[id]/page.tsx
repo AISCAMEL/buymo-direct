@@ -4,6 +4,7 @@ import { ArrowLeft, MessageSquare } from 'lucide-react';
 import { requireAdmin } from '@/lib/admin';
 import { createServiceClient } from '@/lib/supabase/service';
 import { formatDateTime } from '@/lib/format';
+import { skillLabel } from '@/lib/cases';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,6 +13,7 @@ type Conv = {
   buyer_id: string;
   seller_id: string;
   listing?: { title?: string | null } | null;
+  case?: { case_no?: number; type?: string; title?: string | null } | null;
   buyer?: { display_name?: string | null } | null;
   seller?: { display_name?: string | null } | null;
 };
@@ -24,7 +26,7 @@ export default async function AdminMessageDetailPage({ params }: { params: Promi
 
   const { data: convData } = await supabase
     .from('conversations')
-    .select('id, buyer_id, seller_id, listing:listings(title), buyer:profiles!conversations_buyer_id_fkey(display_name), seller:profiles!conversations_seller_id_fkey(display_name)')
+    .select('id, buyer_id, seller_id, listing:listings(title), case:cases(case_no, type, title), buyer:profiles!conversations_buyer_id_fkey(display_name), seller:profiles!conversations_seller_id_fkey(display_name)')
     .eq('id', id)
     .maybeSingle();
   const conv = convData as unknown as Conv | null;
@@ -39,6 +41,12 @@ export default async function AdminMessageDetailPage({ params }: { params: Promi
 
   const buyerName = conv.buyer?.display_name ?? '購入者';
   const sellerName = conv.seller?.display_name ?? '出品者';
+  const isCase = !!conv.case;
+  const headerTitle = isCase
+    ? `【案件】${conv.case?.title ?? skillLabel(conv.case?.type ?? 'other')}`
+    : (conv.listing?.title ?? '（車両情報なし）');
+  const buyerRole = isCase ? '依頼者' : '購入者';
+  const sellerRole = isCase ? '加盟店' : '出品者';
 
   return (
     <div className="max-w-3xl space-y-5">
@@ -47,14 +55,14 @@ export default async function AdminMessageDetailPage({ params }: { params: Promi
       </Link>
 
       <div className="card p-5">
-        <h1 className="text-lg font-black text-navy-800">{conv.listing?.title ?? '（車両情報なし）'}</h1>
+        <h1 className="text-lg font-black text-navy-800">{headerTitle}</h1>
         <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
           <div className="rounded-lg bg-slate-50 p-3">
-            <p className="mb-0.5 text-xs text-slate-400">購入者</p>
+            <p className="mb-0.5 text-xs text-slate-400">{buyerRole}</p>
             <p className="font-bold text-navy-800">{buyerName}</p>
           </div>
           <div className="rounded-lg bg-slate-50 p-3">
-            <p className="mb-0.5 text-xs text-slate-400">出品者</p>
+            <p className="mb-0.5 text-xs text-slate-400">{sellerRole}</p>
             <p className="font-bold text-navy-800">{sellerName}</p>
           </div>
         </div>
@@ -75,7 +83,7 @@ export default async function AdminMessageDetailPage({ params }: { params: Promi
               <div key={m.id} className="p-4">
                 <div className="mb-1.5 flex items-center gap-2">
                   <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${isBuyer ? 'bg-navy-100 text-navy-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                    {isBuyer ? `購入者: ${buyerName}` : `出品者: ${sellerName}`}
+                    {isBuyer ? `${buyerRole}: ${buyerName}` : `${sellerRole}: ${sellerName}`}
                   </span>
                   <span className="text-xs text-slate-400">{formatDateTime(m.created_at)}</span>
                 </div>

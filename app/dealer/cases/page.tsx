@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { Inbox } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { formatDateTime, formatYen } from '@/lib/format';
-import { partnerSetCaseStatus } from '@/app/cases/actions';
+import { partnerSetCaseStatus, openCaseConversation } from '@/app/cases/actions';
 import { CaseCompleteForm } from '@/components/CaseCompleteForm';
 import { getPricingConfig } from '@/lib/settings';
 import { matchingRate, skillCategory } from '@/lib/matching-fee';
@@ -69,8 +69,15 @@ export default async function DealerCasesPage() {
                     )}
                     <p className="mt-1 text-xs text-slate-400">{formatDateTime(c.created_at)}</p>
                   </div>
-                  {(next.length > 0 || canCompleteCase(c.status)) && (
+                  {(next.length > 0 || canCompleteCase(c.status) || !['declined', 'closed'].includes(c.status)) && (
                     <div className="flex shrink-0 flex-col items-end gap-2">
+                      {!['declined', 'closed'].includes(c.status) && (
+                        <form action={openCaseConversation.bind(null, c.id)}>
+                          <button className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50">
+                            チャットで相談
+                          </button>
+                        </form>
+                      )}
                       {next.length > 0 && (
                         <div className="flex flex-wrap gap-1">
                           {next.map((n) => (

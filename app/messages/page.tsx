@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { formatDateTime } from '@/lib/format';
 import { isUnread } from '@/lib/unread';
 import { ConversationListUpdater } from '@/components/ConversationListUpdater';
+import { skillLabel } from '@/lib/cases';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,7 +18,7 @@ export default async function MessagesPage() {
 
   const { data: conversations } = await supabase
     .from('conversations')
-    .select('*, listings(id, title, maker, model, price, listing_images(url, sort_order)), buyer:profiles!conversations_buyer_id_fkey(display_name), seller:profiles!conversations_seller_id_fkey(display_name)')
+    .select('*, listings(id, title, maker, model, price, listing_images(url, sort_order)), case:cases(case_no, type, title), buyer:profiles!conversations_buyer_id_fkey(display_name), seller:profiles!conversations_seller_id_fkey(display_name)')
     .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
     .order('last_message_at', { ascending: false });
 
@@ -39,6 +40,11 @@ export default async function MessagesPage() {
             const other = isBuyer ? c.seller?.display_name : c.buyer?.display_name;
             const cover = c.listings?.listing_images?.sort((a: any, b: any) => a.sort_order - b.sort_order)[0]?.url;
             const unread = isUnread(c, user.id);
+            const isCase = !!c.case;
+            const title = isCase ? (c.case.title ?? `${skillLabel(c.case.type)}のご依頼`) : (c.listings?.title ?? '車両');
+            const subtitle = isCase
+              ? `案件のご相談 ・ ${skillLabel(c.case.type)}`
+              : `${isBuyer ? '売主' : '買主'}：${other ?? 'ユーザー'} ・ ${c.listings?.maker ?? ''} ${c.listings?.model ?? ''}`;
             return (
               <li key={c.id}>
                 <Link href={`/messages/${c.id}`} className="card flex items-center gap-4 p-3 transition hover:shadow-md">
@@ -48,10 +54,8 @@ export default async function MessagesPage() {
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className={`truncate ${unread ? 'font-black' : 'font-bold'}`}>{c.listings?.title ?? '車両'}</p>
-                    <p className="text-xs text-slate-500">
-                      {isBuyer ? '売主' : '買主'}：{other ?? 'ユーザー'} ・ {c.listings?.maker} {c.listings?.model}
-                    </p>
+                    <p className={`truncate ${unread ? 'font-black' : 'font-bold'}`}>{title}</p>
+                    <p className="truncate text-xs text-slate-500">{subtitle}</p>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1">
                     <span className="text-xs text-slate-400">{formatDateTime(c.last_message_at)}</span>

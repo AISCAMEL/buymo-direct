@@ -105,6 +105,53 @@ export async function partnerCompleteCase(caseId: string, formData: FormData): P
   revalidatePath('/dashboard/cases');
 }
 
+/**
+ * 案件のチャットを開く（なければ作成）。依頼者と加盟店オーナーの1スレッド。
+ * 既存 conversations 基盤を再利用し、case_id で案件に紐づける。
+ * どちらの当事者からも開始できるよう作成は service role で行う。
+ */
+export async function openCaseConversation(caseId: string): Promise<void> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  // 案件取得（RLS: 依頼者 or 自社宛の加盟店オーナーのみ読める）
+  const { data: c } = await supabase
+    .from('cases')
+    .select('id, user_id, partner_id, vehicle_id')
+    .eq('id', caseId)
+    .maybeSingle();
+  const kase = c as { id: string; user_id: string; partner_id: string | null; vehicle_id: string | null } | null;
+  if (!kase || !kase.partner_id) return;
+
+  // 加盟店オーナーIDを解決
+  const { data: dealer } = await supabase.from('dealers').select('owner_id').eq('id', kase.partner_id).maybeSingle();
+  const sellerId = (dealer as { owner_id?: string } | null)?.owner_id;
+  if (!sellerId) return;
+
+  // 当事者（依頼者 or 加盟店オーナー）のみ
+  if (user.id !== kase.user_id && user.id !== sellerId) return;
+
+  const svc = createServiceClient();
+  const { data: existing } = await svc.from('conversations').select('id').eq('case_id', caseId).maybeSingle();
+  let convId = (existing as { id?: string } | null)?.id;
+  if (!convId) {
+    const { data: created } = await svc
+      .from('conversations')
+      .insert({
+        case_id: caseId,
+        listing_id: kase.vehicle_id ?? null,
+        buyer_id: kase.user_id,
+        seller_id: sellerId,
+      })
+      .select('id')
+      .single();
+    convId = (created as { id?: string } | null)?.id;
+  }
+
+  if (convId) redirect(`/messages/${convId}`);
+}
+
 /** 依頼者が案件をキャンセル（終了）。 */
 export async function cancelCase(caseId: string): Promise<void> {
   const supabase = await createClient();
