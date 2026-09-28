@@ -18,6 +18,7 @@ import { monthlyPayment } from '@/lib/loan';
 import { MakeOfferButton } from '@/components/MakeOfferButton';
 import { PriceBreakdown } from '@/components/PriceBreakdown';
 import { getPricingConfig } from '@/lib/settings';
+import { sellerKind, SELLER_KIND_LABEL, SELLER_KIND_CLS, SELLER_KIND_NOTE } from '@/lib/listing-kind';
 import { PriceAlertButton } from '@/components/PriceAlertButton';
 import { InsuranceSimulator } from '@/components/InsuranceSimulatorLazy';
 import type { ListingWithImages, MaintenanceRecord } from '@/lib/types';
@@ -310,10 +311,16 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
             </div>
           )}
 
-          <p className="text-xs font-bold text-accent-600">
-            {listing.maker} {listing.model}
-          </p>
+          <div className="flex items-center gap-2">
+            <span className={`badge shadow-sm ${SELLER_KIND_CLS[sellerKind(listing)]}`}>
+              {SELLER_KIND_LABEL[sellerKind(listing)]}出品
+            </span>
+            <p className="text-xs font-bold text-accent-600">
+              {listing.maker} {listing.model}
+            </p>
+          </div>
           <h1 className="mt-1 text-lg font-black leading-snug">{listing.title}</h1>
+          <p className="mt-0.5 text-xs text-slate-400">{SELLER_KIND_NOTE[sellerKind(listing)]}</p>
 
           <p className="mt-3 text-3xl font-black text-navy-600">{formatYen(listing.price)}</p>
           <p className="mt-1 text-sm text-slate-600">
@@ -339,14 +346,17 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
             pricing={pricing}
           />
 
-          {/* 安心バナー（エスクロー） */}
+          {/* 安心バナー（チャットで納得 → エスクロー） */}
           <div className="mt-4 flex items-center gap-2 rounded-xl bg-gold-50 px-3 py-2.5 text-xs font-bold text-gold-600">
             <ShieldCheck className="h-4 w-4 shrink-0" />
-            エスクロー決済で安全に取引
+            チャットで納得 → エスクローで安全に購入
           </div>
+          <p className="mt-1.5 text-[11px] leading-relaxed text-slate-500">
+            見に行かなくてもOK。気になる点はチャットで質問して、<strong className="text-slate-700">納得してから</strong>ご購入いただけます。全国どこでもオンラインで完結します。
+          </p>
           <ul className="mt-2 grid grid-cols-3 gap-1.5 text-center text-[10px] font-bold text-slate-600">
             <li className="rounded-lg bg-slate-50 px-1 py-1.5">代金は<br />第三者保全</li>
-            <li className="rounded-lg bg-slate-50 px-1 py-1.5">現車確認<br />してから</li>
+            <li className="rounded-lg bg-slate-50 px-1 py-1.5">チャットで<br />納得してから</li>
             <li className="rounded-lg bg-slate-50 px-1 py-1.5">名義変更<br />まで代行</li>
           </ul>
 

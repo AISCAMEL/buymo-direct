@@ -6,6 +6,7 @@ import { FavoriteButton } from '@/components/FavoriteButton';
 import { CompareButton } from '@/components/CompareButton';
 import { LOAN_APR_FROM } from '@/lib/constants';
 import { monthlyPayment } from '@/lib/loan';
+import { sellerKind, SELLER_KIND_LABEL, SELLER_KIND_CLS } from '@/lib/listing-kind';
 import type { ListingWithImages } from '@/lib/types';
 
 const STATUS_BADGE: Record<string, string> = {
@@ -24,6 +25,7 @@ export function ListingCard({
   loggedIn?: boolean;
 }) {
   const cover = listing.listing_images?.sort((a, b) => a.sort_order - b.sort_order)[0]?.url;
+  const kind = sellerKind(listing);
 
   return (
     <Link href={`/listings/${listing.id}`} className="card group relative overflow-hidden transition hover:shadow-md">
@@ -43,6 +45,9 @@ export function ListingCard({
         ) : (
           <div className="flex h-full items-center justify-center text-slate-300">No Image</div>
         )}
+        <span className={`badge absolute left-2 top-2 shadow-sm ${SELLER_KIND_CLS[kind]}`}>
+          {SELLER_KIND_LABEL[kind]}
+        </span>
         {listing.repair_history && (
           <span className="badge absolute bottom-2 left-2 bg-red-100 text-red-700">修復歴あり</span>
         )}
