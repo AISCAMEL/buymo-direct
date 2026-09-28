@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { PlusCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import { getDealerForUser } from '@/lib/dealer';
 import { unreadConversationIds } from '@/lib/unread';
 import { pendingReviewCount } from '@/lib/pendingReviews';
 import { PushNotificationManager } from '@/components/PushNotificationManager';
@@ -26,9 +27,11 @@ export async function Header() {
     : { count: 0 };
 
   let isAdmin = false;
+  let isDealer = false;
   if (user) {
     const { data: prof } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
     isAdmin = (prof as { role?: string } | null)?.role === 'admin';
+    isDealer = (await getDealerForUser(user.id)) !== null;
   }
 
   return (
@@ -56,6 +59,7 @@ export async function Header() {
                 pendingReviews={pendingReviews}
                 pendingEscrows={pendingEscrows ?? 0}
                 isAdmin={isAdmin}
+                isDealer={isDealer}
               />
               <span className="hidden lg:block"><PushNotificationManager /></span>
             </>

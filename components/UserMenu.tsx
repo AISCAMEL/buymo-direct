@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  ChevronDown, LayoutDashboard, Heart, MessageSquare, Star, Building2,
+  ChevronDown, LayoutDashboard, Heart, MessageSquare, Star, Building2, Store,
   ShieldAlert, LogOut, UserRound, ClipboardList,
 } from 'lucide-react';
 
@@ -12,6 +12,7 @@ type Props = {
   pendingReviews: number;
   pendingEscrows: number;
   isAdmin: boolean;
+  isDealer?: boolean;
 };
 
 function Badge({ n, color }: { n: number; color: string }) {
@@ -23,7 +24,7 @@ function Badge({ n, color }: { n: number; color: string }) {
   );
 }
 
-export function UserMenu({ unreadCount, pendingReviews, pendingEscrows, isAdmin }: Props) {
+export function UserMenu({ unreadCount, pendingReviews, pendingEscrows, isAdmin, isDealer }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const total = unreadCount + pendingReviews + pendingEscrows;
@@ -77,8 +78,13 @@ export function UserMenu({ unreadCount, pendingReviews, pendingEscrows, isAdmin 
             <Badge n={pendingReviews} color="bg-accent-500" />
           </Link>
           <Link href="/dealers" className={item} onClick={() => setOpen(false)}>
-            <Building2 className="h-4 w-4 text-slate-400" /> 加盟店
+            <Building2 className="h-4 w-4 text-slate-400" /> 加盟店を探す
           </Link>
+          {isDealer && (
+            <Link href="/dealer/dashboard" className={`${item} text-navy-700`} onClick={() => setOpen(false)}>
+              <Store className="h-4 w-4 text-navy-500" /> 加盟店管理
+            </Link>
+          )}
           {isAdmin && (
             <Link href="/admin" className={`${item} text-accent-600`} onClick={() => setOpen(false)}>
               <ShieldAlert className="h-4 w-4 text-accent-500" /> 管理（本部）
