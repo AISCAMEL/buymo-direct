@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Package, Users, TrendingUp, ShieldCheck, Clock } from 'lucide-react';
+import { Package, Users, TrendingUp, ShieldCheck, Clock, FileText, Receipt } from 'lucide-react';
 import { requireDealer } from '@/lib/dealer';
 import { formatYen } from '@/lib/format';
 
@@ -16,6 +16,8 @@ export default async function DealerDashboardPage() {
     { data: escrows },
     { data: dealerInfo },
     { count: staffCount },
+    { data: quoteRows },
+    { data: invoiceRows },
   ] = await Promise.all([
     s.from('listings').select('id', { count: 'exact', head: true })
       .eq('dealer_id', dealer.dealerId).eq('status', 'active'),
@@ -29,13 +31,26 @@ export default async function DealerDashboardPage() {
       ),
     s.from('dealers').select('name, status, commission_rate, approved_at').eq('id', dealer.dealerId).maybeSingle(),
     s.from('dealer_staff').select('id', { count: 'exact', head: true }).eq('dealer_id', dealer.dealerId),
+    s.from('quotes').select('status').eq('dealer_id', dealer.dealerId),
+    s.from('invoices').select('status, total, paid_amount').eq('dealer_id', dealer.dealerId),
   ]);
 
   const gmv = (escrows ?? []).reduce((s: number, t: any) => s + (t.amount ?? 0), 0);
   const commission = gmv * ((dealerInfo?.commission_rate ?? 3) / 100);
 
+  const quotes = (quoteRows ?? []) as { status: string }[];
+  const invoices = (invoiceRows ?? []) as { status: string; total: number; paid_amount: number }[];
+  const quoteOpen = quotes.filter((q) => ['draft', 'sent', 'accepted'].includes(q.status)).length;
+  const invoiceOpen = invoices.filter((v) => ['issued', 'sent', 'awaiting_payment', 'partially_paid'].includes(v.status)).length;
+  const outstanding = invoices
+    .filter((v) => v.status !== 'cancelled')
+    .reduce((sum, v) => sum + Math.max(0, (v.total ?? 0) - (v.paid_amount ?? 0)), 0);
+
   const kpis = [
     { icon: Package, label: '公開中在庫', value: String(activeCount ?? 0) + '台', href: '/dealer/listings' },
+    { icon: FileText, label: '進行中の見積', value: String(quoteOpen), href: '/dealer/quotes' },
+    { icon: Receipt, label: '進行中の請求', value: String(invoiceOpen), href: '/dealer/invoices' },
+    { icon: Receipt, label: '未回収額', value: formatYen(outstanding), href: '/dealer/invoices' },
     { icon: ShieldCheck, label: '成約件数', value: String(soldCount ?? 0) + '台', href: '/dealer/listings?status=sold' },
     { icon: TrendingUp, label: '成約 GMV', value: formatYen(gmv), href: '/dealer/analytics' },
     { icon: TrendingUp, label: '手数料（推計）', value: formatYen(commission), href: '/dealer/analytics' },
@@ -46,10 +61,10 @@ export default async function DealerDashboardPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-black">ダッシュボード</h1>
 
-      <div className="flex items-start gap-3 rounded-2xl border border-gold-200 bg-gold-50 p-4">
-        <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-gold-600" />
+      <div className="flex items-start gap-3 rounded-2xl border border-navy-200 bg-navy-50 p-4">
+        <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-navy-600" />
         <p className="text-sm text-slate-700">
-          <span className="font-black text-slate-800">買取保証つきで販売</span>：貴店の在庫は BUYMO の買取保証つきでダイレクト販売できます。売れ残りリスクを抑えつつ、購入者へより高く販売できます。
+          <span className="font-black text-slate-800">ダイレクト販売（B2C）</span>：貴店の在庫を全国の購入希望者へ販売できます。問い合わせ → 見積 → 請求 → 入金 → 成約までBUYMO内で管理できます。
         </p>
       </div>
 
