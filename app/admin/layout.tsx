@@ -16,6 +16,7 @@ const NAV = [
   { href: '/admin/warranty', label: '保証見積り' },
   { href: '/admin/transport', label: '陸送申込' },
   { href: '/admin/messages', label: 'チャット監視' },
+  { href: '/admin/risk', label: 'AIリスクセンター' },
   { href: '/admin/contact', label: 'お問い合わせ' },
   { href: '/admin/reports', label: '通報' },
   { href: '/admin/announcements', label: 'お知らせ' },

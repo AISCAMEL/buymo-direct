@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Users, Car, ShieldCheck, Landmark, Star, Wallet, Flag, Banknote } from 'lucide-react';
+import { Users, Car, ShieldCheck, Landmark, Star, Wallet, Flag, Banknote, ShieldAlert } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { formatYen } from '@/lib/format';
 
@@ -22,7 +22,7 @@ export default async function AdminDashboard() {
   const supabase = await createClient();
 
   // 管理者は is_admin() ポリシーで横断的に閲覧可能
-  const [{ count: userCount }, listingsRes, escrowRes, loansRes, reviewsRes, reportsRes, buybackRes] = await Promise.all([
+  const [{ count: userCount }, listingsRes, escrowRes, loansRes, reviewsRes, reportsRes, buybackRes, riskRes] = await Promise.all([
     supabase.from('profiles').select('*', { count: 'exact', head: true }),
     supabase.from('listings').select('status'),
     supabase.from('escrow_transactions').select('status, amount, escrow_fee, title_fee, installment_fee'),
@@ -30,6 +30,7 @@ export default async function AdminDashboard() {
     supabase.from('reviews').select('rating'),
     supabase.from('reports').select('status'),
     supabase.from('buyback_requests').select('status, buyback_price'),
+    supabase.from('moderation_events').select('level'),
   ]);
 
   const listings = (listingsRes.data ?? []) as { status: string }[];
@@ -50,6 +51,9 @@ export default async function AdminDashboard() {
 
   const reports = (reportsRes.data ?? []) as { status: string }[];
   const openReports = reports.filter((r) => r.status === 'open').length;
+
+  const riskEvents = (riskRes.data ?? []) as { level: number }[];
+  const highRisk = riskEvents.filter((e) => e.level >= 2).length;
 
   const buybacks = (buybackRes.data ?? []) as { status: string; buyback_price: number }[];
   const buybackPending = buybacks.filter((b) => b.status === 'pending' || b.status === 'in_review').length;
@@ -97,6 +101,13 @@ export default async function AdminDashboard() {
             <span className="font-bold">買取保証の審査待ち</span>
           </div>
           <span className={`badge ${buybackPending ? 'bg-gold-100 text-gold-600' : 'bg-slate-200 text-slate-600'}`}>{buybackPending} 件</span>
+        </Link>
+        <Link href="/admin/risk" className="card flex items-center justify-between p-5 hover:shadow-md">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="h-5 w-5 text-navy-400" />
+            <span className="font-bold">AIリスク検知（要確認）</span>
+          </div>
+          <span className={`badge ${highRisk ? 'bg-red-100 text-red-700' : 'bg-slate-200 text-slate-600'}`}>{highRisk} 件</span>
         </Link>
       </div>
     </div>
