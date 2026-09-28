@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { adminContext, logAdminAction } from '@/lib/admin';
+import { createServiceClient } from '@/lib/supabase/service';
 import { sendEmail, emailLayout } from '@/lib/email';
 import type { ListingStatus, EscrowStatus, LoanAppStatus, ReportStatus, AnnouncementLevel } from '@/lib/types';
 
@@ -134,6 +135,15 @@ export async function adminApproveKyc(userId: string) {
   if (!ctx) return;
 
   const now = new Date().toISOString();
+
+  // 承認前の状態を確認（ポイント二重付与の防止）
+  const { data: beforeRow } = await ctx.supabase
+    .from('profiles')
+    .select('kyc_status')
+    .eq('id', userId)
+    .maybeSingle();
+  const alreadyVerified = (beforeRow as { kyc_status?: string } | null)?.kyc_status === 'verified';
+
   await ctx.supabase
     .from('kyc_documents')
     .update({ status: 'verified', reviewed_at: now, note: null })
@@ -142,6 +152,28 @@ export async function adminApproveKyc(userId: string) {
     .from('profiles')
     .update({ kyc_status: 'verified', kyc_verified_at: now })
     .eq('id', userId);
+
+  // 初回承認時のみ 100 ポイントを付与（対象ユーザーへの書き込みは service role）
+  if (!alreadyVerified) {
+    try {
+      const service = createServiceClient();
+      const { data: existing } = await service
+        .from('user_points')
+        .select('points')
+        .eq('user_id', userId)
+        .maybeSingle();
+      const currentPoints = (existing as { points?: number } | null)?.points ?? 0;
+      await service
+        .from('user_points')
+        .upsert({ user_id: userId, points: currentPoints + 100, updated_at: now }, { onConflict: 'user_id' });
+      await service.from('point_transactions').insert({
+        user_id: userId,
+        amount: 100,
+        reason: 'kyc_verified',
+        ref_id: crypto.randomUUID(),
+      });
+    } catch { /* ポイント付与の失敗は本人確認の承認を妨げない */ }
+  }
 
   await logAdminAction(ctx, 'kyc.approve', 'user', userId);
   revalidatePath('/admin/kyc');

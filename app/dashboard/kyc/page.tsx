@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation';
 import { ShieldCheck } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { KycVerificationForm } from '@/components/KycVerificationForm';
-import { EkycUploadPanel } from '@/components/EkycUploadPanel';
 import type { KycDocument } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -14,11 +13,7 @@ const STATUS_INFO: Record<string, { label: string; className: string }> = {
   rejected:   { label: '要再提出', className: 'bg-red-100 text-red-700' },
 };
 
-export default async function KycPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
+export default async function KycPage() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -41,15 +36,10 @@ export default async function KycPage({
 
   const statusInfo = STATUS_INFO[kycStatus] ?? STATUS_INFO.unverified;
 
-  const params = await searchParams;
-  const resultParam = params['result'];
-  const ekycResult =
-    resultParam === 'success' ? 'success' : resultParam === 'failed' ? 'failed' : null;
-
   return (
     <div className="mx-auto max-w-xl space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-black">本人確認（eKYC）</h1>
+        <h1 className="text-2xl font-black">本人確認</h1>
         <span className={`badge px-3 py-1 text-sm font-bold ${statusInfo.className}`}>
           {statusInfo.label}
         </span>
@@ -60,48 +50,30 @@ export default async function KycPage({
         <div className="flex items-start gap-3">
           <ShieldCheck className="mt-0.5 h-6 w-6 shrink-0 text-navy-500" />
           <div className="space-y-1.5 text-sm text-slate-600">
-            <p className="font-bold text-slate-800">本人確認とは</p>
+            <p className="font-bold text-slate-800">本人確認の流れ</p>
             <p>
-              政府発行の身分証をご提出いただき、本人確認バッジを取得できます。
+              運転免許証などの身分証をご提出ください。ご提出後、内容を確認のうえ
+              運営が審査し、承認されると本人確認バッジが付与されます。
               バッジはプロフィールと出品ページに表示され、取引相手に安心感を与えます。
             </p>
-            <ul className="mt-2 list-inside list-disc space-y-1 text-xs text-slate-500">
-              <li>運転免許証、マイナンバーカード、パスポートが使用できます</li>
-              <li>審査は通常1〜3営業日以内に完了します</li>
-              <li>書類は本人確認目的のみに使用し、厳重に管理します</li>
-            </ul>
+            <ol className="mt-2 list-inside list-decimal space-y-1 text-xs text-slate-500">
+              <li>運転免許証・マイナンバーカード・パスポート等を撮影して提出</li>
+              <li>ステータスが「審査中」になります</li>
+              <li>運営の審査後（通常1〜3営業日）に承認・結果を通知します</li>
+            </ol>
+            <p className="text-xs text-slate-400">
+              ※ 書類は本人確認目的のみに使用し、厳重に管理します。
+            </p>
           </div>
         </div>
       </div>
 
-      {/* eKYC 統合パネル（TRUSTDOCK ホスト型 + 手動アップロード） */}
-      {kycStatus !== 'verified' && (
-        <EkycUploadPanel initialResult={ekycResult} />
-      )}
-
-      {/* 従来の手動アップロードフォーム（フォールバック） */}
-      {kycStatus !== 'verified' && (
-        <details className="group">
-          <summary className="cursor-pointer select-none text-sm text-slate-400 hover:text-slate-600">
-            従来の提出フォームを使用する
-          </summary>
-          <div className="mt-4">
-            <KycVerificationForm
-              userId={user.id}
-              currentStatus={kycStatus}
-              existingNote={kycDoc?.note}
-            />
-          </div>
-        </details>
-      )}
-
-      {kycStatus === 'verified' && (
-        <KycVerificationForm
-          userId={user.id}
-          currentStatus={kycStatus}
-          existingNote={kycDoc?.note}
-        />
-      )}
+      {/* 免許証提出フォーム（提出 → 審査中 → 運営が承認） */}
+      <KycVerificationForm
+        userId={user.id}
+        currentStatus={kycStatus}
+        existingNote={kycDoc?.note}
+      />
     </div>
   );
 }
