@@ -350,15 +350,6 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
             <li className="rounded-lg bg-slate-50 px-1 py-1.5">名義変更<br />まで代行</li>
           </ul>
 
-          {/* 保険料シミュレーター */}
-          <div className="mt-4">
-            <InsuranceSimulator
-              vehiclePrice={listing.price}
-              year={listing.year}
-              maker={listing.maker}
-            />
-          </div>
-
           {isOwner ? (
             <div className="mt-5 space-y-3">
               <p className="rounded-lg bg-slate-50 p-2 text-center text-xs text-slate-500">
@@ -460,6 +451,15 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
         )}
       </aside>
     </div>
+
+      {/* 保険料シミュレーター（全幅で見やすく） */}
+      <section className="mt-8">
+        <InsuranceSimulator
+          vehiclePrice={listing.price}
+          year={listing.year}
+          maker={listing.maker}
+        />
+      </section>
 
       {/* 統合訴求：乗り換え・売却クロスセル */}
       <section className="mt-10 overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-r from-navy-700 to-navy-500 p-6 text-white sm:p-8">
