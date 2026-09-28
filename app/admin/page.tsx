@@ -61,7 +61,9 @@ export default async function AdminDashboard() {
   const buybackGmv = buybackCompleted.reduce((s, b) => s + (b.buyback_price ?? 0), 0);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
+      <section className="space-y-3">
+        <h2 className="text-lg font-black text-slate-800">主要指標</h2>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <KpiCard icon={Users} label="登録ユーザー" value={`${userCount ?? 0}`} />
         <KpiCard icon={Car} label="出品（公開中）" value={`${byStatus('active')}`} sub={`商談中 ${byStatus('reserved')} / 売約 ${byStatus('sold')}`} />
@@ -72,7 +74,10 @@ export default async function AdminDashboard() {
         <KpiCard icon={Banknote} label="買取実績（GMV）" value={formatYen(buybackGmv)} sub={`買取完了 ${buybackCompleted.length} 件`} />
         <KpiCard icon={Banknote} label="買取 審査待ち" value={`${buybackPending}`} sub="申請受付・審査中" />
       </div>
+      </section>
 
+      <section className="space-y-3">
+        <h2 className="text-lg font-black text-slate-800">対応が必要な項目</h2>
       <div className="grid gap-4 sm:grid-cols-2">
         <Link href="/admin/loans" className="card flex items-center justify-between p-5 hover:shadow-md">
           <div className="flex items-center gap-2">
@@ -110,6 +115,7 @@ export default async function AdminDashboard() {
           <span className={`badge ${highRisk ? 'bg-red-100 text-red-700' : 'bg-slate-200 text-slate-600'}`}>{highRisk} 件</span>
         </Link>
       </div>
+      </section>
     </div>
   );
 }
