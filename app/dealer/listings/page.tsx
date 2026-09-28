@@ -83,8 +83,11 @@ export default async function DealerListingsPage({ searchParams }: { searchParam
                     <span className={`badge ${STATUS_CLASS[l.status]}`}>{STATUS_LABEL[l.status]}</span>
                   </div>
                 </div>
-                <div className="mt-3 border-t border-slate-100 pt-3">
-                  <OwnerListingControls listingId={l.id} status={l.status} compact />
+                <div className="mt-3 flex items-center gap-2 border-t border-slate-100 pt-3">
+                  <Link href={`/dealer/quotes/new?listing=${l.id}`} className="rounded-md border border-navy-300 px-2.5 py-1 text-xs font-bold text-navy-700 hover:bg-navy-50">
+                    見積作成
+                  </Link>
+                  <div className="flex-1"><OwnerListingControls listingId={l.id} status={l.status} compact /></div>
                 </div>
               </li>
             );
