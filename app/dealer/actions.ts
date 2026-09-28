@@ -54,21 +54,43 @@ export async function updateDealerProfile(formData: FormData): Promise<void> {
   const { dealer, supabase } = await requireDealer() as any;
   if (!dealer.isOwner) return;
 
+  const str = (k: string) => String(formData.get(k) || '').trim() || null;
+  let gallery: string[] = [];
+  try {
+    const g = JSON.parse(String(formData.get('gallery') || '[]'));
+    if (Array.isArray(g)) gallery = g.filter((u) => typeof u === 'string').slice(0, 12);
+  } catch { gallery = []; }
+
   await (supabase as any)
     .from('dealers')
     .update({
       name: String(formData.get('name')).trim(),
-      company_name: String(formData.get('company_name') || '').trim() || null,
+      company_name: str('company_name'),
       prefecture: String(formData.get('prefecture')),
-      address: String(formData.get('address') || '').trim() || null,
-      phone: String(formData.get('phone') || '').trim() || null,
-      website_url: String(formData.get('website_url') || '').trim() || null,
-      description: String(formData.get('description') || '').trim() || null,
+      address: str('address'),
+      phone: str('phone'),
+      website_url: str('website_url'),
+      description: str('description'),
+      // 追加プロフィール項目
+      tagline: str('tagline'),
+      cover_url: str('cover_url'),
+      logo_url: str('logo_url'),
+      rep_name: str('rep_name'),
+      rep_photo_url: str('rep_photo_url'),
+      rep_message: str('rep_message'),
+      business_hours: str('business_hours'),
+      holidays: str('holidays'),
+      established: str('established'),
+      service_area: str('service_area'),
+      instagram_url: str('instagram_url'),
+      line_url: str('line_url'),
+      gallery,
       updated_at: new Date().toISOString(),
     })
     .eq('id', dealer.dealerId);
 
   revalidatePath('/dealer/settings');
+  revalidatePath(`/dealers/${dealer.dealerId}`);
 }
 
 // ─── スタッフ招待 ─────────────────────────────────────────────────────────────

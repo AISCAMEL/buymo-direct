@@ -39,6 +39,19 @@ export interface Dealer {
   approved_at: string | null;
   created_at: string;
   updated_at: string;
+  // 拡張プロフィール項目（20240731 migration）
+  tagline?: string | null;
+  cover_url?: string | null;
+  rep_name?: string | null;
+  rep_photo_url?: string | null;
+  rep_message?: string | null;
+  business_hours?: string | null;
+  holidays?: string | null;
+  established?: string | null;
+  service_area?: string | null;
+  instagram_url?: string | null;
+  line_url?: string | null;
+  gallery?: string[] | null;
 }
 
 export interface DealerStaff {

@@ -52,7 +52,7 @@ export default async function DealerShopPage({ params }: { params: Promise<{ id:
 
   const { data: dealer } = await s
     .from('dealers')
-    .select('id, name, company_name, prefecture, address, phone, website_url, logo_url, description, status, approved_at')
+    .select('id, name, company_name, prefecture, address, phone, website_url, logo_url, description, status, approved_at, tagline, cover_url, rep_name, rep_photo_url, rep_message, business_hours, holidays, established, service_area, instagram_url, line_url, gallery')
     .eq('id', id)
     .eq('status', 'approved')
     .maybeSingle();
@@ -83,10 +83,20 @@ export default async function DealerShopPage({ params }: { params: Promise<{ id:
   const skills = (skillRows ?? []) as PartnerSkill[];
   const skillKeys = skills.map((sk) => sk.skill_key);
 
+  const gallery: string[] = Array.isArray(dealer.gallery) ? dealer.gallery : [];
+
   return (
     <div className="space-y-8">
+      {/* Cover */}
+      {dealer.cover_url && (
+        <div className="-mx-4 -mt-6 aspect-[3/1] max-h-64 w-[calc(100%+2rem)] overflow-hidden sm:mx-0 sm:w-full sm:rounded-2xl">
+          <img src={dealer.cover_url} alt="" className="h-full w-full object-cover" />
+        </div>
+      )}
+
       {/* Dealer header */}
       <div className="card p-6">
+        {dealer.tagline && <p className="mb-3 text-sm font-bold text-accent-600">{dealer.tagline}</p>}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
           {dealer.logo_url ? (
             <img src={dealer.logo_url} alt={dealer.name} className="h-20 w-auto object-contain rounded-lg" />
@@ -113,16 +123,22 @@ export default async function DealerShopPage({ params }: { params: Promise<{ id:
                   {dealer.phone}
                 </a>
               )}
+              {dealer.service_area && (
+                <span className="flex items-center gap-1"><MapPin className="h-4 w-4" />対応: {dealer.service_area}</span>
+              )}
+              {dealer.business_hours && <span>🕒 {dealer.business_hours}</span>}
+              {dealer.holidays && <span>定休: {dealer.holidays}</span>}
+              {dealer.established && <span>創業 {dealer.established}</span>}
               {dealer.website_url && (
-                <a
-                  href={dealer.website_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 hover:text-navy-600"
-                >
-                  <Globe className="h-4 w-4" />
-                  公式サイト
+                <a href={dealer.website_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-navy-600">
+                  <Globe className="h-4 w-4" />公式サイト
                 </a>
+              )}
+              {dealer.instagram_url && (
+                <a href={dealer.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:text-navy-600">Instagram</a>
+              )}
+              {dealer.line_url && (
+                <a href={dealer.line_url} target="_blank" rel="noopener noreferrer" className="hover:text-navy-600">LINE</a>
               )}
             </div>
           </div>
@@ -139,6 +155,36 @@ export default async function DealerShopPage({ params }: { params: Promise<{ id:
           </div>
         </div>
       </div>
+
+      {/* 担当者紹介 */}
+      {(dealer.rep_name || dealer.rep_photo_url || dealer.rep_message) && (
+        <div className="card flex items-start gap-4 p-6">
+          {dealer.rep_photo_url ? (
+            <img src={dealer.rep_photo_url} alt={dealer.rep_name ?? '担当者'} className="h-20 w-20 shrink-0 rounded-full object-cover" />
+          ) : (
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-navy-100 text-2xl">🧑‍🔧</div>
+          )}
+          <div>
+            <p className="text-xs font-bold text-slate-400">担当者</p>
+            {dealer.rep_name && <p className="text-lg font-black text-navy-800">{dealer.rep_name}</p>}
+            {dealer.rep_message && <p className="mt-1 text-sm text-slate-600">{dealer.rep_message}</p>}
+          </div>
+        </div>
+      )}
+
+      {/* お店の雰囲気（ギャラリー） */}
+      {gallery.length > 0 && (
+        <div>
+          <h2 className="mb-3 font-black text-navy-800">お店の雰囲気</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {gallery.map((u, i) => (
+              <div key={i} className="aspect-square overflow-hidden rounded-xl border border-slate-200">
+                <img src={u} alt="" className="h-full w-full object-cover" />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 提供サービス（スキルマーケット）＋依頼CTA */}
       <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
