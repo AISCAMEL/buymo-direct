@@ -197,3 +197,19 @@ export async function adminRejectKyc(userId: string, note?: string) {
   await logAdminAction(ctx, 'kyc.reject', 'user', userId, note);
   revalidatePath('/admin/kyc');
 }
+
+/** マッチング手数料の請求ステータスを変更（請求済み/入金済み/免除/取消）。 */
+export async function adminSetChargeStatus(chargeId: string, status: string) {
+  const ctx = await adminContext();
+  if (!ctx) return;
+
+  // 書き込みは service role（case_charges は参照のみの RLS）
+  const service = createServiceClient();
+  await service
+    .from('case_charges')
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq('id', chargeId);
+
+  await logAdminAction(ctx, `charge.status.${status}`, 'case_charge', chargeId);
+  revalidatePath('/admin/billing');
+}

@@ -1,10 +1,13 @@
 import { redirect } from 'next/navigation';
 import { Inbox } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
-import { formatDateTime } from '@/lib/format';
+import { formatDateTime, formatYen } from '@/lib/format';
 import { partnerSetCaseStatus } from '@/app/cases/actions';
+import { CaseCompleteForm } from '@/components/CaseCompleteForm';
+import { getPricingConfig } from '@/lib/settings';
+import { matchingRate, skillCategory } from '@/lib/matching-fee';
 import {
-  CASE_STATUS_LABEL, CASE_STATUS_CLS, CASE_SOURCE_LABEL, skillLabel, formatCaseNo, partnerNextStatuses,
+  CASE_STATUS_LABEL, CASE_STATUS_CLS, CASE_SOURCE_LABEL, skillLabel, formatCaseNo, partnerNextStatuses, canCompleteCase,
   type CaseStatus, type CaseSource,
 } from '@/lib/cases';
 
@@ -12,7 +15,7 @@ export const dynamic = 'force-dynamic';
 
 type CaseRow = {
   id: string; case_no: number; type: string; source: CaseSource; status: CaseStatus;
-  title: string | null; detail: string | null; created_at: string;
+  title: string | null; detail: string | null; created_at: string; amount: number | null;
   user?: { display_name?: string | null } | null;
 };
 
@@ -27,11 +30,12 @@ export default async function DealerCasesPage() {
 
   const { data } = await supabase
     .from('cases')
-    .select('id, case_no, type, source, status, title, detail, created_at, user:profiles!cases_user_id_fkey(display_name)')
+    .select('id, case_no, type, source, status, title, detail, created_at, amount, user:profiles!cases_user_id_fkey(display_name)')
     .eq('partner_id', (dealer as { id: string }).id)
     .order('created_at', { ascending: false });
   const cases = (data ?? []) as unknown as CaseRow[];
 
+  const cfg = await getPricingConfig();
   const newCount = cases.filter((c) => c.status === 'new').length;
 
   return (
@@ -60,17 +64,33 @@ export default async function DealerCasesPage() {
                     </p>
                     <p className="mt-1 text-sm text-slate-600">依頼者: {c.user?.display_name ?? '—'}</p>
                     {c.detail && <p className="mt-1 text-sm text-slate-500">{c.detail}</p>}
+                    {c.amount != null && (
+                      <p className="mt-1 text-sm font-bold text-emerald-700">成約金額: {formatYen(c.amount)}</p>
+                    )}
                     <p className="mt-1 text-xs text-slate-400">{formatDateTime(c.created_at)}</p>
                   </div>
-                  {next.length > 0 && (
-                    <div className="flex shrink-0 flex-wrap gap-1">
-                      {next.map((n) => (
-                        <form key={n.status} action={partnerSetCaseStatus.bind(null, c.id, n.status)}>
-                          <button className={`rounded-md border px-3 py-1.5 text-xs font-bold ${n.status === 'declined' ? 'border-red-200 text-red-600 hover:bg-red-50' : 'border-navy-300 text-navy-700 hover:bg-navy-50'}`}>
-                            {n.label}
-                          </button>
-                        </form>
-                      ))}
+                  {(next.length > 0 || canCompleteCase(c.status)) && (
+                    <div className="flex shrink-0 flex-col items-end gap-2">
+                      {next.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {next.map((n) => (
+                            <form key={n.status} action={partnerSetCaseStatus.bind(null, c.id, n.status)}>
+                              <button className={`rounded-md border px-3 py-1.5 text-xs font-bold ${n.status === 'declined' ? 'border-red-200 text-red-600 hover:bg-red-50' : 'border-navy-300 text-navy-700 hover:bg-navy-50'}`}>
+                                {n.label}
+                              </button>
+                            </form>
+                          ))}
+                        </div>
+                      )}
+                      {canCompleteCase(c.status) && (
+                        <CaseCompleteForm
+                          caseId={c.id}
+                          category={skillCategory(c.type)}
+                          rate={matchingRate(skillCategory(c.type), cfg)}
+                          minFee={cfg.matchingFeeMinFee}
+                          taxRate={cfg.matchingFeeTaxRate}
+                        />
+                      )}
                     </div>
                   )}
                 </div>

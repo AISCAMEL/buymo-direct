@@ -21,6 +21,11 @@ export interface PricingConfig {
   warrantyCap: number;           // 上限
   // 保証の全体調整（％）。PDF料金表の税込価格に対して加算/割引。正=上乗せ, 負=割引。0=そのまま。
   warrantyAdjustPercent: number;
+  // マッチング手数料（加盟店→本部の成果報酬）。料率はサービスカテゴリー単位。
+  matchingFeeRateByCategory: Record<string, number>; // 例 {'整備・修理':0.10}
+  matchingFeeDefaultRate: number;                     // 個別未設定時の既定料率（例 0.10）
+  matchingFeeMinFee: number;                          // 最低手数料（税抜, 例 1100）
+  matchingFeeTaxRate: number;                         // 消費税率（例 0.10）
 }
 
 export const PRICING_DEFAULTS: PricingConfig = {
@@ -43,6 +48,18 @@ export const PRICING_DEFAULTS: PricingConfig = {
   warrantyMileageStep: 0.05,
   warrantyCap: 150000,
   warrantyAdjustPercent: 0,
+  // ※ 料率はあくまで初期の目安。本部で調整可能（法務確認のうえ確定してください）。
+  matchingFeeRateByCategory: {
+    '査定・買取': 0.03,
+    '整備・修理': 0.10,
+    '美装': 0.10,
+    '電装・取付': 0.10,
+    '物流・手続き': 0.08,
+    'その他': 0.10,
+  },
+  matchingFeeDefaultRate: 0.10,
+  matchingFeeMinFee: 1100,
+  matchingFeeTaxRate: 0.10,
 };
 
 /** 保証の税込価格に本部調整（％）を適用。 */
@@ -82,5 +99,25 @@ export function mergePricingConfig(partial?: Partial<PricingConfig> | null): Pri
     warrantyMileageStep: num(partial.warrantyMileageStep, PRICING_DEFAULTS.warrantyMileageStep),
     warrantyCap: num(partial.warrantyCap, PRICING_DEFAULTS.warrantyCap),
     warrantyAdjustPercent: signed(partial.warrantyAdjustPercent, PRICING_DEFAULTS.warrantyAdjustPercent),
+    matchingFeeRateByCategory: mergeRateMap(partial.matchingFeeRateByCategory),
+    matchingFeeDefaultRate: rate(partial.matchingFeeDefaultRate, PRICING_DEFAULTS.matchingFeeDefaultRate),
+    matchingFeeMinFee: num(partial.matchingFeeMinFee, PRICING_DEFAULTS.matchingFeeMinFee),
+    matchingFeeTaxRate: rate(partial.matchingFeeTaxRate, PRICING_DEFAULTS.matchingFeeTaxRate),
   };
+}
+
+/** 料率（0〜1）。範囲外・不正は既定値。 */
+function rate(v: unknown, d: number): number {
+  return typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 1 ? v : d;
+}
+
+/** カテゴリー別料率マップをデフォルトにマージ（0〜1 の数値のみ採用）。 */
+function mergeRateMap(partial: unknown): Record<string, number> {
+  const base = { ...PRICING_DEFAULTS.matchingFeeRateByCategory };
+  if (partial && typeof partial === 'object') {
+    for (const [k, v] of Object.entries(partial as Record<string, unknown>)) {
+      if (typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 1) base[k] = v;
+    }
+  }
+  return base;
 }

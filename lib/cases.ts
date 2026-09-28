@@ -19,15 +19,22 @@ export const CASE_STATUS_CLS: Record<CaseStatus, string> = {
 };
 export const CASE_SOURCE_LABEL: Record<CaseSource, string> = { HQ: '本部配信', DIRECT: '直接', PARTNER: '直接依頼' };
 
-/** 加盟店が次に取れる状態遷移。 */
+/**
+ * 加盟店が次に取れる状態遷移（「完了」は成約金額の入力が必要なため含めない。
+ * 完了は canCompleteCase() が true の案件で専用フォームから確定する）。
+ */
 export function partnerNextStatuses(current: string): { status: CaseStatus; label: string }[] {
   switch (current) {
     case 'new': return [{ status: 'accepted', label: '受ける' }, { status: 'declined', label: '辞退' }];
     case 'accepted': return [{ status: 'in_progress', label: '対応開始' }];
-    case 'in_progress': return [{ status: 'awaiting', label: '確認待ちにする' }, { status: 'completed', label: '完了' }];
-    case 'awaiting': return [{ status: 'completed', label: '完了' }];
+    case 'in_progress': return [{ status: 'awaiting', label: '確認待ちにする' }];
     default: return [];
   }
+}
+
+/** この案件を「完了（成約金額の入力あり）」にできるか。 */
+export function canCompleteCase(current: string): boolean {
+  return current === 'accepted' || current === 'in_progress' || current === 'awaiting';
 }
 
 /** スキルキー→日本語名（フォールバックはキーそのもの）。DBのskillsと重複するが表示用に最低限保持。 */
