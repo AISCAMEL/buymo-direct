@@ -21,6 +21,10 @@ export const TRANSMISSIONS = ['AT', 'CVT', 'MT', 'その他'];
 
 export const FUELS = ['ガソリン', 'ハイブリッド', 'ディーゼル', 'EV', 'その他'];
 
+export const DRIVETRAINS = ['FF', 'FR', '4WD', 'AWD', 'その他'];
+
+export const COLORS = ['ホワイト', 'ブラック', 'シルバー', 'グレー', 'レッド', 'ブルー', 'ブラウン', 'ベージュ', 'グリーン', 'その他'];
+
 export const PREFECTURES = [
   '北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
   '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県',

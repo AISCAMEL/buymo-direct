@@ -39,6 +39,11 @@ export async function adminContext(): Promise<AdminCtx | null> {
   return { supabase, userId: user.id };
 }
 
+/** UUID 形式かどうか（audit_logs.target_id は uuid 型のため非UUIDは null にする）。 */
+function asUuid(v?: string | null): string | null {
+  return v && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v) ? v : null;
+}
+
 /** 監査ログを記録（呼び出し元で管理者確認済みを前提）。 */
 export async function logAdminAction(
   ctx: AdminCtx,
@@ -51,7 +56,28 @@ export async function logAdminAction(
     actor_id: ctx.userId,
     action,
     target_type: targetType,
-    target_id: targetId,
-    detail: detail ?? null,
+    target_id: asUuid(targetId),
+    detail: detail ?? (asUuid(targetId) ? null : targetId ?? null),
+  });
+}
+
+/** 監査ログを変更前・変更後つきで記録。 */
+export async function logAdminChange(
+  ctx: AdminCtx,
+  action: string,
+  targetType: string,
+  targetId: string | null,
+  before: unknown,
+  after: unknown,
+  detail?: string
+) {
+  await ctx.supabase.from('audit_logs').insert({
+    actor_id: ctx.userId,
+    action,
+    target_type: targetType,
+    target_id: asUuid(targetId),
+    detail: detail ?? (targetId && !asUuid(targetId) ? targetId : null),
+    before: before ?? null,
+    after: after ?? null,
   });
 }

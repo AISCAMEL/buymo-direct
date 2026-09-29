@@ -1,8 +1,9 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { isAdminUser } from '@/lib/admin';
+import { adminContext, logAdminChange } from '@/lib/admin';
 import { createServiceClient } from '@/lib/supabase/service';
+import { getPricingConfig } from '@/lib/settings';
 import { mergePricingConfig, type PricingConfig } from '@/lib/pricing-config';
 
 const n = (fd: FormData, key: string, fallback: number): number => {
@@ -17,9 +18,13 @@ const sn = (fd: FormData, key: string, fallback: number): number => {
 
 /** 料金・係数設定を保存（管理者のみ）。%入力は小数に変換して保存。 */
 export async function savePricingConfig(formData: FormData): Promise<void> {
-  if (!(await isAdminUser())) return;
+  const ctx = await adminContext();
+  if (!ctx) return;
+  const before = await getPricingConfig();
 
+  // フォームにある項目のみ上書き。フォーム外の設定（手数料/締め/有料会員 等）は既存値を維持。
   const cfg: PricingConfig = mergePricingConfig({
+    ...before,
     escrowTiers: [
       { max: n(formData, 'esc_max1', 1_000_000), fee: n(formData, 'esc_fee1', 19800) },
       { max: n(formData, 'esc_max2', 2_000_000), fee: n(formData, 'esc_fee2', 39800) },
@@ -44,6 +49,7 @@ export async function savePricingConfig(formData: FormData): Promise<void> {
   try {
     const service = createServiceClient();
     await service.from('app_settings').upsert({ key: 'pricing', value: cfg, updated_at: new Date().toISOString() });
+    await logAdminChange(ctx, 'pricing.update', 'settings', null, before, cfg, '料金・係数設定の変更');
   } catch (err) {
     console.error('[settings] 保存に失敗:', err instanceof Error ? err.message : err);
   }

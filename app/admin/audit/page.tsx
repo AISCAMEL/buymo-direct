@@ -26,8 +26,38 @@ function actionLabel(action: string): string {
     'announcement.publish': 'お知らせを公開',
     'announcement.unpublish': 'お知らせを非公開に',
     'announcement.delete': 'お知らせを削除',
+    'pricing.update': '料金・係数設定を変更',
+    'dealer.commission': '加盟店の手数料率を変更',
+    'dealer.suspend': '加盟店を停止',
+    'dealer.reinstate': '加盟店を再開',
+    'member.tier.paid': '有料会員にした',
+    'member.tier.free': '無料会員に戻した',
+    'membership.approve': '有料会員を承認',
+    'membership.reject': '有料会員を却下',
+    'lead.convert': 'リードを加盟店化',
   };
   return map[action] ?? action;
+}
+
+function shortVal(v: unknown): string {
+  if (v === null || v === undefined) return '—';
+  if (typeof v === 'object') return JSON.stringify(v);
+  return String(v);
+}
+
+/** before/after の変化した項目のみ抽出（トップレベル・浅い比較）。 */
+function diffFields(before: unknown, after: unknown): { key: string; from: string; to: string }[] {
+  if (!before || !after || typeof before !== 'object' || typeof after !== 'object') return [];
+  const b = before as Record<string, unknown>;
+  const a = after as Record<string, unknown>;
+  const keys = Array.from(new Set([...Object.keys(b), ...Object.keys(a)]));
+  const out: { key: string; from: string; to: string }[] = [];
+  for (const k of keys) {
+    const fv = shortVal(b[k]);
+    const tv = shortVal(a[k]);
+    if (fv !== tv) out.push({ key: k, from: fv, to: tv });
+  }
+  return out;
 }
 
 const TARGET_HREF: Record<string, (id: string) => string | null> = {
@@ -59,17 +89,36 @@ export default async function AdminAuditPage() {
       <ul className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 bg-white">
         {logs.map((l) => {
           const href = l.target_id ? TARGET_HREF[l.target_type ?? '']?.(l.target_id) : null;
+          const lx = l as LogWithActor & { before?: unknown; after?: unknown };
+          const changes = diffFields(lx.before, lx.after);
           return (
-            <li key={l.id} className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm">
-              <div className="min-w-0">
-                <span className="font-bold">{actionLabel(l.action)}</span>
-                <span className="ml-2 text-xs text-slate-400">
-                  by {l.actor?.display_name ?? '—'}
-                  {l.detail && <> — {l.detail}</>}
-                  {href && <> ・ <Link href={href} className="text-navy-400 hover:underline">対象</Link></>}
-                </span>
+            <li key={l.id} className="px-4 py-2.5 text-sm">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <span className="font-bold">{actionLabel(l.action)}</span>
+                  <span className="ml-2 text-xs text-slate-400">
+                    by {l.actor?.display_name ?? '—'}
+                    {l.detail && <> — {l.detail}</>}
+                    {href && <> ・ <Link href={href} className="text-navy-400 hover:underline">対象</Link></>}
+                  </span>
+                </div>
+                <span className="shrink-0 text-xs text-slate-400">{formatDateTime(l.created_at)}</span>
               </div>
-              <span className="shrink-0 text-xs text-slate-400">{formatDateTime(l.created_at)}</span>
+              {changes.length > 0 && (
+                <details className="mt-1">
+                  <summary className="cursor-pointer text-xs font-bold text-navy-500">変更前 → 変更後（{changes.length}項目）</summary>
+                  <ul className="mt-1 space-y-0.5 rounded-lg bg-slate-50 p-2 text-xs text-slate-600">
+                    {changes.map((c) => (
+                      <li key={c.key} className="flex flex-wrap gap-1">
+                        <span className="font-bold text-slate-500">{c.key}:</span>
+                        <span className="text-red-500 line-through">{c.from}</span>
+                        <span>→</span>
+                        <span className="font-bold text-emerald-600">{c.to}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
             </li>
           );
         })}

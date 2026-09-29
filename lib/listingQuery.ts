@@ -31,6 +31,14 @@ export function applyListingFilters(
   if (p.seller === 'dealer') query = query.not('dealer_id', 'is', null);
   else if (p.seller === 'user') query = query.is('dealer_id', null);
 
+  // カラー・駆動方式
+  if (p.color) query = query.eq('color', p.color);
+  if (p.drivetrain) query = query.eq('drivetrain', p.drivetrain);
+  // 保証つき（加盟店ダイレクト販売で保証料あり）
+  if (p.warranty === '1') query = query.gt('warranty_fee', 0);
+  // 車検残あり（満了日が本日以降）
+  if (p.shaken === '1') query = query.gte('shaken_until', new Date().toISOString().slice(0, 10));
+
   // 地域（単一または複数）
   if (p.prefs) {
     const list = p.prefs.split(',').map((s) => s.trim()).filter(Boolean);

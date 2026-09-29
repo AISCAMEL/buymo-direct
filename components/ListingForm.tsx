@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Camera, ImagePlus, X, Loader2, ShieldCheck, Users, Check } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { compressImage } from '@/lib/image';
-import { MAKERS, BODY_TYPES, TRANSMISSIONS, FUELS, PREFECTURES } from '@/lib/constants';
+import { MAKERS, BODY_TYPES, TRANSMISSIONS, FUELS, PREFECTURES, DRIVETRAINS, COLORS } from '@/lib/constants';
 import type { Listing, ListingImage } from '@/lib/types';
 import { AiDescriptionButton } from '@/components/AiDescriptionButton';
 import { formatYen } from '@/lib/format';
@@ -154,6 +154,8 @@ export function ListingForm({
       transmission: String(fd.get('transmission')) || null,
       fuel: String(fd.get('fuel')) || null,
       color: String(fd.get('color')) || null,
+      drivetrain: String(fd.get('drivetrain') || '') || null,
+      shaken_until: String(fd.get('shaken_until') || '') || null,
       prefecture: String(fd.get('prefecture')),
       repair_history: fd.get('repair_history') === 'on',
       description: String(fd.get('description')) || null,
@@ -578,13 +580,36 @@ export function ListingForm({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
+            <label className="label">駆動方式</label>
+            <select name="drivetrain" className="input" defaultValue={(listing as unknown as { drivetrain?: string } | undefined)?.drivetrain ?? ''}>
+              <option value="">指定なし</option>
+              {DRIVETRAINS.map((d) => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="label">車検満了日</label>
+            <input
+              name="shaken_until"
+              type="date"
+              className="input"
+              defaultValue={(listing as unknown as { shaken_until?: string } | undefined)?.shaken_until ?? ''}
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
             <label className="label">カラー</label>
             <input
               name="color"
+              list="color-suggestions"
               className="input"
               defaultValue={listing?.color ?? initial?.color ?? ''}
-              placeholder="パールホワイト"
+              placeholder="ホワイト"
             />
+            <datalist id="color-suggestions">
+              {COLORS.map((c) => <option key={c} value={c} />)}
+            </datalist>
           </div>
           <div>
             <label className="label">地域 *</label>

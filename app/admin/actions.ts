@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { adminContext, logAdminAction } from '@/lib/admin';
+import { adminContext, logAdminAction, logAdminChange } from '@/lib/admin';
 import { createServiceClient } from '@/lib/supabase/service';
 import { recordDealerSaleCommission } from '@/lib/sale-commission';
 import { sendEmail, emailLayout } from '@/lib/email';
@@ -295,9 +295,11 @@ export async function adminSetMemberTier(userId: string, tier: string) {
   const ctx = await adminContext();
   if (!ctx) return;
   const t = tier === 'paid' ? 'paid' : 'free';
+  const { data: old } = await ctx.supabase.from('profiles').select('member_tier').eq('id', userId).maybeSingle();
   await ctx.supabase.from('profiles').update({ member_tier: t }).eq('id', userId);
-  await logAdminAction(ctx, `member.tier.${t}`, 'user', userId);
+  await logAdminChange(ctx, `member.tier.${t}`, 'user', userId, { member_tier: (old as { member_tier?: string } | null)?.member_tier ?? 'free' }, { member_tier: t });
   revalidatePath('/admin/leads');
+  revalidatePath('/admin/members');
 }
 
 /** 販売手数料（成果報酬）の請求ステータスを変更。 */

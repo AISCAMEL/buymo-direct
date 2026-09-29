@@ -9,6 +9,8 @@ import {
   PREFECTURE_REGIONS,
   YEAR_OPTIONS,
   MILEAGE_MAX_OPTIONS,
+  DRIVETRAINS,
+  COLORS,
 } from '@/lib/constants';
 
 const BODY_TYPE_ICONS: Record<string, string> = {
@@ -171,6 +173,42 @@ export function SearchFilters() {
                   </button>
                 );
               })}
+            </div>
+          </div>
+
+          {/* こだわり条件 */}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => update({ warranty: params.get('warranty') === '1' ? null : '1' })}
+              className={`rounded-lg border px-2 py-2 text-sm font-bold transition ${params.get('warranty') === '1' ? 'border-navy-500 bg-navy-500 text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}
+            >
+              保証つき
+            </button>
+            <button
+              type="button"
+              onClick={() => update({ shaken: params.get('shaken') === '1' ? null : '1' })}
+              className={`rounded-lg border px-2 py-2 text-sm font-bold transition ${params.get('shaken') === '1' ? 'border-navy-500 bg-navy-500 text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}
+            >
+              車検残あり
+            </button>
+          </div>
+
+          {/* 駆動方式・カラー */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">駆動方式</label>
+              <select className="input" value={params.get('drivetrain') ?? ''} onChange={(e) => update({ drivetrain: e.target.value || null })}>
+                <option value="">すべて</option>
+                {DRIVETRAINS.map((d) => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="label">カラー</label>
+              <select className="input" value={params.get('color') ?? ''} onChange={(e) => update({ color: e.target.value || null })}>
+                <option value="">すべて</option>
+                {COLORS.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
             </div>
           </div>
 
