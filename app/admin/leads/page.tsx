@@ -1,7 +1,7 @@
 import { UserPlus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { formatDateTime } from '@/lib/format';
-import { adminSetLeadStatus } from '@/app/admin/actions';
+import { adminSetLeadStatus, adminConvertLeadToDealer } from '@/app/admin/actions';
 import { LEAD_WISH_LABEL, LEAD_STATUS_LABEL, LEAD_STATUS_CLS } from '@/lib/membership';
 
 export const dynamic = 'force-dynamic';
@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 type Row = {
   id: string; name: string | null; email: string | null; phone: string | null;
   business_type_wish: string | null; message: string | null; source: string | null;
-  status: string; created_at: string;
+  status: string; created_at: string; user_id: string | null;
 };
 
 const NEXT: { status: string; label: string; cls: string }[] = [
@@ -48,14 +48,27 @@ export default async function AdminLeadsPage() {
                   {r.message && <p className="mt-1 text-sm text-slate-500">{r.message}</p>}
                   {r.source && <p className="mt-1 text-[11px] text-slate-400">流入元: {r.source}</p>}
                 </div>
-                <div className="flex flex-wrap gap-1">
-                  {NEXT.map((n) => (
-                    <form key={n.status} action={adminSetLeadStatus.bind(null, r.id, n.status)}>
-                      <button disabled={r.status === n.status} className={`rounded-md border px-2.5 py-1 text-xs font-bold transition disabled:opacity-30 ${n.cls}`}>
-                        {n.label}
+                <div className="flex flex-col items-end gap-1.5">
+                  {r.status !== 'converted' && (
+                    <form action={adminConvertLeadToDealer.bind(null, r.id)}>
+                      <button
+                        disabled={!r.user_id}
+                        title={r.user_id ? '' : '発行には本人の会員登録が必要です'}
+                        className="rounded-md bg-navy-600 px-3 py-1.5 text-xs font-black text-white hover:bg-navy-700 disabled:opacity-40"
+                      >
+                        加盟店として発行
                       </button>
                     </form>
-                  ))}
+                  )}
+                  <div className="flex flex-wrap gap-1">
+                    {NEXT.map((n) => (
+                      <form key={n.status} action={adminSetLeadStatus.bind(null, r.id, n.status)}>
+                        <button disabled={r.status === n.status} className={`rounded-md border px-2.5 py-1 text-xs font-bold transition disabled:opacity-30 ${n.cls}`}>
+                          {n.label}
+                        </button>
+                      </form>
+                    ))}
+                  </div>
                 </div>
               </div>
             </li>

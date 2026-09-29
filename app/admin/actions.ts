@@ -219,6 +219,50 @@ export async function adminSetChargeStatus(chargeId: string, status: string) {
   revalidatePath('/admin/billing');
 }
 
+/**
+ * リードを加盟店として発行（承認済みで作成）。
+ * リードにログインユーザーが紐づいている場合のみ発行可能（owner が必要）。
+ */
+export async function adminConvertLeadToDealer(leadId: string): Promise<void> {
+  const ctx = await adminContext();
+  if (!ctx) return;
+
+  const { data: lead } = await ctx.supabase.from('dealer_leads').select('*').eq('id', leadId).maybeSingle();
+  const l = lead as { user_id?: string | null; name?: string | null; phone?: string | null; business_type_wish?: string | null; note?: string | null } | null;
+  if (!l) return;
+  if (!l.user_id) {
+    // 会員登録がないと加盟店（owner）を作成できない
+    await ctx.supabase.from('dealer_leads').update({ status: 'contacted', note: (l.note ? l.note + ' / ' : '') + '発行にはご本人の会員登録が必要', updated_at: new Date().toISOString() }).eq('id', leadId);
+    revalidatePath('/admin/leads');
+    return;
+  }
+
+  const svc = createServiceClient();
+  // 既に加盟店なら二重作成しない
+  const { data: existing } = await svc.from('dealers').select('id').eq('owner_id', l.user_id).maybeSingle();
+  let dealerId = (existing as { id?: string } | null)?.id;
+  if (!dealerId) {
+    const businessType = l.business_type_wish === 'sole_proprietor' ? 'sole_proprietor' : 'corporation';
+    const now = new Date().toISOString();
+    const { data: created } = await svc.from('dealers').insert({
+      owner_id: l.user_id,
+      name: l.name || '（店舗名未設定）',
+      phone: l.phone ?? null,
+      business_type: businessType,
+      status: 'approved',
+      approved_at: now,
+    }).select('id').single();
+    dealerId = (created as { id?: string } | null)?.id;
+    if (dealerId) {
+      await svc.from('dealer_staff').insert({ dealer_id: dealerId, user_id: l.user_id, role: 'owner' }).then(() => {}, () => {});
+    }
+  }
+
+  await ctx.supabase.from('dealer_leads').update({ status: 'converted', updated_at: new Date().toISOString() }).eq('id', leadId);
+  await logAdminAction(ctx, 'lead.convert', 'dealer_lead', leadId, dealerId ?? undefined);
+  revalidatePath('/admin/leads');
+}
+
 /** 加盟店・プロ希望リードのステータスを変更。 */
 export async function adminSetLeadStatus(leadId: string, status: string) {
   const ctx = await adminContext();
