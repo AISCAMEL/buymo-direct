@@ -7,6 +7,7 @@ import { createServiceClient } from '@/lib/supabase/service';
 import { skillLabel } from '@/lib/cases';
 import { getPricingConfig } from '@/lib/settings';
 import { computeMatchingFee } from '@/lib/matching-fee';
+import { createNotification } from '@/lib/notifications';
 
 /** ユーザーが加盟店（車のプロ）に直接依頼して案件(Case)を作成。 */
 export async function requestPartner(formData: FormData): Promise<void> {
@@ -33,6 +34,53 @@ export async function requestPartner(formData: FormData): Promise<void> {
     title: `${skillLabel(type)}のご依頼`,
     detail: detail || null,
   });
+
+  revalidatePath('/dashboard/cases');
+  redirect('/dashboard/cases?created=1');
+}
+
+/** 買い手が販売店の車両について見積・購入を相談（案件を作成し加盟店へ通知）。 */
+export async function requestVehicleQuote(listingId: string): Promise<void> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect(`/login?redirect=/listings/${listingId}`);
+
+  const { data: l } = await supabase
+    .from('listings')
+    .select('id, title, seller_id, dealer_id, status')
+    .eq('id', listingId)
+    .maybeSingle();
+  const listing = l as { id: string; title: string; seller_id: string; dealer_id: string | null; status: string } | null;
+  if (!listing || !listing.dealer_id) return;         // 販売店の車のみ
+  if (listing.seller_id === user.id) return;          // 自分の出品は不可
+
+  // 重複防止：同じ車で進行中の依頼があれば既存へ
+  const { data: existing } = await supabase
+    .from('cases')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('vehicle_id', listing.id)
+    .not('status', 'in', '(closed,declined)')
+    .maybeSingle();
+  if (existing) redirect('/dashboard/cases?created=1');
+
+  await supabase.from('cases').insert({
+    type: 'sales',
+    source: 'PARTNER',
+    status: 'new',
+    user_id: user.id,
+    partner_id: listing.dealer_id,
+    vehicle_id: listing.id,
+    title: `${listing.title} の見積・購入相談`,
+  });
+
+  // 加盟店オーナーへ通知
+  const { data: dealer } = await supabase.from('dealers').select('owner_id').eq('id', listing.dealer_id).maybeSingle();
+  const ownerId = (dealer as { owner_id?: string } | null)?.owner_id;
+  if (ownerId) {
+    createNotification(ownerId, 'system', '見積・購入の相談が届きました', `「${listing.title}」への相談が届きました。`, '/dealer/cases')
+      .catch(() => {});
+  }
 
   revalidatePath('/dashboard/cases');
   redirect('/dashboard/cases?created=1');

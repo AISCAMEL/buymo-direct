@@ -13,9 +13,11 @@ const yen = (n: number) => '¥' + (n || 0).toLocaleString('ja-JP');
 export function QuoteForm({
   taxRate,
   presetVehicle,
+  presetBuyer,
 }: {
   taxRate: number;
   presetVehicle?: { listingId?: string; summary?: string; price?: number } | null;
+  presetBuyer?: { id: string; name: string } | null;
 }) {
   const router = useRouter();
   const [rows, setRows] = useState<Row[]>(
@@ -24,7 +26,7 @@ export function QuoteForm({
       : [{ label: '車両本体価格', category: 'vehicle', amount: 0, taxable: true }]
   );
   const [discount, setDiscount] = useState(0);
-  const [customerName, setCustomerName] = useState('');
+  const [customerName, setCustomerName] = useState(presetBuyer?.name ?? '');
   const [vehicleSummary, setVehicleSummary] = useState(presetVehicle?.summary ?? '');
   const [validUntil, setValidUntil] = useState('');
   const [note, setNote] = useState('');
@@ -48,6 +50,7 @@ export function QuoteForm({
     setSaving(true);
     const res = await createQuote({
       listingId: presetVehicle?.listingId ?? null,
+      buyerId: presetBuyer?.id ?? null,
       customerName,
       vehicleSummary,
       validUntil: validUntil || null,

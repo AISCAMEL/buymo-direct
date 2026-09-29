@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Inbox } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
@@ -15,7 +16,7 @@ export const dynamic = 'force-dynamic';
 
 type CaseRow = {
   id: string; case_no: number; type: string; source: CaseSource; status: CaseStatus;
-  title: string | null; detail: string | null; created_at: string; amount: number | null;
+  title: string | null; detail: string | null; created_at: string; amount: number | null; vehicle_id: string | null;
   user?: { display_name?: string | null } | null;
 };
 
@@ -30,7 +31,7 @@ export default async function DealerCasesPage() {
 
   const { data } = await supabase
     .from('cases')
-    .select('id, case_no, type, source, status, title, detail, created_at, amount, user:profiles!cases_user_id_fkey(display_name)')
+    .select('id, case_no, type, source, status, title, detail, created_at, amount, vehicle_id, user:profiles!cases_user_id_fkey(display_name)')
     .eq('partner_id', (dealer as { id: string }).id)
     .order('created_at', { ascending: false });
   const cases = (data ?? []) as unknown as CaseRow[];
@@ -72,11 +73,18 @@ export default async function DealerCasesPage() {
                   {(next.length > 0 || canCompleteCase(c.status) || !['declined', 'closed'].includes(c.status)) && (
                     <div className="flex shrink-0 flex-col items-end gap-2">
                       {!['declined', 'closed'].includes(c.status) && (
-                        <form action={openCaseConversation.bind(null, c.id)}>
-                          <button className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50">
-                            チャットで相談
-                          </button>
-                        </form>
+                        <div className="flex gap-1">
+                          {c.vehicle_id && (
+                            <Link href={`/dealer/quotes/new?listing=${c.vehicle_id}&case=${c.id}`} className="rounded-md border border-navy-300 px-3 py-1.5 text-xs font-bold text-navy-700 hover:bg-navy-50">
+                              見積作成
+                            </Link>
+                          )}
+                          <form action={openCaseConversation.bind(null, c.id)}>
+                            <button className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50">
+                              チャットで相談
+                            </button>
+                          </form>
+                        </div>
                       )}
                       {next.length > 0 && (
                         <div className="flex flex-wrap gap-1">

@@ -5,6 +5,7 @@ import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { formatYen, formatMileage, formatDate } from '@/lib/format';
 import { startConversation } from './actions';
+import { requestVehicleQuote } from '@/app/cases/actions';
 import { OwnerListingControls } from '@/components/OwnerListingControls';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { ReportDialog } from '@/components/ReportDialog';
@@ -483,10 +484,18 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
             </div>
           ) : listing.status === 'active' ? (
             <div className="mt-5 space-y-3">
+              {dealerBiz && (
+                <form action={requestVehicleQuote.bind(null, listing.id)}>
+                  <button className="btn-accent w-full py-3.5 text-base shadow-sm">
+                    見積・購入を相談する（無料）
+                  </button>
+                  <p className="mt-1 text-center text-xs text-slate-400">販売店へ相談が届き、お見積りをご案内します。</p>
+                </form>
+              )}
               <form action={startConversation}>
                 <input type="hidden" name="listing_id" value={listing.id} />
-                <button className="btn-accent w-full py-3.5 text-base shadow-sm">
-                  出品者にメッセージを送る
+                <button className={`w-full py-3.5 text-base shadow-sm ${dealerBiz ? 'btn-outline' : 'btn-accent'}`}>
+                  {dealerBiz ? '販売店にメッセージを送る' : '出品者にメッセージを送る'}
                 </button>
               </form>
               {user && !isOwner && (
