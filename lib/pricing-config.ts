@@ -31,6 +31,8 @@ export interface PricingConfig {
   // 手数料の締め請求
   billingClosingDay: number;                          // 締め日（0=末日, 1〜28=その日）
   billingDueDays: number;                             // 締め後の支払期限（日数, 例 14）
+  // 有料会員
+  membershipMonthlyFee: number;                       // 有料会員 月額（税込, 例 3300）
 }
 
 export const PRICING_DEFAULTS: PricingConfig = {
@@ -68,6 +70,7 @@ export const PRICING_DEFAULTS: PricingConfig = {
   consumptionTaxRate: 0.10,
   billingClosingDay: 0,
   billingDueDays: 14,
+  membershipMonthlyFee: 3300,
 };
 
 /** 保証の税込価格に本部調整（％）を適用。 */
@@ -114,6 +117,7 @@ export function mergePricingConfig(partial?: Partial<PricingConfig> | null): Pri
     consumptionTaxRate: rate(partial.consumptionTaxRate, PRICING_DEFAULTS.consumptionTaxRate),
     billingClosingDay: num(partial.billingClosingDay, PRICING_DEFAULTS.billingClosingDay),
     billingDueDays: num(partial.billingDueDays, PRICING_DEFAULTS.billingDueDays),
+    membershipMonthlyFee: num(partial.membershipMonthlyFee, PRICING_DEFAULTS.membershipMonthlyFee),
   };
 }
 

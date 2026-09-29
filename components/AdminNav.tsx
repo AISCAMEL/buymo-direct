@@ -53,6 +53,7 @@ const GROUPS: Group[] = [
       { href: '/admin/coupons', label: 'クーポン管理' },
       { href: '/admin/dealers', label: '加盟店管理' },
       { href: '/admin/leads', label: '加盟店・プロ希望' },
+      { href: '/admin/members', label: '有料会員管理' },
       { href: '/admin/learn', label: '学習コンテンツ' },
       { href: '/admin/audit', label: '監査ログ' },
       { href: '/admin/settings', label: '料金設定' },

@@ -228,6 +228,24 @@ export async function adminSetLeadStatus(leadId: string, status: string) {
   revalidatePath('/admin/leads');
 }
 
+/** 有料会員の申込を承認（member_tier=paid）／却下。 */
+export async function adminDecideMembership(appId: string, approve: boolean) {
+  const ctx = await adminContext();
+  if (!ctx) return;
+  const { data: app } = await ctx.supabase.from('membership_applications').select('user_id').eq('id', appId).maybeSingle();
+  const userId = (app as { user_id?: string } | null)?.user_id;
+  const now = new Date().toISOString();
+  await ctx.supabase
+    .from('membership_applications')
+    .update({ status: approve ? 'approved' : 'rejected', decided_by: ctx.userId, decided_at: now, updated_at: now })
+    .eq('id', appId);
+  if (approve && userId) {
+    await ctx.supabase.from('profiles').update({ member_tier: 'paid' }).eq('id', userId);
+  }
+  await logAdminAction(ctx, `membership.${approve ? 'approve' : 'reject'}`, 'user', userId ?? appId);
+  revalidatePath('/admin/members');
+}
+
 /** 会員の有料/無料を切替。 */
 export async function adminSetMemberTier(userId: string, tier: string) {
   const ctx = await adminContext();

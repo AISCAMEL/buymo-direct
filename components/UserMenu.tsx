@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import {
   ChevronDown, LayoutDashboard, Heart, MessageSquare, Star, Building2, Store,
-  ShieldAlert, LogOut, UserRound, ClipboardList, FileText, Receipt,
+  ShieldAlert, LogOut, UserRound, ClipboardList, FileText, Receipt, Crown,
 } from 'lucide-react';
 
 type Props = {
@@ -82,6 +82,9 @@ export function UserMenu({ unreadCount, pendingReviews, pendingEscrows, isAdmin,
           <Link href="/dashboard/reviews" className={item} onClick={() => setOpen(false)}>
             <Star className="h-4 w-4 text-slate-400" /> 評価
             <Badge n={pendingReviews} color="bg-accent-500" />
+          </Link>
+          <Link href="/membership" className={item} onClick={() => setOpen(false)}>
+            <Crown className="h-4 w-4 text-gold-500" /> 有料会員
           </Link>
           <Link href="/dealers" className={item} onClick={() => setOpen(false)}>
             <Building2 className="h-4 w-4 text-slate-400" /> 加盟店を探す
