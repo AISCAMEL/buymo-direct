@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { requireDealer } from '@/lib/dealer';
 import { getPricingConfig } from '@/lib/settings';
 import { computeQuoteTotals, type QuoteItemInput } from '@/lib/quotes';
+import { createNotification } from '@/lib/notifications';
 
 export type CreateQuoteInput = {
   listingId?: string | null;
@@ -67,6 +68,17 @@ export async function createQuote(input: CreateQuoteInput): Promise<{ ok: boolea
 export async function updateQuoteStatus(quoteId: string, status: string): Promise<void> {
   const { supabase } = (await requireDealer()) as any;
   await supabase.from('quotes').update({ status, updated_at: new Date().toISOString() }).eq('id', quoteId);
+
+  // 送付時は宛先ユーザーへ通知
+  if (status === 'sent') {
+    const { data: q } = await supabase.from('quotes').select('buyer_id, vehicle_summary').eq('id', quoteId).maybeSingle();
+    const buyerId = (q as { buyer_id?: string | null } | null)?.buyer_id;
+    if (buyerId) {
+      const v = (q as { vehicle_summary?: string } | null)?.vehicle_summary ?? '車両';
+      createNotification(buyerId, 'system', '見積書が届きました', `「${v}」の見積書が届きました。ご確認ください。`, '/dashboard/quotes').catch(() => {});
+    }
+  }
+
   revalidatePath('/dealer/quotes');
   revalidatePath(`/dealer/quotes/${quoteId}`);
 }

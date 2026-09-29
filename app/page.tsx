@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   Tag,
   BookOpen,
+  Car,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ListingGrid } from '@/components/ListingGrid';
@@ -105,6 +106,27 @@ export default async function HomePage() {
         }}
       />
       <div className="-mx-4 -mt-6">
+
+        {/* ── 0. スマホ最優先：売る / 買う の2択 ── */}
+        <section className="bg-white px-4 pb-2 pt-5 lg:hidden">
+          <p className="mb-3 text-center text-sm font-black text-slate-700">まずは選んでください</p>
+          <div className="grid grid-cols-2 gap-3">
+            <Link href="/listings/valuation" className="flex flex-col items-center gap-1.5 rounded-2xl bg-gradient-to-br from-navy-700 to-navy-800 p-5 text-center text-white shadow-sm active:scale-[0.98]">
+              <Banknote className="h-8 w-8 text-accent-200" />
+              <span className="text-lg font-black">車を売る</span>
+              <span className="text-[11px] text-white/80">無料査定・買取・出品</span>
+            </Link>
+            <Link href="/listings" className="flex flex-col items-center gap-1.5 rounded-2xl bg-gradient-to-br from-accent-500 to-accent-600 p-5 text-center text-[#2E2408] shadow-sm active:scale-[0.98]">
+              <Car className="h-8 w-8 text-[#5a4a12]" />
+              <span className="text-lg font-black">車を買う</span>
+              <span className="text-[11px] text-[#5a4a12]/80">在庫から探す</span>
+            </Link>
+          </div>
+          <div className="mt-2 flex justify-center gap-4 text-[11px] font-bold text-slate-400">
+            <Link href="/learn" className="hover:text-slate-600">買取を学ぶ</Link>
+            <Link href="/join" className="hover:text-slate-600">加盟店・プロ登録</Link>
+          </div>
+        </section>
 
         {/* ── 1. Hero（人物＋車の実写真・分割レイアウト）── */}
         <section className="bg-gradient-to-br from-navy-800 to-navy-900">

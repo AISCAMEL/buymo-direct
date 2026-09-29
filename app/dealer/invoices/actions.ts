@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireDealer } from '@/lib/dealer';
 import { derivePaymentStatus, type InvoiceStatus } from '@/lib/invoices';
+import { createNotification } from '@/lib/notifications';
 
 /** 見積からワンクリックで請求書を作成し、請求書へ遷移。 */
 export async function createInvoiceFromQuote(quoteId: string): Promise<void> {
@@ -60,6 +61,11 @@ export async function createInvoiceFromQuote(quoteId: string): Promise<void> {
   if (rows.length) await supabase.from('invoice_items').insert(rows);
 
   await supabase.from('quotes').update({ status: 'converted', updated_at: new Date().toISOString() }).eq('id', quoteId);
+
+  // 宛先ユーザーへ請求発行を通知
+  if (q.buyer_id) {
+    createNotification(q.buyer_id, 'system', '請求書が発行されました', `「${q.vehicle_summary ?? '車両'}」の請求書が発行されました。`, '/dashboard/invoices').catch(() => {});
+  }
 
   revalidatePath('/dealer/invoices');
   revalidatePath('/dealer/quotes');
