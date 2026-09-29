@@ -20,7 +20,8 @@ const GROUPS: Group[] = [
       { href: '/admin/listings', label: '出品モデレーション' },
       { href: '/admin/escrow', label: '取引監視' },
       { href: '/admin/invoices', label: '請求・入金管理' },
-      { href: '/admin/billing', label: '手数料請求' },
+      { href: '/admin/billing', label: '手数料（個別）' },
+      { href: '/admin/statements', label: '手数料 締め請求' },
     ],
   },
   {

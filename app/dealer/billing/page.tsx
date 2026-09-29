@@ -1,8 +1,10 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Receipt } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
-import { formatYen, formatDateTime } from '@/lib/format';
+import { formatYen, formatDateTime, formatDate } from '@/lib/format';
 import { CHARGE_STATUS_LABEL, CHARGE_STATUS_CLS, type ChargeStatus } from '@/lib/matching-fee';
+import { STATEMENT_STATUS_LABEL, STATEMENT_STATUS_CLS, formatStatementNo, type StatementStatus } from '@/lib/fee-statement';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,7 +29,7 @@ export default async function DealerBillingPage() {
   if (!dealer) redirect('/dealer/register');
 
   const dealerId = (dealer as { id: string }).id;
-  const [{ data }, { data: saleData }] = await Promise.all([
+  const [{ data }, { data: saleData }, { data: stmtData }] = await Promise.all([
     supabase
       .from('case_charges')
       .select('id, case_id, category, base_amount, fee_rate, fee_amount, tax, total, status, created_at, case:cases!case_charges_case_id_fkey(case_no, type, title)')
@@ -38,9 +40,15 @@ export default async function DealerBillingPage() {
       .select('id, title, sale_amount, rate, fee_amount, tax, total, status, created_at')
       .eq('dealer_id', dealerId)
       .order('created_at', { ascending: false }),
+    supabase
+      .from('fee_statements')
+      .select('id, statement_no, period_end, total, status, due_date, created_at')
+      .eq('dealer_id', dealerId)
+      .order('created_at', { ascending: false }),
   ]);
   const charges = (data ?? []) as unknown as ChargeRow[];
   const sales = (saleData ?? []) as unknown as SaleRow[];
+  const statements = (stmtData ?? []) as unknown as { id: string; statement_no: number; period_end: string; total: number; status: StatementStatus; due_date: string | null }[];
 
   const isUnpaid = (s: string) => s === 'pending' || s === 'invoiced';
   const unpaidTotal =
@@ -71,6 +79,31 @@ export default async function DealerBillingPage() {
           <p className="text-xs text-slate-500">請求件数</p>
         </div>
       </div>
+
+      {/* 締め請求（手数料の合算請求） */}
+      {statements.length > 0 && (
+        <section className="space-y-2">
+          <h2 className="text-lg font-black">締め請求（手数料のご請求）</h2>
+          <p className="text-xs text-slate-500">締め日ごとに手数料をまとめた請求です。明細・印刷は各請求から確認できます。</p>
+          <ul className="space-y-2">
+            {statements.map((st) => (
+              <li key={st.id}>
+                <Link href={`/dealer/statements/${st.id}`} className="card flex flex-wrap items-center justify-between gap-3 p-4 hover:shadow-md">
+                  <div className="min-w-0">
+                    <p className="flex flex-wrap items-center gap-2 font-bold">
+                      <span className="font-mono text-xs text-slate-400">{formatStatementNo(st.statement_no)}</span>
+                      締め日 {formatDate(st.period_end)}
+                      <span className={`badge ${STATEMENT_STATUS_CLS[st.status]}`}>{STATEMENT_STATUS_LABEL[st.status]}</span>
+                    </p>
+                    <p className="mt-0.5 text-xs text-slate-500">お支払い期限 {formatDate(st.due_date ?? st.period_end)}</p>
+                  </div>
+                  <p className="text-lg font-black text-navy-700">{formatYen(st.total)}</p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* 自社在庫の販売手数料（成果報酬） */}
       <section className="space-y-2">

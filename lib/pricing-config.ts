@@ -28,6 +28,9 @@ export interface PricingConfig {
   matchingFeeTaxRate: number;                         // 消費税率（例 0.10）
   // 消費税マスター（見積・請求で使用。将来変更可能）
   consumptionTaxRate: number;                         // 標準税率（例 0.10）
+  // 手数料の締め請求
+  billingClosingDay: number;                          // 締め日（0=末日, 1〜28=その日）
+  billingDueDays: number;                             // 締め後の支払期限（日数, 例 14）
 }
 
 export const PRICING_DEFAULTS: PricingConfig = {
@@ -63,6 +66,8 @@ export const PRICING_DEFAULTS: PricingConfig = {
   matchingFeeMinFee: 1100,
   matchingFeeTaxRate: 0.10,
   consumptionTaxRate: 0.10,
+  billingClosingDay: 0,
+  billingDueDays: 14,
 };
 
 /** 保証の税込価格に本部調整（％）を適用。 */
@@ -107,6 +112,8 @@ export function mergePricingConfig(partial?: Partial<PricingConfig> | null): Pri
     matchingFeeMinFee: num(partial.matchingFeeMinFee, PRICING_DEFAULTS.matchingFeeMinFee),
     matchingFeeTaxRate: rate(partial.matchingFeeTaxRate, PRICING_DEFAULTS.matchingFeeTaxRate),
     consumptionTaxRate: rate(partial.consumptionTaxRate, PRICING_DEFAULTS.consumptionTaxRate),
+    billingClosingDay: num(partial.billingClosingDay, PRICING_DEFAULTS.billingClosingDay),
+    billingDueDays: num(partial.billingDueDays, PRICING_DEFAULTS.billingDueDays),
   };
 }
 
