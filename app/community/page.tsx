@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Users, Pin, MessageCircle, Plus, ShieldCheck } from 'lucide-react';
+import { Users, Pin, MessageCircle, Plus, ShieldCheck, Heart, CheckCircle2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getViewerAccess } from '@/lib/viewer';
 import { formatDateTime } from '@/lib/format';
@@ -9,9 +9,10 @@ export const dynamic = 'force-dynamic';
 export const metadata = { title: '買取コミュニティ | BUYMO ダイレクト' };
 
 type Row = {
-  id: string; category: string; title: string; pinned: boolean; created_at: string;
+  id: string; category: string; title: string; pinned: boolean; resolved: boolean; created_at: string;
   author?: { display_name: string | null } | null;
   comments?: { count: number }[];
+  likes?: { count: number }[];
 };
 
 export default async function CommunityPage() {
@@ -37,7 +38,7 @@ export default async function CommunityPage() {
   const supabase = await createClient();
   const { data } = await supabase
     .from('community_posts')
-    .select('id, category, title, pinned, created_at, author:profiles!community_posts_author_id_fkey(display_name), comments:community_comments(count)')
+    .select('id, category, title, pinned, resolved, created_at, author:profiles!community_posts_author_id_fkey(display_name), comments:community_comments(count), likes:community_post_likes(count)')
     .order('pinned', { ascending: false })
     .order('created_at', { ascending: false });
   const rows = (data ?? []) as unknown as Row[];
@@ -63,6 +64,7 @@ export default async function CommunityPage() {
               <Link href={`/community/${p.id}`} className="card block p-4 hover:shadow-md">
                 <p className="flex flex-wrap items-center gap-2 font-bold">
                   {p.pinned && <Pin className="h-3.5 w-3.5 text-navy-500" />}
+                  {p.resolved && <span className="badge inline-flex items-center gap-0.5 bg-emerald-100 text-emerald-700"><CheckCircle2 className="h-3 w-3" />解決済み</span>}
                   <span className={`badge ${COMMUNITY_CATEGORY_CLS[p.category] ?? 'bg-slate-100 text-slate-600'}`}>{COMMUNITY_CATEGORY_LABEL[p.category] ?? p.category}</span>
                   {p.title}
                 </p>
@@ -70,6 +72,7 @@ export default async function CommunityPage() {
                   <span>{p.category === 'official' ? '運営' : (p.author?.display_name ?? 'メンバー')}</span>
                   <span>{formatDateTime(p.created_at)}</span>
                   <span className="inline-flex items-center gap-0.5"><MessageCircle className="h-3 w-3" />{p.comments?.[0]?.count ?? 0}</span>
+                  <span className="inline-flex items-center gap-0.5"><Heart className="h-3 w-3" />{p.likes?.[0]?.count ?? 0}</span>
                 </p>
               </Link>
             </li>

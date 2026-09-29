@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { analyzeMessage } from '@/lib/moderation';
+import { createNotification } from '@/lib/notifications';
 
 const ALLOWED = ['beginner', 'question', 'consult', 'success'];
 
@@ -45,6 +46,44 @@ export async function addComment(postId: string, formData: FormData): Promise<vo
     author_id: user.id,
     body: mod.flagged ? mod.masked : raw,
   });
+
+  // 投稿者へ通知（自分のコメントは除く）
+  const { data: post } = await supabase.from('community_posts').select('author_id, title').eq('id', postId).maybeSingle();
+  const authorId = (post as { author_id?: string | null } | null)?.author_id;
+  if (authorId && authorId !== user.id) {
+    const title = (post as { title?: string } | null)?.title ?? '投稿';
+    createNotification(authorId, 'system', 'コミュニティに返信がありました', `「${title}」にコメントが付きました。`, `/community/${postId}`)
+      .catch(() => {/* fire-and-forget */});
+  }
+
+  revalidatePath(`/community/${postId}`);
+}
+
+/** 解決済みマークの切替（作者・本部）。 */
+export async function toggleResolved(postId: string, resolved: boolean): Promise<void> {
+  const supabase = await createClient();
+  await supabase.from('community_posts').update({ resolved, updated_at: new Date().toISOString() }).eq('id', postId);
+  revalidatePath('/community');
+  revalidatePath(`/community/${postId}`);
+}
+
+/** いいねの切替。 */
+export async function toggleLike(postId: string): Promise<void> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  const { data: existing } = await supabase
+    .from('community_post_likes')
+    .select('id')
+    .eq('post_id', postId)
+    .eq('user_id', user.id)
+    .maybeSingle();
+  if (existing) {
+    await supabase.from('community_post_likes').delete().eq('id', (existing as { id: string }).id);
+  } else {
+    await supabase.from('community_post_likes').insert({ post_id: postId, user_id: user.id });
+  }
+  revalidatePath('/community');
   revalidatePath(`/community/${postId}`);
 }
 
