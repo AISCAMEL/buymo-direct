@@ -10,7 +10,7 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
   const source = sp.source || 'join';
 
   const freeItems = ['プロとしてスキル提供（整備・板金・コーティング等）', '案件の受注・チャット', '店舗プロフィールの公開', '出品（ダイレクト販売）'];
-  const paidItems = ['業販・仕入れ相場の詳細表示', 'オンライン講座「買取を学ぶ」実践編', 'プロ向けの限定情報・非公開データ', '成約手数料の優遇', '上位表示・集客ブースト'];
+  const paidItems = ['業販・仕入れ相場の詳細表示', 'オンライン講座「買取を学ぶ」実践編', '買取コミュニティ（初心者も安心・運営が見守り）', 'プロ向けの限定情報・非公開データ', '成約手数料の優遇', '上位表示・集客ブースト'];
 
   return (
     <div className="mx-auto max-w-2xl space-y-8 py-6">
