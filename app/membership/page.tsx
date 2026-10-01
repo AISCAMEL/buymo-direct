@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { Crown, Check, Clock, CheckCircle2 } from 'lucide-react';
+import { Crown, Check, Clock, CheckCircle2, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getPricingConfig } from '@/lib/settings';
 import { formatYen } from '@/lib/format';
@@ -82,6 +82,44 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
             </li>
           ))}
         </ul>
+      </div>
+
+      {/* 無料 vs 有料 比較表 */}
+      <div className="card overflow-hidden p-0">
+        <div className="border-b border-slate-100 p-4">
+          <p className="font-black text-slate-700">無料会員と有料会員のちがい</p>
+        </div>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-slate-50 text-xs text-slate-500">
+              <th className="px-4 py-2 text-left font-medium">できること</th>
+              <th className="w-16 px-2 py-2 text-center font-medium">無料</th>
+              <th className="w-16 px-2 py-2 text-center font-bold text-gold-700">有料</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-50">
+            {[
+              { label: '車の売買・出品', free: true },
+              { label: 'スキル提供・案件の受注', free: true },
+              { label: '車を探す・問い合わせ・チャット', free: true },
+              { label: '本人確認', free: true },
+              { label: '買取の相場・仕入れ情報', free: false },
+              { label: 'オンライン講座「買取を学ぶ」実践編', free: false },
+              { label: '買取コミュニティ', free: false },
+              { label: 'プロ向けの限定情報・非公開データ', free: false },
+            ].map((r) => (
+              <tr key={r.label}>
+                <td className="px-4 py-2.5 text-slate-700">{r.label}</td>
+                <td className="px-2 py-2.5 text-center">
+                  {r.free ? <Check className="mx-auto h-4 w-4 text-emerald-500" /> : <X className="mx-auto h-4 w-4 text-slate-300" />}
+                </td>
+                <td className="bg-gold-50/40 px-2 py-2.5 text-center">
+                  <Check className="mx-auto h-4 w-4 text-gold-600" />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {tier === 'paid' ? (
