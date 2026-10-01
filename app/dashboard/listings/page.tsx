@@ -7,6 +7,8 @@ import { formatYen, formatDate } from '@/lib/format';
 import { ESCROW_STEPS } from '@/lib/constants';
 import { OwnerListingControls } from '@/components/OwnerListingControls';
 import { ExportButton } from '@/components/ExportButton';
+import { UpgradeNudge } from '@/components/UpgradeNudge';
+import { getViewerAccess } from '@/lib/viewer';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,9 +48,13 @@ export default async function DashboardListingsPage() {
 
   const myListings = (listings ?? []) as any[];
   const myEscrows = (escrows ?? []) as any[];
+  const access = await getViewerAccess();
 
   return (
     <div className="space-y-10">
+      {/* 無料会員への有料誘致（有料・加盟店・本部には出さない） */}
+      {!access.premium && <UpgradeNudge source="dashboard" />}
+
       {/* 出品 */}
       <section>
         <div className="mb-4 flex items-center justify-between">

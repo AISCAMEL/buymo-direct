@@ -32,9 +32,11 @@ export default async function LearnPage() {
       </div>
 
       {!access.premium && (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-accent-200 bg-accent-50/50 p-4">
-          <p className="text-sm font-bold text-accent-700">実践編を見るには有料会員・加盟店登録が必要です。</p>
-          <Link href="/join?source=learn" className="btn-accent shrink-0 text-sm">登録する（無料〜）</Link>
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gold-200 bg-gold-50/60 p-4">
+          <p className="text-sm font-bold text-gold-700">実践編（査定・相場・仕入れ）は有料会員限定です。</p>
+          <Link href={access.loggedIn ? '/membership?from=learn' : '/join?source=learn'} className="btn-accent shrink-0 text-sm">
+            {access.loggedIn ? '有料会員になる' : '無料登録ではじめる'}
+          </Link>
         </div>
       )}
 

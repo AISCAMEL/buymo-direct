@@ -9,8 +9,8 @@ import { Lock } from 'lucide-react';
 export function PremiumGate({
   unlocked,
   loggedIn = false,
-  title = 'この先は会員限定です',
-  note = '続きを見るには、ログインまたは加盟店（プロ）登録（無料）が必要です。',
+  title = '買取の相場・仕入れ情報は有料会員限定です',
+  note = '無料のままでは見られません。有料会員なら、買取の相場・仕入れの目安・実践講座・コミュニティがすべて使えます。',
   source = 'gate',
   children,
 }: {
@@ -29,23 +29,29 @@ export function PremiumGate({
         {children}
       </div>
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-white/75 p-4 text-center backdrop-blur-[2px]">
-        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-navy-100">
-          <Lock className="h-5 w-5 text-navy-600" />
+        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-gold-500/15">
+          <Lock className="h-5 w-5 text-gold-600" />
         </span>
         <p className="font-black text-slate-800">{title}</p>
         <p className="max-w-xs text-xs text-slate-500">{note}</p>
         <div className="mt-1 flex flex-wrap justify-center gap-2">
-          {!loggedIn && (
-            <Link href={`/login?redirect=${encodeURIComponent('/join?source=' + source)}`} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">
-              ログイン
+          {loggedIn ? (
+            <Link href={`/membership?from=${source}`} className="btn-accent">
+              有料会員になる
             </Link>
+          ) : (
+            <>
+              <Link href={`/login?redirect=${encodeURIComponent('/membership?from=' + source)}`} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">
+                ログイン
+              </Link>
+              <Link href={`/join?source=${source}`} className="btn-accent">
+                無料登録ではじめる
+              </Link>
+            </>
           )}
-          <Link href={`/join?source=${source}`} className="btn-accent">
-            加盟店・プロ登録（無料）
-          </Link>
         </div>
-        <Link href="/join#plan" className="text-xs font-bold text-navy-500 underline">
-          有料会員でできること →
+        <Link href={`/membership?from=${source}`} className="text-xs font-bold text-gold-700 underline">
+          有料会員でできること・料金を見る →
         </Link>
       </div>
     </div>
