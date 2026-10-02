@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import {
   ChevronDown, LayoutDashboard, Heart, MessageSquare, Star, Building2, Store,
-  ShieldAlert, LogOut, UserRound, ClipboardList, FileText, Receipt, Crown,
+  ShieldAlert, LogOut, UserRound, ClipboardList, FileText, Receipt, Crown, GraduationCap, Users,
 } from 'lucide-react';
 
 type Props = {
@@ -82,6 +82,12 @@ export function UserMenu({ unreadCount, pendingReviews, pendingEscrows, isAdmin,
           <Link href="/dashboard/reviews" className={item} onClick={() => setOpen(false)}>
             <Star className="h-4 w-4 text-slate-400" /> 評価
             <Badge n={pendingReviews} color="bg-accent-500" />
+          </Link>
+          <Link href="/learn" className={item} onClick={() => setOpen(false)}>
+            <GraduationCap className="h-4 w-4 text-slate-400" /> 買取を学ぶ
+          </Link>
+          <Link href="/community" className={item} onClick={() => setOpen(false)}>
+            <Users className="h-4 w-4 text-slate-400" /> コミュニティ
           </Link>
           <Link href="/membership" className={item} onClick={() => setOpen(false)}>
             <Crown className="h-4 w-4 text-gold-500" /> 有料会員
