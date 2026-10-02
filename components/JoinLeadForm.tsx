@@ -33,6 +33,11 @@ export function JoinLeadForm({ source = 'join' }: { source?: string }) {
   return (
     <form onSubmit={onSubmit} className="card space-y-4 p-6">
       <input type="hidden" name="source" value={source} />
+      {/* ハニーポット（ボット対策・人には非表示） */}
+      <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
+      <div aria-hidden="true" className="absolute left-[-9999px] h-0 w-0 overflow-hidden">
+        <label>Website<input type="text" name="website2" tabIndex={-1} autoComplete="off" /></label>
+      </div>
       <div>
         <label className="label">お名前 *</label>
         <input name="name" required className="input" placeholder="例）山田 太郎" />

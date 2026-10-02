@@ -19,6 +19,16 @@ export async function createPost(formData: FormData): Promise<void> {
   const category = ALLOWED.includes(String(formData.get('category'))) ? String(formData.get('category')) : 'question';
   if (!title) return;
 
+  // 連投抑止：直近30秒以内に自分の投稿があればブロック
+  const since = new Date(Date.now() - 30 * 1000).toISOString();
+  const { data: recent } = await supabase
+    .from('community_posts')
+    .select('id')
+    .eq('author_id', user.id)
+    .gte('created_at', since)
+    .maybeSingle();
+  if (recent) redirect(`/community/${(recent as { id: string }).id}`);
+
   const mod = bodyRaw ? analyzeMessage(bodyRaw) : null;
   const body = mod?.flagged ? mod.masked : bodyRaw;
 

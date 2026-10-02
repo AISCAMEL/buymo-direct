@@ -14,6 +14,9 @@ export async function submitLead(formData: FormData): Promise<{ ok: boolean; err
 
   if (!name || !email) return { ok: false, error: 'お名前とメールアドレスをご入力ください。' };
 
+  // ハニーポット（ボット対策）：人間には見えない項目が埋まっていたら無視（成功扱い）
+  if (String(formData.get('website') || '').trim() || String(formData.get('website2') || '').trim()) return { ok: true };
+
   let userId: string | null = null;
   try {
     const supabase = await createClient();
@@ -23,6 +26,16 @@ export async function submitLead(formData: FormData): Promise<{ ok: boolean; err
 
   try {
     const svc = createServiceClient();
+    // 連投スパム抑止：同一メールで直近10分以内の申込があればスキップ（成功扱い）
+    const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const { data: recent } = await svc
+      .from('dealer_leads')
+      .select('id')
+      .eq('email', email)
+      .gte('created_at', since)
+      .maybeSingle();
+    if (recent) return { ok: true };
+
     const { error } = await svc.from('dealer_leads').insert({
       user_id: userId,
       name,

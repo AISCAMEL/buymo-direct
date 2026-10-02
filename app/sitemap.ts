@@ -17,6 +17,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .select('id, updated_at')
     .eq('status', 'active');
 
+  const { data: lessons } = await supabase
+    .from('learning_contents')
+    .select('slug, updated_at')
+    .eq('published', true);
+
   const now = new Date();
 
   const staticPages: MetadataRoute.Sitemap = [
@@ -26,9 +31,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/area`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${BASE}/column`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${BASE}/dealers`, lastModified: now, changeFrequency: 'weekly', priority: 0.5 },
+    { url: `${BASE}/learn`, lastModified: now, changeFrequency: 'weekly', priority: 0.6 },
+    { url: `${BASE}/join`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${BASE}/login`, lastModified: now, changeFrequency: 'monthly', priority: 0.3 },
     { url: `${BASE}/signup`, lastModified: now, changeFrequency: 'monthly', priority: 0.4 },
   ];
+
+  const lessonPages: MetadataRoute.Sitemap = (lessons ?? []).map((l) => ({
+    url: `${BASE}/learn/${l.slug}`, lastModified: new Date(l.updated_at), changeFrequency: 'monthly', priority: 0.5,
+  }));
 
   const makerPages: MetadataRoute.Sitemap = Object.keys(MAKERS).map((maker) => ({
     url: `${BASE}/makers/${encodeURIComponent(maker)}`, lastModified: now, changeFrequency: 'daily', priority: 0.7,
@@ -60,7 +71,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   return [
-    ...staticPages, ...makerPages, ...bodyPages,
+    ...staticPages, ...lessonPages, ...makerPages, ...bodyPages,
     ...genrePages, ...crossPages, ...areaPages, ...columnPages,
     ...listingPages,
   ];

@@ -11,6 +11,7 @@ import { CompareBar } from '@/components/CompareBar';
 import { createClient } from '@/lib/supabase/server';
 import type { Announcement } from '@/lib/types';
 import { validateEnv } from '@/lib/env';
+import { OPERATOR } from '@/lib/operator';
 
 // Validate required environment variables at server startup.
 // Throws immediately on missing vars so misconfigured deployments fail fast.
@@ -67,6 +68,24 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="ja" className={noto.variable}>
       <body className="pb-16 sm:pb-0">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: OPERATOR.brandName,
+              legalName: OPERATOR.companyName,
+              url: process.env.NEXT_PUBLIC_SITE_URL ?? OPERATOR.url,
+              email: OPERATOR.email,
+              address: {
+                '@type': 'PostalAddress',
+                addressCountry: 'JP',
+                streetAddress: OPERATOR.address,
+              },
+            }),
+          }}
+        />
         {ann && <AnnouncementBanner id={ann.id} title={ann.title} level={ann.level} />}
         <Header />
         {navUser && <NotificationRefresher userId={navUser.id} />}
