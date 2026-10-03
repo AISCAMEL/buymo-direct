@@ -56,7 +56,7 @@ export async function Header() {
           <Link href="/listings" className="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100">
             車を探す
           </Link>
-          {(!user || businessTrack) && (
+          {businessTrack && (
             <Link href="/learn" className="hidden whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 sm:inline-block">
               買取を学ぶ
             </Link>
