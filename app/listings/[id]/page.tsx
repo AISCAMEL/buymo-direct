@@ -28,6 +28,8 @@ import { PremiumGate } from '@/components/PremiumGate';
 import { PriceAlertButton } from '@/components/PriceAlertButton';
 import { InsuranceSimulator } from '@/components/InsuranceSimulatorLazy';
 import type { ListingWithImages, MaintenanceRecord } from '@/lib/types';
+import { getListingActivity } from '@/lib/activity';
+import { ListingActivityBanner } from '@/components/ListingActivityBanner';
 
 export const revalidate = 300; // ISR: rebuild listing detail at most once per 5 minutes
 
@@ -157,6 +159,12 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
   const favoritedIds = await favoritedSet(supabase, user?.id, [listing.id]);
   const isFavorited = favoritedIds.has(listing.id);
 
+  // 「気になる動線」：閲覧・本日のお問い合わせ・商談中などの動きを集計
+  const activity = await getListingActivity(listing.id, {
+    views: (listing.view_count ?? 0) + (isOwner ? 0 : 1),
+    status: listing.status,
+  });
+
   // アクティブなオファーを取得（買主として）
   let existingOffer: { amount: number; status: string; counter_amount: number | null } | null = null;
   if (user && !isOwner) {
@@ -248,6 +256,9 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
       <div className="space-y-6">
         {/* ── ギャラリー ── */}
         <ListingGallery images={images} title={listing.title} />
+
+        {/* ── 気になる動線（動きの可視化） ── */}
+        <ListingActivityBanner activity={activity} />
 
         {/* ── メタ情報行 ── */}
         <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500">

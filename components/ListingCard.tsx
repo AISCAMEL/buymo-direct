@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { MapPin, Gauge, Calendar } from 'lucide-react';
+import { MapPin, Gauge, Calendar, Eye, Flame } from 'lucide-react';
 import { formatYen, formatMileage } from '@/lib/format';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { CompareButton } from '@/components/CompareButton';
@@ -26,6 +26,9 @@ export function ListingCard({
 }) {
   const cover = listing.listing_images?.sort((a, b) => a.sort_order - b.sort_order)[0]?.url;
   const kind = sellerKind(listing);
+  const views = listing.view_count ?? 0;
+  const boosted = !!listing.boosted_until && new Date(listing.boosted_until) > new Date();
+  const hot = boosted || views >= 50;
 
   return (
     <Link href={`/listings/${listing.id}`} className="card group relative overflow-hidden transition hover:shadow-md">
@@ -48,6 +51,11 @@ export function ListingCard({
         <span className={`badge absolute left-2 top-2 shadow-sm ${SELLER_KIND_CLS[kind]}`}>
           {SELLER_KIND_LABEL[kind]}
         </span>
+        {hot && listing.status === 'active' && (
+          <span className="badge absolute left-2 top-9 inline-flex items-center gap-1 bg-rose-100 text-rose-700 shadow-sm">
+            <Flame className="h-3 w-3" />{boosted ? '注目' : '人気'}
+          </span>
+        )}
         {listing.repair_history && (
           <span className="badge absolute bottom-2 left-2 bg-red-100 text-red-700">修復歴あり</span>
         )}
@@ -70,6 +78,7 @@ export function ListingCard({
           <span className="inline-flex items-center gap-1"><Calendar className="h-3.5 w-3.5" />{listing.year}年</span>
           <span className="inline-flex items-center gap-1"><Gauge className="h-3.5 w-3.5" />{formatMileage(listing.mileage_km)}</span>
           <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{listing.prefecture}</span>
+          {views > 0 && <span className="inline-flex items-center gap-1 text-slate-400"><Eye className="h-3.5 w-3.5" />{views.toLocaleString()}</span>}
         </div>
         <div className="mt-2">
           <CompareButton listingId={listing.id} />
