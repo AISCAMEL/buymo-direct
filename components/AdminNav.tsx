@@ -27,6 +27,7 @@ const GROUPS: Group[] = [
   {
     title: '審査・申込',
     items: [
+      { href: '/admin/franchise', label: '買取加盟申込' },
       { href: '/admin/buyback', label: '買取保証審査' },
       { href: '/admin/appraisals', label: '査定依頼' },
       { href: '/admin/valuations', label: '査定履歴' },
@@ -54,6 +55,7 @@ const GROUPS: Group[] = [
       { href: '/admin/dealers', label: '加盟店管理' },
       { href: '/admin/leads', label: '加盟店・プロ希望' },
       { href: '/admin/members', label: '有料会員管理' },
+      { href: '/admin/premium', label: '有料コンテンツ' },
       { href: '/admin/learn', label: '学習コンテンツ' },
       { href: '/admin/audit', label: '監査ログ' },
       { href: '/admin/settings', label: '料金設定' },

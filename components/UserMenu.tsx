@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import {
   ChevronDown, LayoutDashboard, Heart, MessageSquare, Star, Building2, Store,
-  ShieldAlert, LogOut, UserRound, ClipboardList, FileText, Receipt, Crown, GraduationCap, Users,
+  ShieldAlert, LogOut, UserRound, ClipboardList, FileText, Receipt, Crown, GraduationCap, Users, Sparkles,
 } from 'lucide-react';
 
 type Props = {
@@ -97,6 +97,11 @@ export function UserMenu({ unreadCount, pendingReviews, pendingEscrows, isAdmin,
               <Link href="/community" className={item} onClick={() => setOpen(false)}>
                 <Users className="h-4 w-4 text-slate-400" /> コミュニティ
               </Link>
+              {buybackOpen && (
+                <Link href="/premium" className={item} onClick={() => setOpen(false)}>
+                  <Sparkles className="h-4 w-4 text-gold-500" /> 会員コンテンツ
+                </Link>
+              )}
               {/* 買取加盟は有料会員を開放。スキル登録は「ご案内」(後出し→LP)。 */}
               {buybackOpen ? (
                 <Link href="/membership" className={item} onClick={() => setOpen(false)}>
@@ -105,6 +110,11 @@ export function UserMenu({ unreadCount, pendingReviews, pendingEscrows, isAdmin,
               ) : (
                 <Link href="/membership" className={`${item} text-gold-700`} onClick={() => setOpen(false)}>
                   <Crown className="h-4 w-4 text-gold-500" /> 有料会員のご案内
+                </Link>
+              )}
+              {!isDealer && (
+                <Link href="/franchise" className={`${item} text-gold-700`} onClick={() => setOpen(false)}>
+                  <Store className="h-4 w-4 text-gold-500" /> 買取加盟の申込
                 </Link>
               )}
               <Link href="/dealers" className={item} onClick={() => setOpen(false)}>

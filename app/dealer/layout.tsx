@@ -13,6 +13,8 @@ const NAV = [
   { href: '/dealer/quotes', label: '見積書' },
   { href: '/dealer/invoices', label: '請求書' },
   { href: '/dealer/billing', label: '手数料・請求' },
+  { href: '/dealer/auctions', label: 'オークション' },
+  { href: '/premium', label: '会員コンテンツ' },
   { href: '/dealer/skills', label: 'スキル・サービス' },
   { href: '/dealer/listings', label: '在庫管理' },
   { href: '/dealer/staff', label: 'スタッフ管理' },
