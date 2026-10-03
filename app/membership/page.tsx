@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import { Crown, Check, Clock, CheckCircle2, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getPricingConfig } from '@/lib/settings';
+import { getViewerAccess } from '@/lib/viewer';
+import { BusinessOnlyGate } from '@/components/BusinessOnlyGate';
 import { formatYen } from '@/lib/format';
 import { applyMembership, cancelMembership } from '@/app/membership/actions';
 
@@ -14,6 +16,12 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login?redirect=/membership');
+
+  // 有料会員は業者・プロ向けの商品。個人（一般会員）には業者になる入口を案内。
+  const access = await getViewerAccess();
+  if (!access.businessTrack) {
+    return <BusinessOnlyGate feature="有料会員（買取）" source="membership" />;
+  }
 
   const cfg = await getPricingConfig();
   const { data: prof } = await supabase.from('profiles').select('member_tier').eq('id', user.id).maybeSingle();

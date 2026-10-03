@@ -45,6 +45,9 @@ export async function applyDealer(formData: FormData): Promise<void> {
     role: 'owner',
   });
 
+  // 加盟店申込で業者トラックへ（買取系を利用可能に）
+  await supabase.from('profiles').update({ account_type: 'business' }).eq('id', user.id);
+
   redirect('/dealer?applied=1');
 }
 

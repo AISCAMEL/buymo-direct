@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { GraduationCap, Lock, Sparkles } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getViewerAccess } from '@/lib/viewer';
+import { BusinessOnlyGate } from '@/components/BusinessOnlyGate';
 import { LEARN_CATEGORY_LABEL, LEARN_CATEGORY_CLS, type LearningContent } from '@/lib/learn';
 
 export const dynamic = 'force-dynamic';
@@ -10,6 +11,11 @@ export const metadata = { title: '買取を学ぶ | BUYMO ダイレクト' };
 export default async function LearnPage() {
   const supabase = await createClient();
   const access = await getViewerAccess();
+
+  // 個人（一般会員）には買取系を提供しない。業者になる入口を案内。
+  if (access.loggedIn && !access.businessTrack) {
+    return <BusinessOnlyGate feature="買取を学ぶ" source="learn" />;
+  }
 
   const { data } = await supabase
     .from('learning_contents')

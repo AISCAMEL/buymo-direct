@@ -28,10 +28,14 @@ export async function Header() {
 
   let isAdmin = false;
   let isDealer = false;
+  let businessTrack = false;
   if (user) {
-    const { data: prof } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
-    isAdmin = (prof as { role?: string } | null)?.role === 'admin';
+    const { data: prof } = await supabase.from('profiles').select('role, member_tier, account_type').eq('id', user.id).maybeSingle();
+    const p = prof as { role?: string; member_tier?: string; account_type?: string } | null;
+    isAdmin = p?.role === 'admin';
     isDealer = (await getDealerForUser(user.id)) !== null;
+    // 業者トラック（プロ・加盟店・有料会員・本部）だけに買取系を見せる。個人は対象外。
+    businessTrack = p?.account_type === 'business' || isDealer || isAdmin || p?.member_tier === 'paid';
   }
 
   return (
@@ -48,9 +52,11 @@ export async function Header() {
           <Link href="/listings" className="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100">
             車を探す
           </Link>
-          <Link href="/learn" className="hidden whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 sm:inline-block">
-            買取を学ぶ
-          </Link>
+          {(!user || businessTrack) && (
+            <Link href="/learn" className="hidden whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 sm:inline-block">
+              買取を学ぶ
+            </Link>
+          )}
           {user ? (
             <>
               <NotificationBell userId={user?.id} />
@@ -63,6 +69,7 @@ export async function Header() {
                 pendingEscrows={pendingEscrows ?? 0}
                 isAdmin={isAdmin}
                 isDealer={isDealer}
+                businessTrack={businessTrack}
               />
               <span className="hidden lg:block"><PushNotificationManager /></span>
             </>

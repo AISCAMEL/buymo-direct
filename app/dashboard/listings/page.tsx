@@ -52,8 +52,8 @@ export default async function DashboardListingsPage() {
 
   return (
     <div className="space-y-10">
-      {/* 無料会員への有料誘致（有料・加盟店・本部には出さない） */}
-      {!access.premium && <UpgradeNudge source="dashboard" />}
+      {/* 無料の業者（プロ）への有料誘致。個人・有料・加盟店・本部には出さない。 */}
+      {access.businessTrack && !access.premium && <UpgradeNudge source="dashboard" />}
 
       {/* 出品 */}
       <section>

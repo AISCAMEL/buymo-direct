@@ -20,6 +20,8 @@ export async function applyMembership(): Promise<void> {
   if (!existing) {
     await supabase.from('membership_applications').insert({ user_id: user.id, plan: 'standard', status: 'pending' });
   }
+  // 有料申込＝業者トラック（買取を事業として行う意思表示）
+  await supabase.from('profiles').update({ account_type: 'business' }).eq('id', user.id);
   revalidatePath('/membership');
   redirect('/membership?applied=1');
 }

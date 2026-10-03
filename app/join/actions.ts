@@ -47,6 +47,9 @@ export async function submitLead(formData: FormData): Promise<{ ok: boolean; err
       status: 'new',
     });
     if (error) return { ok: false, error: error.message };
+
+    // ログイン済みユーザーが申し込んだら業者トラックへ（買取系を利用可能に）
+    if (userId) await svc.from('profiles').update({ account_type: 'business' }).eq('id', userId);
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : '送信に失敗しました' };
   }

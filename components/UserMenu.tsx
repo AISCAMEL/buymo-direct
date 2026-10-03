@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import {
   ChevronDown, LayoutDashboard, Heart, MessageSquare, Star, Building2, Store,
-  ShieldAlert, LogOut, UserRound, ClipboardList, FileText, Receipt, Crown, GraduationCap, Users,
+  ShieldAlert, LogOut, UserRound, ClipboardList, FileText, Receipt, Crown, GraduationCap, Users, Briefcase,
 } from 'lucide-react';
 
 type Props = {
@@ -13,6 +13,8 @@ type Props = {
   pendingEscrows: number;
   isAdmin: boolean;
   isDealer?: boolean;
+  /** 業者トラック（プロ・加盟店・有料会員・本部）か。個人には買取系を出さない。 */
+  businessTrack?: boolean;
 };
 
 function Badge({ n, color }: { n: number; color: string }) {
@@ -24,7 +26,7 @@ function Badge({ n, color }: { n: number; color: string }) {
   );
 }
 
-export function UserMenu({ unreadCount, pendingReviews, pendingEscrows, isAdmin, isDealer }: Props) {
+export function UserMenu({ unreadCount, pendingReviews, pendingEscrows, isAdmin, isDealer, businessTrack }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const total = unreadCount + pendingReviews + pendingEscrows;
@@ -83,15 +85,23 @@ export function UserMenu({ unreadCount, pendingReviews, pendingEscrows, isAdmin,
             <Star className="h-4 w-4 text-slate-400" /> 評価
             <Badge n={pendingReviews} color="bg-accent-500" />
           </Link>
-          <Link href="/learn" className={item} onClick={() => setOpen(false)}>
-            <GraduationCap className="h-4 w-4 text-slate-400" /> 買取を学ぶ
-          </Link>
-          <Link href="/community" className={item} onClick={() => setOpen(false)}>
-            <Users className="h-4 w-4 text-slate-400" /> コミュニティ
-          </Link>
-          <Link href="/membership" className={item} onClick={() => setOpen(false)}>
-            <Crown className="h-4 w-4 text-gold-500" /> 有料会員
-          </Link>
+          {businessTrack ? (
+            <>
+              <Link href="/learn" className={item} onClick={() => setOpen(false)}>
+                <GraduationCap className="h-4 w-4 text-slate-400" /> 買取を学ぶ
+              </Link>
+              <Link href="/community" className={item} onClick={() => setOpen(false)}>
+                <Users className="h-4 w-4 text-slate-400" /> コミュニティ
+              </Link>
+              <Link href="/membership" className={item} onClick={() => setOpen(false)}>
+                <Crown className="h-4 w-4 text-gold-500" /> 有料会員
+              </Link>
+            </>
+          ) : (
+            <Link href="/join?source=menu" className={item} onClick={() => setOpen(false)}>
+              <Briefcase className="h-4 w-4 text-gold-500" /> 買取を始める（業者の方）
+            </Link>
+          )}
           <Link href="/dealers" className={item} onClick={() => setOpen(false)}>
             <Building2 className="h-4 w-4 text-slate-400" /> 加盟店を探す
           </Link>

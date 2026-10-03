@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Users, Pin, MessageCircle, Plus, ShieldCheck, Heart, CheckCircle2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getViewerAccess } from '@/lib/viewer';
+import { BusinessOnlyGate } from '@/components/BusinessOnlyGate';
 import { formatDateTime } from '@/lib/format';
 import { COMMUNITY_CATEGORY_LABEL, COMMUNITY_CATEGORY_CLS } from '@/lib/community';
 
@@ -18,6 +19,11 @@ type Row = {
 export default async function CommunityPage() {
   const access = await getViewerAccess();
 
+  // 個人（一般会員）には買取系を提供しない。業者になる入口を案内。
+  if (access.loggedIn && !access.businessTrack) {
+    return <BusinessOnlyGate feature="買取コミュニティ" source="community" />;
+  }
+
   if (!access.premium) {
     return (
       <div className="mx-auto max-w-xl space-y-4 py-10 text-center">
@@ -28,9 +34,9 @@ export default async function CommunityPage() {
         </p>
         <div className="card p-5 text-left text-sm text-slate-600">
           <p className="font-bold text-slate-800">参加するには</p>
-          <p className="mt-1">加盟店登録（無料〜）または有料会員へのご登録が必要です。</p>
+          <p className="mt-1">有料会員へのご登録でご利用いただけます（加盟店は無料でご利用可）。</p>
         </div>
-        <Link href="/join?source=community" className="btn-accent inline-flex">加盟店・プロ登録（無料）へ</Link>
+        <Link href="/membership?from=community" className="btn-accent inline-flex">有料会員になる</Link>
       </div>
     );
   }
