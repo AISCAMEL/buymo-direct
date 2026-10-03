@@ -29,14 +29,18 @@ export async function Header() {
   let isAdmin = false;
   let isDealer = false;
   let businessTrack = false;
+  let buybackOpen = false;
   if (user) {
-    const { data: prof } = await supabase.from('profiles').select('role, member_tier, account_type').eq('id', user.id).maybeSingle();
-    const p = prof as { role?: string; member_tier?: string; account_type?: string } | null;
+    const { data: prof } = await supabase.from('profiles').select('role, member_tier, account_type, business_kind').eq('id', user.id).maybeSingle();
+    const p = prof as { role?: string; member_tier?: string; account_type?: string; business_kind?: string | null } | null;
     isAdmin = p?.role === 'admin';
     isDealer = (await getDealerForUser(user.id)) !== null;
     // 業者トラック（プロ・加盟店・有料会員・本部）だけに買取系を見せる。個人は対象外。
     businessTrack = p?.account_type === 'business' || isDealer || isAdmin || p?.member_tier === 'paid';
+    // 買取加盟（全開放）：買取募集からの加盟・加盟店・有料会員・本部。
+    buybackOpen = p?.business_kind === 'buyback' || isDealer || isAdmin || p?.member_tier === 'paid';
   }
+  const skillTrack = businessTrack && !buybackOpen;
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
@@ -70,6 +74,8 @@ export async function Header() {
                 isAdmin={isAdmin}
                 isDealer={isDealer}
                 businessTrack={businessTrack}
+                buybackOpen={buybackOpen}
+                skillTrack={skillTrack}
               />
               <span className="hidden lg:block"><PushNotificationManager /></span>
             </>

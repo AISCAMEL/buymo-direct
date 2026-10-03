@@ -139,6 +139,17 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
             <button className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-50">有料会員を解約する</button>
           </form>
         </div>
+      ) : access.skillTrack ? (
+        /* スキル登録の方には「後出し」：ここからは有料会員。まずは無料セミナーへ誘導。 */
+        <div className="space-y-3 rounded-2xl border border-gold-200 bg-gold-50/60 p-5 text-center">
+          <p className="text-lg font-black text-gold-800">ここからは有料会員の世界です</p>
+          <p className="text-sm text-slate-600">
+            相場・仕入れの勝ち筋、実践講座、仲間との情報交換——<strong>買取で稼ぐ力</strong>がここに。
+            まずは<strong>無料オンラインセミナー</strong>で、全体像と始め方をご覧ください。
+          </p>
+          <Link href="/seminar?from=membership" className="btn-accent inline-flex w-full justify-center py-3.5 text-base">無料セミナーに申し込む</Link>
+          <p className="text-xs text-slate-400">セミナー後、ご希望の方だけ有料会員・買取加盟にお進みいただけます。無理な勧誘はありません。</p>
+        </div>
       ) : appStatus === 'pending' || sp.applied ? (
         <div className="flex items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-700">
           <Clock className="h-5 w-5" /><span className="font-black">お申し込みを受け付けました（審査中）</span>
@@ -149,10 +160,6 @@ export default async function MembershipPage({ searchParams }: { searchParams: P
           <p className="mt-2 text-center text-xs text-slate-400">※ 現在は本部承認制です。決済連携は順次対応します。いつでも解約できます。</p>
         </form>
       )}
-
-      <p className="text-center text-xs text-slate-400">
-        まだ加盟していない方は <Link href="/join" className="font-bold text-navy-500 underline">加盟店・プロ登録（無料）</Link> もご検討ください。
-      </p>
     </div>
   );
 }

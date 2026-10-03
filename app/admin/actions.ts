@@ -258,8 +258,8 @@ export async function adminConvertLeadToDealer(leadId: string): Promise<void> {
     }
   }
 
-  // 加盟で業者トラックへ
-  if (l.user_id) await svc.from('profiles').update({ account_type: 'business' }).eq('id', l.user_id);
+  // 加盟で業者トラック（買取加盟＝全開放）へ
+  if (l.user_id) await svc.from('profiles').update({ account_type: 'business', business_kind: 'buyback' }).eq('id', l.user_id);
 
   await ctx.supabase.from('dealer_leads').update({ status: 'converted', updated_at: new Date().toISOString() }).eq('id', leadId);
   await logAdminAction(ctx, 'lead.convert', 'dealer_lead', leadId, dealerId ?? undefined);

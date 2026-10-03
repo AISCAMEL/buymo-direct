@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function NewPostPage() {
   const access = await getViewerAccess();
-  if (!access.premium) redirect('/community');
+  if (!access.businessTrack) redirect('/community');
 
   return (
     <div className="mx-auto max-w-xl space-y-4 py-6">

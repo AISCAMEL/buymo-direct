@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 export default async function PostDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const access = await getViewerAccess();
-  if (!access.premium) redirect('/community');
+  if (!access.businessTrack) redirect('/community');
 
   const supabase = await createClient();
   const { data: post } = await supabase

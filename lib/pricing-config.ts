@@ -32,7 +32,14 @@ export interface PricingConfig {
   billingClosingDay: number;                          // 締め日（0=末日, 1〜28=その日）
   billingDueDays: number;                             // 締め後の支払期限（日数, 例 14）
   // 有料会員
-  membershipMonthlyFee: number;                       // 有料会員 月額（税込, 例 3300）
+  membershipMonthlyFee: number;                       // 有料会員 月額（税込, 例 33000）
+  // 買取加盟（フランチャイズ）
+  joiningFee: number;                                 // 買取加盟金（請求, 例 550000）
+  // カード決済（Square）の手数料上乗せ率。提示額に加算して請求（例 0.036 = 3.6%）
+  squareSurchargeRate: number;
+  // オークション
+  auctionListingFee: number;                          // オークション出品料（1台, 例 10000）
+  dealCommissionRate: number;                          // 成約手数料率＝利益に対して（例 0.03 = 3%）。オークション決算書で算出。
 }
 
 export const PRICING_DEFAULTS: PricingConfig = {
@@ -70,7 +77,11 @@ export const PRICING_DEFAULTS: PricingConfig = {
   consumptionTaxRate: 0.10,
   billingClosingDay: 0,
   billingDueDays: 14,
-  membershipMonthlyFee: 3300,
+  membershipMonthlyFee: 33000,
+  joiningFee: 550000,
+  squareSurchargeRate: 0.036,
+  auctionListingFee: 10000,
+  dealCommissionRate: 0.03,
 };
 
 /** 保証の税込価格に本部調整（％）を適用。 */
@@ -118,6 +129,10 @@ export function mergePricingConfig(partial?: Partial<PricingConfig> | null): Pri
     billingClosingDay: num(partial.billingClosingDay, PRICING_DEFAULTS.billingClosingDay),
     billingDueDays: num(partial.billingDueDays, PRICING_DEFAULTS.billingDueDays),
     membershipMonthlyFee: num(partial.membershipMonthlyFee, PRICING_DEFAULTS.membershipMonthlyFee),
+    joiningFee: num(partial.joiningFee, PRICING_DEFAULTS.joiningFee),
+    squareSurchargeRate: rate(partial.squareSurchargeRate, PRICING_DEFAULTS.squareSurchargeRate),
+    auctionListingFee: num(partial.auctionListingFee, PRICING_DEFAULTS.auctionListingFee),
+    dealCommissionRate: rate(partial.dealCommissionRate, PRICING_DEFAULTS.dealCommissionRate),
   };
 }
 

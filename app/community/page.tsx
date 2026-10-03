@@ -19,26 +19,28 @@ type Row = {
 export default async function CommunityPage() {
   const access = await getViewerAccess();
 
-  // 個人（一般会員）には買取系を提供しない。業者になる入口を案内。
-  if (access.loggedIn && !access.businessTrack) {
-    return <BusinessOnlyGate feature="買取コミュニティ" source="community" />;
-  }
-
-  if (!access.premium) {
+  // 未ログインは参加案内。
+  if (!access.loggedIn) {
     return (
       <div className="mx-auto max-w-xl space-y-4 py-10 text-center">
         <Users className="mx-auto h-12 w-12 text-navy-300" />
         <h1 className="text-2xl font-black">買取コミュニティ</h1>
         <p className="text-sm text-slate-600">
-          買取加盟店・有料会員のための交流の場です。初心者の方も安心して質問・相談でき、運営が見守っています。
+          買取に取り組むプロ・加盟店のための交流の場です。初心者の方も安心して質問・相談でき、運営が見守っています。
         </p>
         <div className="card p-5 text-left text-sm text-slate-600">
           <p className="font-bold text-slate-800">参加するには</p>
-          <p className="mt-1">有料会員へのご登録でご利用いただけます（加盟店は無料でご利用可）。</p>
+          <p className="mt-1">加盟店・プロ登録（無料）でご利用いただけます。</p>
         </div>
-        <Link href="/membership?from=community" className="btn-accent inline-flex">有料会員になる</Link>
+        <Link href="/join?source=community" className="btn-accent inline-flex">加盟店・プロ登録（無料）へ</Link>
       </div>
     );
+  }
+
+  // 個人（一般会員）には買取系を提供しない。業者になる入口を案内。
+  // 業者トラック（スキル登録・買取加盟・加盟店・有料会員）はそのまま閲覧・参加可。
+  if (!access.businessTrack) {
+    return <BusinessOnlyGate feature="買取コミュニティ" source="community" />;
   }
 
   const supabase = await createClient();

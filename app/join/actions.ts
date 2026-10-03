@@ -48,8 +48,12 @@ export async function submitLead(formData: FormData): Promise<{ ok: boolean; err
     });
     if (error) return { ok: false, error: error.message };
 
-    // ログイン済みユーザーが申し込んだら業者トラックへ（買取系を利用可能に）
-    if (userId) await svc.from('profiles').update({ account_type: 'business' }).eq('id', userId);
+    // ログイン済みユーザーが申し込んだら業者トラックへ（買取系を利用可能に）。
+    // 加盟（個人事業主/法人）＝買取加盟(全開放)、それ以外（スキル提供等）＝skill(後出し)。
+    if (userId) {
+      const kind = wish === 'sole_proprietor' || wish === 'corporation' ? 'buyback' : 'skill';
+      await svc.from('profiles').update({ account_type: 'business', business_kind: kind }).eq('id', userId);
+    }
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : '送信に失敗しました' };
   }
