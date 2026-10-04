@@ -10,6 +10,14 @@ body {
   @apply bg-[#F5F9F8] text-slate-800 antialiased;
 }
 
+/* スマホ最適化：iOSの自動テキスト拡大を抑止し、横はみ出しを防ぐ */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+/* 画像・メディアはコンテナ幅を超えない */
+img, svg, video, canvas, iframe { max-width: 100%; }
+
 @layer components {
   /* buymo.me 準拠：ボタンはピル型（角丸フル） */
   .btn {

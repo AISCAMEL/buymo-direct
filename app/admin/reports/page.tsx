@@ -49,7 +49,7 @@ export default async function AdminReportsPage() {
           <p className="text-sm font-bold text-red-700">未対応の通報が {openCount} 件あります</p>
         </div>
       )}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {(['all', 'open', 'reviewing', 'resolved'] as const).map((s) => (
           <div key={s} className="card p-3 text-center">
             <p className={`text-xl font-black ${s === 'open' && count(s) > 0 ? 'text-red-600' : s === 'reviewing' && count(s) > 0 ? 'text-amber-600' : 'text-slate-700'}`}>
