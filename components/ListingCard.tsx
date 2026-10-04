@@ -19,10 +19,12 @@ export function ListingCard({
   listing,
   favorited = false,
   loggedIn = false,
+  todayInquiries = 0,
 }: {
   listing: ListingWithImages;
   favorited?: boolean;
   loggedIn?: boolean;
+  todayInquiries?: number;
 }) {
   const cover = listing.listing_images?.sort((a, b) => a.sort_order - b.sort_order)[0]?.url;
   const kind = sellerKind(listing);
@@ -51,11 +53,15 @@ export function ListingCard({
         <span className={`badge absolute left-2 top-2 shadow-sm ${SELLER_KIND_CLS[kind]}`}>
           {SELLER_KIND_LABEL[kind]}
         </span>
-        {hot && listing.status === 'active' && (
+        {listing.status === 'active' && todayInquiries > 0 ? (
+          <span className="badge absolute left-2 top-9 inline-flex items-center gap-1 bg-rose-500 text-white shadow-sm">
+            <Flame className="h-3 w-3" />本日お問い合わせ{todayInquiries > 1 ? ` ${todayInquiries}` : ''}
+          </span>
+        ) : hot && listing.status === 'active' ? (
           <span className="badge absolute left-2 top-9 inline-flex items-center gap-1 bg-rose-100 text-rose-700 shadow-sm">
             <Flame className="h-3 w-3" />{boosted ? '注目' : '人気'}
           </span>
-        )}
+        ) : null}
         {listing.repair_history && (
           <span className="badge absolute bottom-2 left-2 bg-red-100 text-red-700">修復歴あり</span>
         )}

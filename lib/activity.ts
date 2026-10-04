@@ -49,3 +49,29 @@ export async function getListingActivity(
 export function isHotListing(a: { views: number; inquiriesTotal: number; favorites: number }): boolean {
   return a.views >= 50 || a.inquiriesTotal >= 3 || a.favorites >= 5;
 }
+
+/**
+ * 一覧用：複数出品の「本日のお問い合わせ件数」を一括集計して {listingId: 件数} を返す。
+ * conversations は当事者限定RLSのため service role で件数のみ集計。失敗時は空。
+ */
+export async function getTodayInquiryMap(listingIds: string[]): Promise<Record<string, number>> {
+  const map: Record<string, number> = {};
+  const ids = Array.from(new Set(listingIds.filter(Boolean)));
+  if (ids.length === 0) return map;
+  try {
+    const svc = createServiceClient();
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const { data } = await svc
+      .from('conversations')
+      .select('listing_id')
+      .in('listing_id', ids)
+      .gte('created_at', start.toISOString());
+    for (const row of (data ?? []) as { listing_id: string | null }[]) {
+      if (row.listing_id) map[row.listing_id] = (map[row.listing_id] ?? 0) + 1;
+    }
+  } catch {
+    /* 集計失敗は無視（空のまま） */
+  }
+  return map;
+}
