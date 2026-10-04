@@ -46,6 +46,20 @@ export default async function DealerDashboardPage() {
     .filter((v) => v.status !== 'cancelled')
     .reduce((sum, v) => sum + Math.max(0, (v.total ?? 0) - (v.paid_amount ?? 0)), 0);
 
+  // オークション サマリー（今月）。新テーブル未作成でも落ちないようガード。
+  let auc = { listed: 0, settled: 0, due: 0 };
+  try {
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+    const [{ count: listedCount }, { data: settRows }] = await Promise.all([
+      s.from('auction_listings').select('id', { count: 'exact', head: true }).eq('dealer_id', dealer.dealerId).gte('created_at', monthStart.toISOString()),
+      s.from('auction_settlements').select('total_due').eq('dealer_id', dealer.dealerId).gte('created_at', monthStart.toISOString()),
+    ]);
+    const setts = (settRows ?? []) as { total_due: number }[];
+    auc = { listed: listedCount ?? 0, settled: setts.length, due: setts.reduce((sum, r) => sum + (r.total_due ?? 0), 0) };
+  } catch { /* オークション未導入時は無視 */ }
+
   const kpis = [
     { icon: Package, label: '公開中在庫', value: String(activeCount ?? 0) + '台', href: '/dealer/listings' },
     { icon: FileText, label: '進行中の見積', value: String(quoteOpen), href: '/dealer/quotes' },
@@ -88,11 +102,26 @@ export default async function DealerDashboardPage() {
         ))}
       </div>
 
+      {/* 今月のオークション */}
+      <div className="card p-5">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 font-bold"><TrendingUp className="h-5 w-5 text-navy-500" />今月のオークション</h2>
+          <Link href="/dealer/auctions" className="text-sm font-bold text-navy-600 hover:underline">管理する →</Link>
+        </div>
+        <div className="grid grid-cols-3 gap-3 text-center">
+          <div><p className="text-xl font-black text-navy-700 sm:text-2xl">{auc.listed}</p><p className="text-xs text-slate-500">出品（今月）</p></div>
+          <div><p className="text-xl font-black text-navy-700 sm:text-2xl">{auc.settled}</p><p className="text-xs text-slate-500">決算済み</p></div>
+          <div><p className="text-xl font-black text-navy-700 sm:text-2xl">{formatYen(auc.due)}</p><p className="text-xs text-slate-500">本部支払い見込み</p></div>
+        </div>
+        <p className="mt-2 text-xs text-slate-400">出品料＋成約手数料（利益×料率）の合計見込みです。</p>
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="card p-5">
           <h2 className="mb-3 font-bold">クイックアクション</h2>
           <div className="space-y-2">
             <Link href="/sell" className="btn-accent block text-center text-sm">新規在庫を出品する</Link>
+            <Link href="/dealer/auctions/new" className="btn-outline block text-center text-sm">オークションに出品する</Link>
             <Link href="/dashboard/listings/import" className="btn-outline block text-center text-sm">CSV 一括インポート</Link>
             <Link href="/dealer/api-keys" className="btn-outline block text-center text-sm">API キー / Webhook</Link>
           </div>
