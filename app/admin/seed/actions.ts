@@ -10,6 +10,7 @@ import { computeMatchingFee } from '@/lib/matching-fee';
 const DEMO_PASSWORD = 'BuymoDemo!2025';
 const DEMO_BUYER = { email: 'demo.buyer@buymo-demo.jp', name: '山田 太郎（デモ）' };
 const DEMO_PRO = { email: 'demo.pro@buymo-demo.jp', name: '佐藤オート（デモ担当）' };
+const DEMO_SKILL = { email: 'demo.skill@buymo-demo.jp', name: '田中 一郎（スキル登録デモ）' };
 
 type Svc = ReturnType<typeof createServiceClient>;
 
@@ -146,9 +147,57 @@ export async function seedDemoData(): Promise<{ ok: boolean; message: string }> 
       log.push(`マッチング手数料の請求を作成（${fee.total.toLocaleString('ja-JP')}円）`);
     }
 
+    // --- 会員トラックのデモ ---
+    // 加盟店オーナー＝買取加盟（全開放）＋有料会員
+    await svc.from('profiles').update({ account_type: 'business', business_kind: 'buyback', member_tier: 'paid' }).eq('id', proId);
+    // スキル登録の業者（有料は後出し・セミナー誘導）
+    const skillId = await ensureUser(svc, DEMO_SKILL.email, DEMO_SKILL.name);
+    if (skillId) {
+      await svc.from('profiles').update({ account_type: 'business', business_kind: 'skill' }).eq('id', skillId);
+      log.push('会員トラック：加盟店オーナー＝買取加盟、スキル登録デモを用意');
+    }
+
+    // --- 買取加盟の申込（スキルユーザーがカード払いで申込＝審査待ち） ---
+    try {
+      if (skillId) {
+        await svc.from('franchise_applications').delete().eq('user_id', skillId);
+        const base = cfg.joiningFee;
+        const sur = Math.round(base * cfg.squareSurchargeRate);
+        await svc.from('franchise_applications').insert({
+          user_id: skillId, company_name: '田中モータース（デモ）', contact_name: '田中 一郎',
+          phone: '090-0000-0000', prefecture: '宮城県', payment_method: 'card',
+          joining_fee: base, surcharge: sur, total: base + sur, status: 'pending', note: 'デモ申込',
+        });
+        log.push('買取加盟の申込（カード・審査待ち）を作成');
+      }
+    } catch { log.push('※ 買取加盟申込はスキップ（新テーブルのSQL未実行の可能性）'); }
+
+    // --- オークション出品＋決算書 ---
+    try {
+      await svc.from('auction_listings').delete().eq('dealer_id', dealerId); // settlements は cascade
+      const { data: aRows } = await svc.from('auction_listings').insert([
+        { dealer_id: dealerId, user_id: proId, car_name: 'ホンダ ヴェゼル X', maker: 'ホンダ', model_year: 2018, mileage: 58000, reserve_price: 1400000, listing_fee: cfg.auctionListingFee, status: 'listed' },
+        { dealer_id: dealerId, user_id: proId, car_name: 'トヨタ ノア Si', maker: 'トヨタ', model_year: 2017, mileage: 72000, reserve_price: 1600000, listing_fee: cfg.auctionListingFee, status: 'settled' },
+      ]).select('id, status');
+      const settled = (aRows ?? []).find((r: { status: string }) => r.status === 'settled') as { id: string } | undefined;
+      if (settled) {
+        const sale = 1650000, cost = 1350000, exp = 40000;
+        const profit = sale - cost - exp;
+        const commission = Math.round(Math.max(0, profit) * cfg.dealCommissionRate);
+        await svc.from('auction_settlements').upsert({
+          listing_id: settled.id, dealer_id: dealerId, sale_price: sale, purchase_cost: cost, expenses: exp,
+          listing_fee: cfg.auctionListingFee, profit, commission_rate: cfg.dealCommissionRate, commission,
+          total_due: cfg.auctionListingFee + commission, status: 'finalized', updated_at: now,
+        }, { onConflict: 'listing_id' });
+      }
+      log.push('オークション出品2台（うち1台は決算済み＝成約手数料を算出）を作成');
+    } catch { log.push('※ オークションはスキップ（新テーブルのSQL未実行の可能性）'); }
+
     revalidatePath('/admin');
     revalidatePath('/admin/billing');
+    revalidatePath('/admin/franchise');
     revalidatePath('/dealers');
+    revalidatePath('/dealer/auctions');
 
     return {
       ok: true,
@@ -157,8 +206,9 @@ export async function seedDemoData(): Promise<{ ok: boolean; message: string }> 
         ...log.map((l) => '・' + l),
         '',
         'デモ用ログイン（メール＋パスワード）:',
-        `　買い手  ${DEMO_BUYER.email} / ${DEMO_PASSWORD}`,
-        `　車のプロ ${DEMO_PRO.email} / ${DEMO_PASSWORD}`,
+        `　買い手　　　${DEMO_BUYER.email} / ${DEMO_PASSWORD}`,
+        `　車のプロ　　${DEMO_PRO.email} / ${DEMO_PASSWORD}`,
+        `　スキル登録　${DEMO_SKILL.email} / ${DEMO_PASSWORD}`,
       ].join('\n'),
     };
   } catch (e) {
@@ -176,15 +226,26 @@ export async function clearDemoData(): Promise<{ ok: boolean; message: string }>
     const { data: list } = await svc.auth.admin.listUsers({ page: 1, perPage: 1000 });
     const buyer = list?.users?.find((u) => (u.email ?? '') === DEMO_BUYER.email);
     const pro = list?.users?.find((u) => (u.email ?? '') === DEMO_PRO.email);
+    const skill = list?.users?.find((u) => (u.email ?? '') === DEMO_SKILL.email);
 
     if (buyer) await svc.from('cases').delete().eq('user_id', buyer.id);
     if (pro) {
+      // オークション（決算書は cascade）を加盟店単位で削除
+      try {
+        const { data: d } = await svc.from('dealers').select('id').eq('owner_id', pro.id).maybeSingle();
+        const did = (d as { id?: string } | null)?.id;
+        if (did) await svc.from('auction_listings').delete().eq('dealer_id', did);
+      } catch { /* テーブル未作成は無視 */ }
       await svc.from('listings').delete().eq('seller_id', pro.id);
       await svc.from('dealers').delete().eq('owner_id', pro.id);
     }
+    if (skill) {
+      try { await svc.from('franchise_applications').delete().eq('user_id', skill.id); } catch { /* 未作成は無視 */ }
+    }
     revalidatePath('/admin');
+    revalidatePath('/admin/franchise');
     revalidatePath('/dealers');
-    return { ok: true, message: 'デモデータ（案件・出品・加盟店）を削除しました。※デモ用ログインアカウントは残します。' };
+    return { ok: true, message: 'デモデータ（案件・出品・加盟店・オークション・加盟申込）を削除しました。※デモ用ログインアカウントは残します。' };
   } catch (e) {
     return { ok: false, message: 'エラー: ' + (e instanceof Error ? e.message : String(e)) };
   }
