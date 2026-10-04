@@ -97,6 +97,21 @@ export default async function AdminSettingsPage() {
           <p className="text-xs text-slate-400">期間係数（6ヶ月=1.0／12ヶ月=1.7／24ヶ月=2.4）は固定です。</p>
         </section>
 
+        {/* 加盟・会員・オークション */}
+        <section className="card space-y-3 p-5">
+          <h2 className="font-bold text-slate-700">加盟・有料会員・オークション</h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field name="membership_monthly" label="有料会員 月額（税込）" defaultValue={c.membershipMonthlyFee} suffix="円" />
+            <Field name="joining_fee" label="買取加盟金（初回）" defaultValue={c.joiningFee} suffix="円" />
+            <Field name="square_surcharge_pct" label="カード決済の上乗せ率" defaultValue={Math.round(c.squareSurchargeRate * 1000) / 10} suffix="%" step="0.1" />
+            <Field name="auction_listing_fee" label="オークション出品料（1台）" defaultValue={c.auctionListingFee} suffix="円" />
+            <Field name="deal_commission_pct" label="成約手数料率（利益に対して）" defaultValue={Math.round(c.dealCommissionRate * 1000) / 10} suffix="%" step="0.1" />
+          </div>
+          <p className="text-xs text-slate-400">
+            ※ カード決済の上乗せは<strong>買取加盟金のクレジット払い時のみ</strong>適用。月会費は上乗せなし。成約手数料は<strong>利益×料率</strong>（オークション決算書で算出）。
+          </p>
+        </section>
+
         <div className="flex justify-end">
           <button type="submit" className="btn-accent px-8">設定を保存する</button>
         </div>

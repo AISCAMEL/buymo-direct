@@ -44,6 +44,12 @@ export async function savePricingConfig(formData: FormData): Promise<void> {
     warrantyMileageStep: n(formData, 'w_km_step_pct', 5) / 100,
     warrantyCap: n(formData, 'w_cap', 150000),
     warrantyAdjustPercent: sn(formData, 'w_adjust_pct', 0),
+    // 加盟・会員・オークション
+    membershipMonthlyFee: n(formData, 'membership_monthly', 33000),
+    joiningFee: n(formData, 'joining_fee', 550000),
+    squareSurchargeRate: n(formData, 'square_surcharge_pct', 3.6) / 100,
+    auctionListingFee: n(formData, 'auction_listing_fee', 10000),
+    dealCommissionRate: n(formData, 'deal_commission_pct', 3) / 100,
   });
 
   try {
@@ -57,4 +63,7 @@ export async function savePricingConfig(formData: FormData): Promise<void> {
   revalidatePath('/admin/settings');
   revalidatePath('/loan/apply');
   revalidatePath('/listings', 'layout');
+  revalidatePath('/membership');
+  revalidatePath('/franchise');
+  revalidatePath('/dealer/auctions');
 }
