@@ -18,10 +18,19 @@ html {
 /* 画像・メディアはコンテナ幅を超えない */
 img, svg, video, canvas, iframe { max-width: 100%; }
 
+/* スマホ：入力欄は16px以上にしてフォーカス時の自動ズームを防ぐ（全フォーム共通） */
+@media (max-width: 640px) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
 @layer components {
   /* buymo.me 準拠：ボタンはピル型（角丸フル） */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
   }
   .btn-primary {
     @apply btn bg-navy-500 text-white shadow-sm hover:bg-navy-600 hover:shadow-md focus:ring-navy-400;
@@ -38,7 +47,7 @@ img, svg, video, canvas, iframe { max-width: 100%; }
     @apply btn border-2 border-navy-500 bg-white text-navy-600 hover:bg-navy-500 hover:text-white focus:ring-navy-400;
   }
   .input {
-    @apply w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:border-navy-400 focus:outline-none focus:ring-1 focus:ring-navy-400;
+    @apply min-h-[44px] w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-base focus:border-navy-400 focus:outline-none focus:ring-1 focus:ring-navy-400 sm:text-sm;
   }
   .label {
     @apply mb-1 block text-sm font-bold text-slate-700;

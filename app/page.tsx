@@ -178,7 +178,7 @@ export default async function HomePage() {
               >
                 <input
                   name="q"
-                  className="min-w-0 flex-1 bg-transparent px-3 text-sm outline-none placeholder:text-slate-400"
+                  className="min-w-0 flex-1 bg-transparent px-3 text-base outline-none placeholder:text-slate-400 sm:text-sm"
                   placeholder="車名・メーカー・モデルで検索"
                 />
                 <button type="submit" className="btn-accent shrink-0 rounded-xl px-5 py-2.5">

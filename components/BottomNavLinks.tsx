@@ -23,7 +23,7 @@ export function BottomNavLinks({ unreadCount, userHref }: Props) {
   const idleClass = 'text-slate-500 hover:text-navy-500';
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-slate-200 bg-white sm:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] sm:hidden">
       {/* ホーム */}
       <Link
         href="/"
