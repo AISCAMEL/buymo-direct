@@ -19,7 +19,7 @@ validateEnv();
 
 const noto = Noto_Sans_JP({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '700', '900'],
+  weight: ['400', '500', '700', '900'],
   variable: '--font-noto',
   display: 'swap',
 });

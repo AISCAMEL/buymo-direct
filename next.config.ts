@@ -22,6 +22,8 @@ const nextConfig: NextConfig = {
   experimental: {
     // Inline critical CSS to reduce render-blocking resources
     optimizeCss: true,
+    // アイコンのバレル import をツリーシェイクして初期JSを削減（174ファイルで使用）
+    optimizePackageImports: ['lucide-react'],
   },
 
   async headers() {

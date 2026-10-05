@@ -136,34 +136,28 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
   }
   const premiumUnlocked = canSeePremium({ tier: viewerTier, isDealer: viewerIsDealer, isAdmin: viewerIsAdmin });
 
-  // 閲覧数カウント（自分の出品は除く）
+  // 閲覧数カウント（自分の出品は除く）。描画をブロックしないよう非同期で実行。
   if (!isOwner) {
-    await supabase.rpc('increment_listing_view', { p_listing_id: listing.id });
+    void supabase.rpc('increment_listing_view', { p_listing_id: listing.id }).then(() => {}, () => {});
   }
 
-  // 出品者の評価集計
-  const { data: sellerReviews } = await supabase
-    .from('reviews')
-    .select('rating')
-    .eq('reviewee_id', listing.seller_id);
+  // 独立した集計はまとめて並列取得（DB往復を削減して高速化）
+  const [reviewsRes, favCountRes, favoritedIds, activity] = await Promise.all([
+    supabase.from('reviews').select('rating').eq('reviewee_id', listing.seller_id),
+    supabase.from('favorites').select('*', { count: 'exact', head: true }).eq('listing_id', listing.id),
+    favoritedSet(supabase, user?.id, [listing.id]),
+    getListingActivity(listing.id, {
+      views: (listing.view_count ?? 0) + (isOwner ? 0 : 1),
+      status: listing.status,
+    }),
+  ]);
+  const sellerReviews = reviewsRes.data;
   const reviewCount = sellerReviews?.length ?? 0;
   const avgRating = reviewCount
     ? (sellerReviews as { rating: number }[]).reduce((s, r) => s + r.rating, 0) / reviewCount
     : 0;
-
-  // お気に入り数・お気に入り状態
-  const { count: favoriteCount } = await supabase
-    .from('favorites')
-    .select('*', { count: 'exact', head: true })
-    .eq('listing_id', listing.id);
-  const favoritedIds = await favoritedSet(supabase, user?.id, [listing.id]);
+  const favoriteCount = favCountRes.count;
   const isFavorited = favoritedIds.has(listing.id);
-
-  // 「気になる動線」：閲覧・本日のお問い合わせ・商談中などの動きを集計
-  const activity = await getListingActivity(listing.id, {
-    views: (listing.view_count ?? 0) + (isOwner ? 0 : 1),
-    status: listing.status,
-  });
 
   // アクティブなオファーを取得（買主として）
   let existingOffer: { amount: number; status: string; counter_amount: number | null } | null = null;
