@@ -194,6 +194,7 @@ export interface Listing {
   repair_history: boolean;
   description: string | null;
   owner_comment: string | null;
+  equipment: string[] | null;
   vin: string | null;
   video_url: string | null;
   expires_at: string | null;

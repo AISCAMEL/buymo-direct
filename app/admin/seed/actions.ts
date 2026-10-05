@@ -108,6 +108,7 @@ export async function seedDemoData(): Promise<{ ok: boolean; message: string }> 
         fuel: 'ガソリン', color: 'ホワイト', prefecture: '福島県', repair_history: false,
         description: 'ワンオーナー・記録簿あり。内外装きれいです。', status: 'active',
         owner_comment: '新車から大切に乗ってきた一台です。街乗りも高速も扱いやすく、燃費も良好でした。次のオーナーにも気持ちよく乗っていただけると思います。',
+        equipment: ['カーナビ', 'バックカメラ', 'ETC', 'スマートキー', 'LEDヘッドライト', 'ワンオーナー', '禁煙車', '記録簿あり'],
         registration_fee: 40000, recycle_fee: 12000, warranty_fee: 30000, delivery_fee: 30000, misc_fees: 20000,
         sale_terms: '1年保証付き。県外納車は別途ご相談。',
       },
@@ -116,6 +117,7 @@ export async function seedDemoData(): Promise<{ ok: boolean; message: string }> 
         year: 2020, mileage_km: 31000, price: 1350000, body_type: 'コンパクト', transmission: 'CVT',
         fuel: 'ハイブリッド', color: 'ブラック', prefecture: '福島県', repair_history: false,
         description: '低燃費のハイブリッド。人気のSグレードでETC・ナビ付き。', status: 'active',
+        equipment: ['カーナビ', 'フルセグTV', 'Bluetooth', 'ETC', '衝突軽減ブレーキ', 'スマートキー', 'プッシュスタート', '禁煙車'],
       },
     ]).select('id');
     log.push(`出品車両 ${listingRows?.length ?? 0} 台を掲載`);

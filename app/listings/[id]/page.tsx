@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { MapPin, Gauge, Calendar, Fuel, Settings2, Palette, ShieldCheck, Eye, Heart, Hash, Banknote, Tag, ArrowRight } from 'lucide-react';
+import { MapPin, Gauge, Calendar, Fuel, Settings2, Palette, ShieldCheck, Eye, Heart, Hash, Banknote, Tag, ArrowRight, Check } from 'lucide-react';
 import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { formatYen, formatMileage, formatDate } from '@/lib/format';
@@ -317,6 +317,20 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
               {listing.description}
             </p>
+          </div>
+        )}
+
+        {/* 装備・オプション */}
+        {listing.equipment && listing.equipment.length > 0 && (
+          <div className="card p-5">
+            <h2 className="mb-3 font-bold">装備・オプション</h2>
+            <div className="flex flex-wrap gap-2">
+              {listing.equipment.map((eq) => (
+                <span key={eq} className="inline-flex items-center gap-1 rounded-full border border-navy-100 bg-navy-50 px-3 py-1.5 text-xs font-bold text-navy-700">
+                  <Check className="h-3.5 w-3.5 text-emerald-500" />{eq}
+                </span>
+              ))}
+            </div>
           </div>
         )}
 

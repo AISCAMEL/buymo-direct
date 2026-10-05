@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Camera, ImagePlus, X, Loader2, ShieldCheck, Users, Check } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { compressImage } from '@/lib/image';
-import { MAKERS, BODY_TYPES, TRANSMISSIONS, FUELS, PREFECTURES, DRIVETRAINS, COLORS } from '@/lib/constants';
+import { MAKERS, BODY_TYPES, TRANSMISSIONS, FUELS, PREFECTURES, DRIVETRAINS, COLORS, EQUIPMENT_GROUPS } from '@/lib/constants';
 import type { Listing, ListingImage } from '@/lib/types';
 import { AiDescriptionButton } from '@/components/AiDescriptionButton';
 import { formatYen } from '@/lib/format';
@@ -70,6 +70,7 @@ export function ListingForm({
   const router = useRouter();
   const sp = useSearchParams();
   const isEdit = !!listing;
+  const ownedEquipment = new Set<string>((listing as unknown as { equipment?: string[] | null } | undefined)?.equipment ?? []);
 
   // ウィザード/査定から引き継いだパラメータ（クエリ優先、なければ initial）
   const wizardMaker       = sp.get('maker') ?? initial?.maker ?? '';
@@ -160,6 +161,7 @@ export function ListingForm({
       repair_history: fd.get('repair_history') === 'on',
       description: String(fd.get('description')) || null,
       owner_comment: String(fd.get('owner_comment') || '').trim() || null,
+      equipment: fd.getAll('equipment').map(String),
       vin: String(fd.get('vin') || '').trim() || null,
       video_url: String(fd.get('video_url') || '').trim() || null,
       expires_at: expiresVal ? new Date(expiresVal).toISOString() : null,
@@ -665,6 +667,33 @@ export function ListingForm({
             placeholder="例）新車から大切に乗ってきた一台です。高速も街乗りも燃費がよく、気に入っていました。次のオーナーにも可愛がってほしいです。"
           />
           <p className="mt-0.5 text-xs text-slate-400">車両詳細に、あなたのお名前とともに「オーナーからのひとこと」として表示され、購入検討者への安心・アピールになります。</p>
+        </div>
+
+        {/* 装備・オプション（アピールポイント） */}
+        <div>
+          <label className="label">装備・オプション（当てはまるものを選択）</label>
+          <div className="space-y-3 rounded-xl border border-slate-200 p-3">
+            {EQUIPMENT_GROUPS.map((grp) => (
+              <div key={grp.group}>
+                <p className="mb-1.5 text-xs font-bold text-slate-500">{grp.group}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {grp.items.map((item) => (
+                    <label key={item} className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 transition hover:bg-slate-50 has-[:checked]:border-navy-400 has-[:checked]:bg-navy-50 has-[:checked]:text-navy-700">
+                      <input
+                        type="checkbox"
+                        name="equipment"
+                        value={item}
+                        defaultChecked={ownedEquipment.has(item)}
+                        className="h-3.5 w-3.5 rounded border-slate-300"
+                      />
+                      {item}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-0.5 text-xs text-slate-400">選んだ装備は車両詳細に「装備・オプション」バッジとして表示されます。</p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
