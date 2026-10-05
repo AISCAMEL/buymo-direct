@@ -193,6 +193,7 @@ export interface Listing {
   prefecture: string;
   repair_history: boolean;
   description: string | null;
+  owner_comment: string | null;
   vin: string | null;
   video_url: string | null;
   expires_at: string | null;

@@ -159,6 +159,7 @@ export function ListingForm({
       prefecture: String(fd.get('prefecture')),
       repair_history: fd.get('repair_history') === 'on',
       description: String(fd.get('description')) || null,
+      owner_comment: String(fd.get('owner_comment') || '').trim() || null,
       vin: String(fd.get('vin') || '').trim() || null,
       video_url: String(fd.get('video_url') || '').trim() || null,
       expires_at: expiresVal ? new Date(expiresVal).toISOString() : null,
@@ -651,6 +652,19 @@ export function ListingForm({
             className="input"
             placeholder="装備・整備履歴・キズの状態・受け渡し方法など"
           />
+        </div>
+
+        {/* オーナーからのひとこと（アピール） */}
+        <div>
+          <label className="label">オーナーからのひとこと（アピール・任意）</label>
+          <textarea
+            name="owner_comment"
+            rows={3}
+            defaultValue={(listing as unknown as { owner_comment?: string | null } | undefined)?.owner_comment ?? ''}
+            className="input"
+            placeholder="例）新車から大切に乗ってきた一台です。高速も街乗りも燃費がよく、気に入っていました。次のオーナーにも可愛がってほしいです。"
+          />
+          <p className="mt-0.5 text-xs text-slate-400">車両詳細に、あなたのお名前とともに「オーナーからのひとこと」として表示され、購入検討者への安心・アピールになります。</p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">

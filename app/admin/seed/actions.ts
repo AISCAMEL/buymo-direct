@@ -107,6 +107,7 @@ export async function seedDemoData(): Promise<{ ok: boolean; message: string }> 
         year: 2019, mileage_km: 42000, price: 1180000, body_type: 'コンパクト', transmission: 'CVT',
         fuel: 'ガソリン', color: 'ホワイト', prefecture: '福島県', repair_history: false,
         description: 'ワンオーナー・記録簿あり。内外装きれいです。', status: 'active',
+        owner_comment: '新車から大切に乗ってきた一台です。街乗りも高速も扱いやすく、燃費も良好でした。次のオーナーにも気持ちよく乗っていただけると思います。',
         registration_fee: 40000, recycle_fee: 12000, warranty_fee: 30000, delivery_fee: 30000, misc_fees: 20000,
         sale_terms: '1年保証付き。県外納車は別途ご相談。',
       },

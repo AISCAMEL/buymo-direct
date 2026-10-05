@@ -291,6 +291,26 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
           </div>
         </div>
 
+        {listing.owner_comment && (
+          <div className="card border-gold-200 bg-gold-50/40 p-5">
+            <div className="mb-2 flex items-center gap-2.5">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-navy-500 text-sm font-black text-white">
+                {(listing.profiles?.display_name ?? '?').charAt(0)}
+              </span>
+              <div className="min-w-0">
+                <p className="flex flex-wrap items-center gap-1.5 text-sm font-black text-navy-800">
+                  {listing.profiles?.display_name ?? '出品者'} さん
+                  <span className={`badge ${SELLER_KIND_CLS[sellerKind(listing)]}`}>{SELLER_KIND_LABEL[sellerKind(listing)]}</span>
+                </p>
+                <p className="text-[11px] font-bold text-gold-700">オーナーからのひとこと</p>
+              </div>
+            </div>
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
+              {listing.owner_comment}
+            </p>
+          </div>
+        )}
+
         {listing.description && (
           <div className="card p-5">
             <h2 className="mb-2 font-bold">出品者からのコメント</h2>
