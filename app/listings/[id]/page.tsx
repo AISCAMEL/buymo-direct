@@ -334,12 +334,23 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
           </div>
         )}
 
-        {/* VIN */}
-        {listing.vin && (
-          <div className="card flex items-center gap-2 p-4 text-sm">
-            <Hash className="h-4 w-4 shrink-0 text-navy-400" />
-            <span className="text-slate-500">車台番号（VIN）：</span>
-            <span className="font-mono font-bold tracking-wider">{listing.vin}</span>
+        {/* 型式・車台番号 */}
+        {(listing.vin || listing.type_code) && (
+          <div className="card flex flex-wrap items-center gap-x-5 gap-y-1 p-4 text-sm">
+            {listing.type_code && (
+              <span className="flex items-center gap-2">
+                <Hash className="h-4 w-4 shrink-0 text-navy-400" />
+                <span className="text-slate-500">型式：</span>
+                <span className="font-mono font-bold tracking-wider">{listing.type_code}</span>
+              </span>
+            )}
+            {listing.vin && (
+              <span className="flex items-center gap-2">
+                <Hash className="h-4 w-4 shrink-0 text-navy-400" />
+                <span className="text-slate-500">車台番号（VIN）：</span>
+                <span className="font-mono font-bold tracking-wider">{listing.vin}</span>
+              </span>
+            )}
           </div>
         )}
 

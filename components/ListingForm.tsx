@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Camera, ImagePlus, X, Loader2, ShieldCheck, Users, Check } from 'lucide-react';
+import { Camera, ImagePlus, X, Loader2, ShieldCheck, Users, Check, Wand2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { compressImage } from '@/lib/image';
 import { MAKERS, BODY_TYPES, TRANSMISSIONS, FUELS, PREFECTURES, DRIVETRAINS, COLORS, EQUIPMENT_GROUPS } from '@/lib/constants';
@@ -105,6 +105,53 @@ export function ListingForm({
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  // 型式/グレードからAIで仕様・装備を自動入力
+  const formRef = useRef<HTMLFormElement>(null);
+  const [grade, setGrade] = useState('');
+  const [typeCode, setTypeCode] = useState((listing as unknown as { type_code?: string } | undefined)?.type_code ?? '');
+  const [autoLoading, setAutoLoading] = useState(false);
+  const [autoNote, setAutoNote] = useState<string | null>(null);
+
+  async function autofillFromCode() {
+    setAutoNote(null);
+    setAutoLoading(true);
+    try {
+      const res = await fetch('/api/ai/vehicle-spec', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ maker, model: modelVal, year, grade, code: typeCode }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        spec?: { body_type: string | null; transmission: string | null; fuel: string | null; drivetrain: string | null; equipment: string[] } | null;
+        note?: string; error?: string;
+      };
+      if (!res.ok) { setAutoNote(data.error ?? '自動入力に失敗しました'); return; }
+      const f = formRef.current;
+      const spec = data.spec;
+      if (!f || !spec) { setAutoNote(data.note ?? '推定できませんでした。手動でご入力ください。'); return; }
+      const setSel = (name: string, val: string | null) => {
+        if (!val) return;
+        const el = f.querySelector<HTMLSelectElement | HTMLInputElement>(`[name="${name}"]`);
+        if (el) el.value = val;
+      };
+      setSel('body_type', spec.body_type);
+      setSel('transmission', spec.transmission);
+      setSel('fuel', spec.fuel);
+      setSel('drivetrain', spec.drivetrain);
+      let added = 0;
+      for (const eq of spec.equipment ?? []) {
+        const el = f.querySelector<HTMLInputElement>(`input[name="equipment"][value="${(window.CSS && CSS.escape) ? CSS.escape(eq) : eq}"]`);
+        if (el && !el.checked) { el.checked = true; added++; }
+      }
+      const filled = [spec.body_type, spec.transmission, spec.fuel, spec.drivetrain].filter(Boolean).length;
+      setAutoNote(`✓ 仕様${filled}項目・装備${added}個を自動入力しました（AI推定）。内容をご確認・修正ください。`);
+    } catch {
+      setAutoNote('自動入力に失敗しました');
+    } finally {
+      setAutoLoading(false);
+    }
+  }
+
   // ガイドスロット（角度指定）にアップロード。既に同じ角度があれば差し替え。
   function onPickSlot(e: React.ChangeEvent<HTMLInputElement>, label: string) {
     const file = e.target.files?.[0];
@@ -162,6 +209,7 @@ export function ListingForm({
       description: String(fd.get('description')) || null,
       owner_comment: String(fd.get('owner_comment') || '').trim() || null,
       equipment: fd.getAll('equipment').map(String),
+      type_code: typeCode.trim() || null,
       vin: String(fd.get('vin') || '').trim() || null,
       video_url: String(fd.get('video_url') || '').trim() || null,
       expires_at: expiresVal ? new Date(expiresVal).toISOString() : null,
@@ -277,7 +325,7 @@ export function ListingForm({
   const models = maker && MAKERS[maker] ? MAKERS[maker] : [];
 
   return (
-    <form onSubmit={onSubmit} className="space-y-6">
+    <form ref={formRef} onSubmit={onSubmit} className="space-y-6">
       {/* 画像 */}
       <div className="card p-5">
         <div className="mb-1 flex items-center gap-2">
@@ -378,6 +426,49 @@ export function ListingForm({
             )}
           </div>
         </div>
+      </div>
+
+      {/* 型式・車体番号からAI自動入力 */}
+      <div className="card border-navy-100 bg-navy-50/40 p-5">
+        <div className="mb-1 flex items-center gap-2">
+          <Wand2 className="h-4 w-4 text-navy-500" />
+          <label className="label mb-0">かんたん入力（型式・車体番号から下書き）</label>
+        </div>
+        <p className="mb-3 text-xs text-slate-500">
+          型式やグレードを入れて「自動入力」を押すと、メーカー・車種・年式をもとに<strong>よくある仕様・装備をAIが推定</strong>して下書きします（要確認・修正可）。
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label className="label">型式（任意）</label>
+            <input
+              name="type_code"
+              value={typeCode}
+              onChange={(e) => setTypeCode(e.target.value)}
+              className="input font-mono uppercase"
+              placeholder="例）DBA-GK3"
+            />
+          </div>
+          <div>
+            <label className="label">グレード（任意）</label>
+            <input
+              value={grade}
+              onChange={(e) => setGrade(e.target.value)}
+              className="input"
+              placeholder="例）13G・Fパッケージ"
+            />
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={autofillFromCode}
+          disabled={autoLoading || (!maker && !modelVal && !typeCode)}
+          className="btn-outline mt-3 w-full disabled:opacity-50"
+        >
+          {autoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+          {autoLoading ? 'AIが推定中…' : '仕様・装備を自動入力（AI推定）'}
+        </button>
+        {autoNote && <p className="mt-2 rounded-lg bg-white/70 p-2 text-xs font-bold text-navy-700">{autoNote}</p>}
+        <p className="mt-2 text-[11px] text-slate-400">※ 車体番号だけから正確な装備特定はできません。表示は推定です。必ずご確認ください。</p>
       </div>
 
       {/* 基本情報 */}
