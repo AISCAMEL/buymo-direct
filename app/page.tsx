@@ -228,7 +228,7 @@ export default async function HomePage() {
                 fill
                 priority
                 sizes="(max-width: 1024px) 100vw, 50vw"
-                className="object-cover object-center"
+                className="object-cover object-center lg:object-[85%_center]"
               />
               {/* パネルへ自然になじませる（lg以上は左端、モバイルは下端をぼかす） */}
               <div className="absolute inset-0 bg-gradient-to-t from-navy-900/40 to-transparent lg:bg-gradient-to-r lg:from-navy-900/70 lg:via-navy-900/10 lg:to-transparent" />
