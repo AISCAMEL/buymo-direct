@@ -54,17 +54,17 @@ const GROUPS: Group[] = [
     ],
     parking: [
       { name: '自動車保管場所証明申請書' },
-      { name: '保管場所標章交付申請書' },
+      { name: '保管場所標章交付申請書', note: '記載例', href: '/files/hokan-hyosho.pdf' },
       { name: '保管場所の所在図・配置図' },
       { name: '保管場所使用権原疎明書面（自認書）', note: '保管場所が自己所有の場合' },
-      { name: '保管場所使用承諾証明書', note: '保管場所が賃貸の場合' },
+      { name: '保管場所使用承諾証明書', note: '賃貸の場合・記載例', href: '/files/hokan-shodaku.pdf' },
     ],
     notes: ['車庫証明の取得代行をご希望の場合は、BUYMOにてお手続きを代行できます。'],
   },
   {
     key: 'kei-sell',
     title: '軽自動車を売る方',
-    write: [{ name: '申請依頼書', note: '認印可' }],
+    write: [{ name: '申請依頼書', note: '認印可', href: '/files/shinsei-irai.pdf' }],
     prepare: [{ name: '自動車検査証（車検証）', note: '原本' }],
     invehicle: [
       { name: '軽自動車税納税証明書', note: '原本（紛失時は管轄で再発行）' },
@@ -80,7 +80,7 @@ const GROUPS: Group[] = [
     key: 'kei-buy',
     title: '軽自動車を買う方',
     write: [
-      { name: '申請依頼書', note: '認印可' },
+      { name: '申請依頼書', note: '認印可', href: '/files/shinsei-irai.pdf' },
       { name: 'ETCセットアップ委任状', note: 'オプション希望時' },
     ],
     prepare: [
