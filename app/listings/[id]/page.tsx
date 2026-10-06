@@ -14,6 +14,8 @@ import { ListingGallery } from '@/components/ListingGallery';
 import { MaintenanceRecordsPanel } from '@/components/MaintenanceRecordsPanel';
 import { FollowButton } from '@/components/FollowButton';
 import { favoritedSet } from '@/lib/favorites';
+import { ListingGrid } from '@/components/ListingGrid';
+import { getRelatedListings } from '@/lib/related';
 import { LOAN_APR_FROM } from '@/lib/constants';
 import { monthlyPayment } from '@/lib/loan';
 import { MakeOfferButton } from '@/components/MakeOfferButton';
@@ -158,6 +160,12 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
     : 0;
   const favoriteCount = favCountRes.count;
   const isFavorited = favoritedIds.has(listing.id);
+
+  // 関連・類似のおすすめ車両（＋お気に入り状態）
+  const relatedListings = await getRelatedListings(supabase, listing);
+  const relatedFavs = relatedListings.length
+    ? await favoritedSet(supabase, user?.id, relatedListings.map((l) => l.id))
+    : new Set<string>();
 
   // アクティブなオファーを取得（買主として）
   let existingOffer: { amount: number; status: string; counter_amount: number | null } | null = null;
@@ -634,6 +642,17 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
         )}
       </aside>
     </div>
+
+      {/* 関連・類似のおすすめ車両 */}
+      {relatedListings.length > 0 && (
+        <section className="mt-10">
+          <h2 className="text-xl font-black">この車に関連するおすすめ</h2>
+          <p className="mb-4 mt-0.5 text-sm text-slate-500">
+            同じ車種・似たモデル・同じボディタイプから、気になる1台を。
+          </p>
+          <ListingGrid listings={relatedListings} favoritedIds={relatedFavs} loggedIn={!!user} />
+        </section>
+      )}
 
       {/* 保険料シミュレーター（全幅で見やすく） */}
       <section className="mt-8">
