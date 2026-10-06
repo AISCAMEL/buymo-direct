@@ -16,6 +16,8 @@ import { FollowButton } from '@/components/FollowButton';
 import { favoritedSet } from '@/lib/favorites';
 import { ListingGrid } from '@/components/ListingGrid';
 import { getRelatedListings } from '@/lib/related';
+import { computeMarketStats } from '@/lib/market';
+import { PriceAssessment } from '@/components/PriceAssessment';
 import { ShareButton } from '@/components/ShareButton';
 import { LOAN_APR_FROM } from '@/lib/constants';
 import { monthlyPayment } from '@/lib/loan';
@@ -161,6 +163,30 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
     : 0;
   const favoriteCount = favCountRes.count;
   const isFavorited = favoritedIds.has(listing.id);
+
+  // 相場評価：同条件（同メーカー・車種・年式±2年）の他の現役出品から中央値を算出
+  let marketMedian: number | null = null;
+  let marketSample = 0;
+  if (listing.maker && listing.model && listing.year) {
+    const { data: compRows } = await supabase
+      .from('listings')
+      .select('price, mileage_km, year')
+      .eq('status', 'active')
+      .eq('maker', listing.maker)
+      .eq('model', listing.model)
+      .gte('year', listing.year - 2)
+      .lte('year', listing.year + 2)
+      .neq('id', listing.id)
+      .range(0, 499);
+    const cs = computeMarketStats(
+      (compRows ?? []) as { price: number | null; mileage_km: number | null; year: number | null }[],
+      (compRows ?? []).length,
+    );
+    if (cs) {
+      marketMedian = cs.medianPrice;
+      marketSample = cs.sample;
+    }
+  }
 
   // 関連・類似のおすすめ車両（＋お気に入り状態）
   const relatedListings = await getRelatedListings(supabase, listing);
@@ -426,6 +452,9 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
           <p className="mt-0.5 text-xs text-slate-400">{SELLER_KIND_NOTE[sellerKind(listing)]}</p>
 
           <p className="mt-3 text-3xl font-black text-navy-600">{formatYen(listing.price)}</p>
+          {marketMedian && listing.status === 'active' && (
+            <PriceAssessment price={listing.price} median={marketMedian} sample={marketSample} />
+          )}
           <p className="mt-1 text-sm text-slate-600">
             ローン月々{' '}
             <span className="font-bold text-navy-600">
