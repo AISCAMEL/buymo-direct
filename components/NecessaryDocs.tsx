@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { FileText, FilePen, FolderCheck, Car, AlertTriangle, Download, Printer, RotateCcw, CheckCircle2 } from 'lucide-react';
+import { FileText, FilePen, FolderCheck, Car, AlertTriangle, Download, Printer, RotateCcw, CheckCircle2, FileArchive, Loader2 } from 'lucide-react';
 
 type Doc = { name: string; note?: string; href?: string };
 type Group = {
@@ -115,10 +115,12 @@ export function NecessaryDocs() {
   const [kind, setKind] = useState<(typeof KIND)[number]['key']>('std');
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [hydrated, setHydrated] = useState(false);
+  const [zipping, setZipping] = useState(false);
 
   const groupKey = `${kind}-${side}`;
   const group = useMemo(() => GROUPS.find((g) => g.key === groupKey)!, [groupKey]);
   const allDocs = useMemo(() => docsOf(group), [group]);
+  const downloadable = useMemo(() => allDocs.filter((d) => d.href), [allDocs]);
 
   // localStorage load
   useEffect(() => {
@@ -157,6 +159,51 @@ export function NecessaryDocs() {
     });
   }
 
+  async function downloadZip() {
+    if (zipping || downloadable.length === 0) return;
+    setZipping(true);
+    try {
+      const JSZip = (await import('jszip')).default;
+      const zip = new JSZip();
+      const used = new Set<string>();
+      let ok = 0;
+      await Promise.all(
+        downloadable.map(async (d) => {
+          try {
+            const res = await fetch(d.href!);
+            if (!res.ok) return;
+            const buf = await res.arrayBuffer();
+            let fname = `${d.name}.pdf`;
+            let n = 2;
+            while (used.has(fname)) fname = `${d.name}(${n++}).pdf`;
+            used.add(fname);
+            zip.file(fname, buf);
+            ok += 1;
+          } catch {
+            /* skip this file */
+          }
+        }),
+      );
+      if (ok === 0) {
+        alert('ダウンロードできる様式がありませんでした。時間をおいて再度お試しください。');
+        return;
+      }
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `BUYMO_必要書類_${group.title}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert('ZIPの作成に失敗しました。各様式は個別の「ダウンロード」からも取得できます。');
+    } finally {
+      setZipping(false);
+    }
+  }
+
   const doneCount = hydrated ? allDocs.filter((d) => checked[`${groupKey}::${d.name}`]).length : 0;
   const total = allDocs.length;
   const pct = total ? Math.round((doneCount / total) * 100) : 0;
@@ -184,7 +231,17 @@ export function NecessaryDocs() {
               そろえた書類：<span className="font-bold text-teal-700">{doneCount}</span> / {total} 件
             </p>
           </div>
-          <div className="flex gap-2 print:hidden">
+          <div className="flex flex-wrap gap-2 print:hidden">
+            {downloadable.length > 0 && (
+              <button
+                onClick={downloadZip}
+                disabled={zipping}
+                className="inline-flex items-center gap-1 rounded-lg bg-teal-600 px-3 py-2 text-xs font-bold text-white hover:bg-teal-700 disabled:opacity-60"
+              >
+                {zipping ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileArchive className="h-3.5 w-3.5" />}
+                様式をまとめてDL（{downloadable.length}）
+              </button>
+            )}
             <button
               onClick={resetGroup}
               className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50"
