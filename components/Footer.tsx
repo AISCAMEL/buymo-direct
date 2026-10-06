@@ -36,6 +36,7 @@ const FOOTER_LINKS = [
     heading: '運営',
     links: [
       { label: '会社概要', href: '/company' },
+      { label: 'よくある質問', href: '/questions' },
       { label: 'コラム', href: '/column' },
       { label: 'お知らせ', href: '/announcements' },
       { label: 'プライバシーポリシー', href: '/privacy' },
