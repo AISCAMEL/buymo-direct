@@ -5,7 +5,7 @@ import { createServiceClient } from '@/lib/supabase/service';
 // 陸送のお申し込み（未ログインでも可）。ZERO手配前提でベストエフォート保存。
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as {
-    fromPref?: string; toPref?: string; carSize?: string;
+    fromPref?: string; toPref?: string; carSize?: string; carCondition?: string;
     estLow?: number; estHigh?: number;
     name?: string; phone?: string; email?: string; preferredDate?: string; notes?: string;
   };
@@ -31,11 +31,12 @@ export async function POST(req: Request) {
 
   try {
     const service = createServiceClient();
-    await service.from('transport_requests').insert({
+    const row: Record<string, unknown> = {
       user_id: userId,
       from_pref: str(body.fromPref, 20),
       to_pref: str(body.toPref, 20),
       car_size: str(body.carSize, 20),
+      car_condition: str(body.carCondition, 20),
       est_low: num(body.estLow),
       est_high: num(body.estHigh),
       preferred_date: str(body.preferredDate, 20),
@@ -44,7 +45,13 @@ export async function POST(req: Request) {
       contact_email: email || null,
       notes: str(body.notes, 1000),
       status: 'pending',
-    });
+    };
+    const { error } = await service.from('transport_requests').insert(row);
+    // car_condition カラム未適用（マイグレーション未実行）の環境でも申込を失わないようフォールバック
+    if (error && /car_condition/.test(error.message)) {
+      delete row.car_condition;
+      await service.from('transport_requests').insert(row);
+    }
   } catch (err) {
     console.error('[transport] DB保存に失敗:', err instanceof Error ? err.message : err);
   }

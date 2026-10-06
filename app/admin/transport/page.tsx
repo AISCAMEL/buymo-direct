@@ -11,6 +11,7 @@ type Row = {
   from_pref: string | null;
   to_pref: string | null;
   car_size: string | null;
+  car_condition: string | null;
   est_low: number | null;
   est_high: number | null;
   preferred_date: string | null;
@@ -84,6 +85,9 @@ export default async function AdminTransportPage() {
                   <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${s.cls}`}>{s.label}</span>
                   <span className="font-black text-slate-800">{r.from_pref} → {r.to_pref}</span>
                   <span className="text-sm text-slate-500">{sizeLabel(r.car_size)}</span>
+                  {r.car_condition === 'special' && (
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700">特殊車両（5倍）</span>
+                  )}
                   {r.est_low && r.est_high && (
                     <span className="text-xs text-slate-500">概算 {formatYen(r.est_low)}〜{formatYen(r.est_high)}</span>
                   )}

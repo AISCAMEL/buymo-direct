@@ -44,10 +44,10 @@ export default async function TransportPage() {
         <h2 className="mb-3 font-bold">料金の目安</h2>
         <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
           {[
-            { route: '東京→大阪', price: '¥45,000〜' },
-            { route: '東京→福岡', price: '¥68,000〜' },
-            { route: '大阪→名古屋', price: '¥32,000〜' },
-            { route: '東京→仙台', price: '¥38,000〜' },
+            { route: '東京→大阪', price: '¥90,000〜' },
+            { route: '東京→福岡', price: '¥136,000〜' },
+            { route: '大阪→名古屋', price: '¥64,000〜' },
+            { route: '東京→仙台', price: '¥76,000〜' },
           ].map(({ route, price }) => (
             <div key={route} className="rounded-lg bg-slate-50 p-3 text-center">
               <p className="text-xs text-slate-400">{route}</p>
@@ -55,7 +55,7 @@ export default async function TransportPage() {
             </div>
           ))}
         </div>
-        <p className="mt-3 text-xs text-slate-400">※ 上記はバイク・小型車（〜3m）の目安です。大型車・SUVは別途お見積もり。北海道・沖縄は追加料金あり。</p>
+        <p className="mt-3 text-xs text-slate-400">※ 上記はバイク・小型車（〜3m）・通常車両の目安です。大型車・SUVは別途お見積もり。ローダウン車・旧車・高級車などの特殊車両は通常の5倍水準。北海道・沖縄は追加料金あり。</p>
       </div>
 
       {/* Booking form */}

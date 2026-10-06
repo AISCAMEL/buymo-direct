@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import { Truck, Calculator, Loader2, CheckCircle2, ArrowRight } from 'lucide-react';
-import { TRANSPORT_PREFS, CAR_SIZES, estimateTransport } from '@/lib/transport';
+import { TRANSPORT_PREFS, CAR_SIZES, VEHICLE_CONDITIONS, estimateTransport } from '@/lib/transport';
 import { formatYen } from '@/lib/format';
 
 export function TransportSimulator() {
   const [fromPref, setFromPref] = useState('');
   const [toPref, setToPref] = useState('');
   const [size, setSize] = useState('normal');
+  const [condition, setCondition] = useState('standard');
   const [est, setEst] = useState<{ low: number; high: number } | null>(null);
   const [showForm, setShowForm] = useState(false);
 
@@ -25,7 +26,7 @@ export function TransportSimulator() {
   function simulate() {
     setError(null);
     if (!fromPref || !toPref) { setError('出発地と到着地を選んでください。'); return; }
-    const r = estimateTransport(fromPref, toPref, size);
+    const r = estimateTransport(fromPref, toPref, size, condition);
     setEst(r);
     setShowForm(false);
   }
@@ -41,7 +42,7 @@ export function TransportSimulator() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          fromPref, toPref, carSize: size,
+          fromPref, toPref, carSize: size, carCondition: condition,
           estLow: est?.low, estHigh: est?.high,
           name, phone, email: email.trim() || undefined, preferredDate: date, notes,
         }),
@@ -70,6 +71,7 @@ export function TransportSimulator() {
   }
 
   const sizeLabel = CAR_SIZES.find((s) => s.value === size)?.label ?? '';
+  const isSpecial = condition === 'special';
 
   return (
     <div className="card p-5 sm:p-6">
@@ -78,7 +80,7 @@ export function TransportSimulator() {
         <h2 className="text-lg font-black text-navy-800">陸送料金シミュレーション</h2>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <label className="label">出発地（今ある場所）</label>
           <select className="input" value={fromPref} onChange={(e) => { setFromPref(e.target.value); setEst(null); }}>
@@ -99,7 +101,19 @@ export function TransportSimulator() {
             {CAR_SIZES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
           </select>
         </div>
+        <div>
+          <label className="label">車両タイプ</label>
+          <select className="input" value={condition} onChange={(e) => { setCondition(e.target.value); setEst(null); }}>
+            {VEHICLE_CONDITIONS.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+          </select>
+        </div>
       </div>
+
+      {condition === 'special' && (
+        <p className="mt-3 rounded-lg bg-amber-50 p-2.5 text-xs text-amber-700">
+          ※ ローダウン車・旧車・高級車などの特殊車両は、積載・養生に特別対応が必要なため、通常車両の料金が加算されます。正式なお見積りは車両状態により担当がご案内します。
+        </p>
+      )}
 
       <button type="button" onClick={simulate} className="btn-primary mt-4 w-full sm:w-auto sm:px-8">
         <Calculator className="h-4 w-4" /> 概算料金を計算する
@@ -108,8 +122,11 @@ export function TransportSimulator() {
       {/* 結果 */}
       {est && (
         <div className="mt-5 rounded-2xl border-2 border-navy-500 bg-white p-5">
-          <div className="flex items-center gap-2 text-sm font-bold text-navy-700">
+          <div className="flex flex-wrap items-center gap-2 text-sm font-bold text-navy-700">
             <Truck className="h-4 w-4" /> {fromPref} → {toPref}（{sizeLabel}）
+            {isSpecial && (
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700">特殊車両</span>
+            )}
           </div>
           <p className="mt-2 text-center text-xs text-slate-400">概算料金（片道・キャリアカー）</p>
           <p className="text-center text-3xl font-black text-navy-800">
@@ -158,7 +175,7 @@ export function TransportSimulator() {
             {submitting ? '送信中…' : 'この内容で申し込む'}
           </button>
           <p className="text-center text-xs text-slate-400">
-            {fromPref} → {toPref} / {sizeLabel} / 概算 {est ? `${formatYen(est.low)}〜${formatYen(est.high)}` : ''} を引き継いで送信します。
+            {fromPref} → {toPref} / {sizeLabel}{isSpecial ? ' / 特殊車両' : ''} / 概算 {est ? `${formatYen(est.low)}〜${formatYen(est.high)}` : ''} を引き継いで送信します。
           </p>
         </form>
       )}
