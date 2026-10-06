@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { redirect } from 'next/navigation';
-import { PlusCircle, ShieldCheck, BarChart2, Upload, Smartphone, Zap } from 'lucide-react';
+import { PlusCircle, ShieldCheck, BarChart2, Upload, Smartphone, Zap, Bell, ArrowRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { formatYen, formatDate } from '@/lib/format';
 import { ESCROW_STEPS } from '@/lib/constants';
+import { ESCROW_NEXT_ACTION, isMyTurn } from '@/lib/escrow';
+import type { EscrowStatus } from '@/lib/types';
 import { OwnerListingControls } from '@/components/OwnerListingControls';
 import { ExportButton } from '@/components/ExportButton';
 import { UpgradeNudge } from '@/components/UpgradeNudge';
@@ -50,8 +52,50 @@ export default async function DashboardListingsPage() {
   const myEscrows = (escrows ?? []) as any[];
   const access = await getViewerAccess();
 
+  const TERMINAL = ['completed', 'cancelled', 'disputed'];
+  const actionNeeded = myEscrows
+    .filter((e) => !TERMINAL.includes(e.status))
+    .map((e) => {
+      const role: 'buyer' | 'seller' = e.buyer_id === user.id ? 'buyer' : 'seller';
+      const status = e.status as EscrowStatus;
+      return { e, role, status, mine: isMyTurn(status, role), action: ESCROW_NEXT_ACTION[status] };
+    });
+  const myTurn = actionNeeded.filter((x) => x.mine);
+
   return (
     <div className="space-y-10">
+      {/* 対応待ちの取引（あなたの番） */}
+      {myTurn.length > 0 && (
+        <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+          <p className="mb-2 flex items-center gap-1.5 text-sm font-black text-amber-800">
+            <Bell className="h-4 w-4" />あなたの対応待ちの取引（{myTurn.length}件）
+          </p>
+          <ul className="space-y-2">
+            {myTurn.map(({ e, role, action }) => (
+              <li key={e.id}>
+                <Link
+                  href={`/escrow/${e.id}`}
+                  className="flex items-center justify-between gap-3 rounded-xl bg-white p-3 transition hover:shadow-sm"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-bold text-slate-800">
+                      {e.listings?.title ?? (`${e.listings?.maker ?? ''} ${e.listings?.model ?? ''}`.trim() || '取引')}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-amber-700">
+                      {role === 'buyer' ? '買主' : '売主'}として：{action?.label ?? '対応が必要です'}
+                    </span>
+                  </span>
+                  <span className="flex shrink-0 items-center gap-2">
+                    <span className="hidden font-black text-navy-600 sm:inline">{formatYen(e.amount)}</span>
+                    <ArrowRight className="h-4 w-4 text-amber-600" />
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {/* 無料の業者（プロ）への有料誘致。個人・有料・加盟店・本部には出さない。 */}
       {access.businessTrack && !access.premium && <UpgradeNudge source="dashboard" />}
 

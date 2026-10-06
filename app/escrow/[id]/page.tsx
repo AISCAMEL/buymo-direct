@@ -11,19 +11,12 @@ import { isSquareConfigured } from '@/lib/square';
 import { formatYen } from '@/lib/format';
 import { EscrowPayButton } from '@/components/EscrowPayButton';
 import { ExportButton } from '@/components/ExportButton';
+import { ESCROW_NEXT_ACTION as NEXT_ACTION } from '@/lib/escrow';
 import type { EscrowStatus, TitleTransferOption, PaymentMethod } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
 type Params = Promise<{ id: string }>;
-
-// 次に進めるアクションのラベル（実行者の役割つき）
-const NEXT_ACTION: Partial<Record<EscrowStatus, { label: string; by: 'buyer' | 'seller' | 'both'; hint: string }>> = {
-  initiated: { label: '代金をエスクローに入金する', by: 'buyer', hint: '買主が代金を入金すると第三者が保全します。' },
-  funds_held: { label: '現車確認を完了する', by: 'both', hint: '受け渡し・現車確認が済んだら次へ進めます。' },
-  inspection: { label: '名義変更を開始する', by: 'both', hint: '必要書類を揃え、名義変更手続きに進みます。' },
-  title_transfer: { label: '取引を完了して送金する', by: 'buyer', hint: '名義変更完了を確認したら売主へ送金されます。' },
-};
 
 export default async function EscrowPage({ params }: { params: Params }) {
   const { id } = await params;
