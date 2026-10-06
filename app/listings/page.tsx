@@ -9,6 +9,7 @@ import { SaveSearchButton } from '@/components/SaveSearchButton';
 import { PaginationBar } from '@/components/PaginationBar';
 import { MobileFilterButton } from '@/components/MobileFilterDrawer';
 import { ActiveFilters } from '@/components/ActiveFilters';
+import { MarketSummary, computeMarketStats } from '@/components/MarketSummary';
 import { applyListingFilters } from '@/lib/listingQuery';
 import { favoritedSet } from '@/lib/favorites';
 import type { ListingWithImages } from '@/lib/types';
@@ -86,6 +87,18 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
   const hasFilters = Object.values(filterParams).some(Boolean);
   const favoritedIds = await favoritedSet(supabase, user?.id, listings.map((l) => l.id));
 
+  // 相場サマリ用の軽量集計（同一条件・最大2000件の数値のみ）。
+  let statQuery: ReturnType<typeof applyListingFilters> = supabase
+    .from('listings')
+    .select('price, mileage_km, year')
+    .eq('status', 'active');
+  statQuery = applyListingFilters(statQuery, filterParams);
+  const { data: statRows } = await statQuery.range(0, 1999);
+  const marketStats = computeMarketStats(
+    (statRows ?? []) as { price: number | null; mileage_km: number | null; year: number | null }[],
+    count ?? 0,
+  );
+
   const paginationParams: Record<string, string | undefined> = Object.fromEntries(
     Object.entries(filterParams).concat([['sort', sort === 'new' ? undefined : sort]])
   );
@@ -124,6 +137,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
         </Suspense>
         {listings.length > 0 ? (
           <>
+            {marketStats && <MarketSummary stats={marketStats} />}
             <ListingGrid listings={listings} favoritedIds={favoritedIds} loggedIn={!!user} />
             <PaginationBar page={page} totalPages={totalPages} searchParams={paginationParams} />
           </>
