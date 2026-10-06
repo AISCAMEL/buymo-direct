@@ -8,6 +8,7 @@ const FOOTER_LINKS = [
       { label: '無料査定（買取）', href: '/listings/valuation' },
       { label: 'ダイレクト販売で出品', href: '/sell' },
       { label: 'かんたん出品ウィザード', href: '/sell/wizard' },
+      { label: 'おまかせ出品', href: '/sell/omakase' },
     ],
   },
   {
