@@ -4,18 +4,23 @@ import { useState } from 'react';
 import { Sparkles, Wand2, Loader2 } from 'lucide-react';
 
 interface Props {
-  maker: string;
-  model: string;
-  year: number;
-  mileage_km: number;
-  condition: string;
+  maker?: string;
+  model?: string;
+  year?: number;
+  mileage_km?: number;
+  condition?: string;
   /** 現在の説明文（添削に使用） */
   currentText?: string;
   onGenerated: (s: string) => void;
+  /** 添削の文脈。owner=オーナーの一言、vehicle=出品説明 など */
+  kind?: 'vehicle' | 'profile' | 'skill' | 'owner';
+  /** 「AIで作成」ボタンを出すか（オーナーの一言は添削のみ） */
+  showGenerate?: boolean;
 }
 
 export function AiDescriptionButton({
-  maker, model, year, mileage_km, condition, currentText = '', onGenerated,
+  maker = '', model = '', year = 0, mileage_km = 0, condition = '普通', currentText = '', onGenerated,
+  kind = 'vehicle', showGenerate = true,
 }: Props) {
   const [loading, setLoading] = useState<null | 'generate' | 'polish'>(null);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +36,7 @@ export function AiDescriptionButton({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(
           mode === 'polish'
-            ? { mode: 'polish', kind: 'vehicle', text: currentText }
+            ? { mode: 'polish', kind, text: currentText }
             : { mode: 'generate', maker, model, year, mileage_km, condition }
         ),
       });
@@ -52,16 +57,18 @@ export function AiDescriptionButton({
   return (
     <div className="flex flex-col items-end">
       <div className="flex gap-1.5">
-        <button
-          type="button"
-          onClick={() => run('generate')}
-          disabled={!!loading || !maker || !model}
-          className="flex items-center gap-1.5 rounded-lg bg-accent-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-accent-600 disabled:opacity-50"
-          title="車両情報からAIが説明文を作成します"
-        >
-          {loading === 'generate' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-          AIで作成
-        </button>
+        {showGenerate && (
+          <button
+            type="button"
+            onClick={() => run('generate')}
+            disabled={!!loading || !maker || !model}
+            className="flex items-center gap-1.5 rounded-lg bg-accent-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-accent-600 disabled:opacity-50"
+            title="車両情報からAIが説明文を作成します"
+          >
+            {loading === 'generate' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            AIで作成
+          </button>
+        )}
         <button
           type="button"
           onClick={() => run('polish')}

@@ -87,6 +87,7 @@ export function ListingForm({
   const [mileageKm, setMileageKm] = useState(listing?.mileage_km ?? wizardMileage ?? 0);
   const [listingType, setListingType] = useState<'direct' | 'proxy'>(listing?.listing_type ?? wizardType);
   const [description, setDescription] = useState(listing?.description ?? initial?.description ?? '');
+  const [ownerComment, setOwnerComment] = useState((listing as unknown as { owner_comment?: string | null } | undefined)?.owner_comment ?? '');
   const [images, setImages] = useState<ImageItem[]>(() => {
     if (existingImages.length > 0) {
       return [...existingImages]
@@ -747,17 +748,28 @@ export function ListingForm({
           />
         </div>
 
-        {/* オーナーからのひとこと（アピール） */}
+        {/* オーナーからのひとこと（アピール・AI添削つき） */}
         <div>
-          <label className="label">オーナーからのひとこと（アピール・任意）</label>
+          <div className="mb-1.5 flex items-center justify-between gap-2">
+            <label className="label mb-0">オーナーからのひとこと（アピール・任意）</label>
+            <AiDescriptionButton
+              kind="owner"
+              showGenerate={false}
+              currentText={ownerComment}
+              onGenerated={(s) => setOwnerComment(s)}
+            />
+          </div>
           <textarea
             name="owner_comment"
             rows={3}
-            defaultValue={(listing as unknown as { owner_comment?: string | null } | undefined)?.owner_comment ?? ''}
+            value={ownerComment}
+            onChange={(e) => setOwnerComment(e.target.value)}
             className="input"
             placeholder="例）新車から大切に乗ってきた一台です。高速も街乗りも燃費がよく、気に入っていました。次のオーナーにも可愛がってほしいです。"
           />
-          <p className="mt-0.5 text-xs text-slate-400">車両詳細に、あなたのお名前とともに「オーナーからのひとこと」として表示され、購入検討者への安心・アピールになります。</p>
+          <p className="mt-0.5 text-xs text-slate-400">
+            そのまま投稿もOK。少し書いて<strong>「AIで添削」</strong>を押すと、オーナー目線のまま魅力的な文章に整えます（事実は変えません）。車両詳細にお名前とともに表示されます。
+          </p>
         </div>
 
         {/* 装備・オプション（アピールポイント） */}

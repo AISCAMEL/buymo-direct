@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({})) as {
     mode?: 'generate' | 'polish';
     text?: string;
-    kind?: 'vehicle' | 'profile' | 'skill';
+    kind?: 'vehicle' | 'profile' | 'skill' | 'owner';
     maker?: string;
     model?: string;
     year?: number;
@@ -28,6 +28,21 @@ export async function POST(req: Request) {
     const text = (body.text ?? '').trim();
     if (!text) return NextResponse.json({ error: '添削する文章がありません' }, { status: 400 });
     if (!hasAi) return NextResponse.json({ description: text, ai: false, note: 'AI未設定のため原文を返しました' });
+
+    // オーナー本人の一言は、一人称の温かみを保ったまま魅力的に整える
+    if (body.kind === 'owner') {
+      const ownerPrompt = `次は中古車を手放すオーナー本人による「ひとこと（アピール）」の下書きです。これを魅力的に整えてください。
+・一人称（オーナー本人の目線）のまま、温かみのある自然な言葉にする
+・書かれている事実・思い出は変えない。無い事実を足さない（誇張・虚偽は禁止）
+・次のオーナーへの気持ちや、この車の良さ・使い勝手が伝わるように
+・120〜200字程度。本文のみを返す（前置き・カギ括弧不要）
+
+--- 下書き ---
+${text}`;
+      const description = await generateWithClaude(ownerPrompt);
+      return NextResponse.json({ description, ai: true });
+    }
+
     const label = body.kind === 'profile' ? '店舗紹介文' : body.kind === 'skill' ? 'サービス説明文' : '出品説明文';
     const prompt = `次の中古車${label}を添削してください。
 ・事実や数値は変えない（誇張・虚偽は禁止）
