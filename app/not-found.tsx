@@ -15,11 +15,18 @@ export default function NotFound() {
           お探しのページは削除されたか、URL が間違っている可能性があります。
         </p>
       </div>
-      <div className="flex gap-3">
+      <div className="flex flex-wrap justify-center gap-3">
         <Link href="/" className="btn-primary">
           <Car className="h-4 w-4" /> ホームへ
         </Link>
         <Link href="/listings" className="btn-outline">車を探す</Link>
+        <Link href="/sell" className="btn-outline">クルマを売る</Link>
+      </div>
+      <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs font-bold text-slate-400">
+        <Link href="/about" className="hover:text-teal-600 hover:underline">初めての方へ</Link>
+        <Link href="/questions" className="hover:text-teal-600 hover:underline">よくある質問</Link>
+        <Link href="/column" className="hover:text-teal-600 hover:underline">コラム</Link>
+        <Link href="/contact" className="hover:text-teal-600 hover:underline">お問い合わせ</Link>
       </div>
     </div>
   );

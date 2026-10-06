@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Mail, MessageCircle, Phone, CheckCircle2, Banknote, Tag, Loader2 } from 'lucide-react';
 import { submitContact } from './actions';
@@ -48,6 +48,27 @@ export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // URL の ?topic= からお問い合わせ種別をプリセット（各ページのCTAと連携）
+  useEffect(() => {
+    try {
+      const topic = new URLSearchParams(window.location.search).get('topic');
+      const map: Record<string, Category> = {
+        omakase: 'listing',
+        listing: 'listing',
+        sell: 'listing',
+        buyback: 'buyback',
+        valuation: 'buyback',
+        payment: 'payment',
+        escrow: 'payment',
+        account: 'account',
+        dealer: 'dealer',
+      };
+      if (topic && map[topic]) setCategory(map[topic]);
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

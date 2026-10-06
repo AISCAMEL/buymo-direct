@@ -45,7 +45,7 @@ export default function OmakasePage() {
           出品が不安な方・忙しい方へ。基本情報と写真を送っていただければ、相場をふまえた価格の目安づくりから出品ページの作成までBUYMOがサポート。<strong>買取保証つき・手数料0円</strong>なので、売れなくても安心です。
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
-          <Link href="/contact" className="inline-flex items-center gap-1.5 rounded-xl bg-gold-500 px-5 py-2.5 text-sm font-black text-[#2E2408] hover:bg-gold-600">おまかせ出品を相談する <ArrowRight className="h-4 w-4" /></Link>
+          <Link href="/contact?topic=omakase" className="inline-flex items-center gap-1.5 rounded-xl bg-gold-500 px-5 py-2.5 text-sm font-black text-[#2E2408] hover:bg-gold-600">おまかせ出品を相談する <ArrowRight className="h-4 w-4" /></Link>
           <Link href="/listings/valuation" className="inline-flex items-center gap-1.5 rounded-xl border border-white/40 px-5 py-2.5 text-sm font-bold hover:bg-white/10">まず無料査定を試す</Link>
         </div>
       </section>
@@ -102,7 +102,7 @@ export default function OmakasePage() {
         <h2 className="text-xl font-black sm:text-2xl">まずはお気軽にご相談ください</h2>
         <p className="mt-1 text-sm text-white/85">ご相談・査定は無料。自分で出品したい方は、かんたん出品ウィザードもご利用いただけます。</p>
         <div className="mt-5 flex flex-wrap justify-center gap-3">
-          <Link href="/contact" className="inline-flex items-center gap-1.5 rounded-xl bg-gold-500 px-5 py-2.5 text-sm font-black text-[#2E2408] hover:bg-gold-600">おまかせ出品を相談する</Link>
+          <Link href="/contact?topic=omakase" className="inline-flex items-center gap-1.5 rounded-xl bg-gold-500 px-5 py-2.5 text-sm font-black text-[#2E2408] hover:bg-gold-600">おまかせ出品を相談する</Link>
           <Link href="/sell/wizard" className="inline-flex items-center gap-1.5 rounded-xl border border-white/40 px-5 py-2.5 text-sm font-bold hover:bg-white/10">自分で出品する（ウィザード）</Link>
         </div>
       </section>
