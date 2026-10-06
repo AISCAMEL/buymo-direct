@@ -23,6 +23,20 @@ type OfferRow = Offer & {
   seller?: { display_name: string } | null;
 };
 
+/** オファー額の定価比・値引き額を表示。 */
+function OfferDelta({ amount, price }: { amount?: number | null; price?: number | null }) {
+  if (!price || price <= 0 || !amount) return null;
+  const pct = Math.round((amount / price) * 100);
+  const diff = price - amount;
+  return (
+    <p className="mt-0.5 text-xs font-bold text-slate-500">
+      定価の<span className="text-navy-600">{pct}%</span>
+      {diff > 0 && <> ・ <span className="text-emerald-600">{formatYen(diff)} の値引き</span></>}
+      {diff < 0 && <> ・ <span className="text-amber-600">定価より {formatYen(-diff)} 高い</span></>}
+    </p>
+  );
+}
+
 export default async function OffersPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -69,6 +83,7 @@ export default async function OffersPage() {
 
                   <div className="rounded-lg bg-slate-50 p-3">
                     <p className="text-lg font-black text-navy-700">{formatYen(o.amount)}</p>
+                    <OfferDelta amount={o.amount} price={o.listings?.price} />
                     {o.message && <p className="mt-1 text-sm text-slate-600">「{o.message}」</p>}
                   </div>
 
@@ -97,7 +112,7 @@ export default async function OffersPage() {
                             name="counter_amount"
                             type="number"
                             min={1}
-                            defaultValue={o.listings?.price}
+                            defaultValue={o.listings?.price ? Math.round((o.amount + o.listings.price) / 2) : o.amount}
                             className="input flex-1 text-sm"
                             placeholder="反対提示額（円）"
                           />
@@ -163,6 +178,7 @@ export default async function OffersPage() {
 
                   <div className="rounded-lg bg-slate-50 p-3">
                     <p className="text-base font-bold text-navy-700">提示額：{formatYen(o.amount)}</p>
+                    <OfferDelta amount={o.amount} price={o.listings?.price} />
                     {o.message && <p className="mt-0.5 text-sm text-slate-500">「{o.message}」</p>}
                   </div>
 
@@ -172,6 +188,7 @@ export default async function OffersPage() {
                       <p className="text-sm font-bold text-navy-700">
                         売主からの提示：{formatYen(o.counter_amount)}
                       </p>
+                      <OfferDelta amount={o.counter_amount} price={o.listings?.price} />
                       {o.counter_message && (
                         <p className="text-sm text-navy-600">「{o.counter_message}」</p>
                       )}
