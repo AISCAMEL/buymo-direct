@@ -13,6 +13,7 @@ import { QuickFilters } from '@/components/QuickFilters';
 import { ViewToggle } from '@/components/ViewToggle';
 import { ShareSearchButton } from '@/components/ShareSearchButton';
 import { MarketSummary, computeMarketStats } from '@/components/MarketSummary';
+import { RecentlyViewed } from '@/components/RecentlyViewed';
 import { applyListingFilters } from '@/lib/listingQuery';
 import { favoritedSet } from '@/lib/favorites';
 import type { ListingWithImages } from '@/lib/types';
@@ -174,6 +175,10 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
             </div>
           </div>
         )}
+
+        <div className="mt-10">
+          <RecentlyViewed />
+        </div>
       </section>
     </div>
   );

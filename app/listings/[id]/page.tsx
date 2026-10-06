@@ -19,6 +19,7 @@ import { getRelatedListings } from '@/lib/related';
 import { computeMarketStats } from '@/lib/market';
 import { PriceAssessment } from '@/components/PriceAssessment';
 import { LoanSimulator } from '@/components/LoanSimulator';
+import { RecordView, RecentlyViewed } from '@/components/RecentlyViewed';
 import { ShareButton } from '@/components/ShareButton';
 import { LOAN_APR_FROM } from '@/lib/constants';
 import { monthlyPayment } from '@/lib/loan';
@@ -702,6 +703,21 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
           <ListingGrid listings={relatedListings} favoritedIds={relatedFavs} loggedIn={!!user} />
         </section>
       )}
+
+      {/* 閲覧履歴の記録＋最近見た車 */}
+      <RecordView
+        item={{
+          id: listing.id,
+          title: listing.title,
+          price: listing.price,
+          cover: images[0]?.url ?? null,
+          maker: listing.maker,
+          model: listing.model,
+        }}
+      />
+      <div className="mt-10">
+        <RecentlyViewed excludeId={listing.id} />
+      </div>
 
       {/* 保険料シミュレーター（全幅で見やすく） */}
       <section className="mt-8">
