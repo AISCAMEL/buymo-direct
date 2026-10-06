@@ -4,6 +4,8 @@ import type { Metadata } from 'next';
 import { ChevronRight } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import { ListingGrid } from '@/components/ListingGrid';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { SITE_BASE, itemListJsonLd } from '@/lib/seo';
 import { MAKERS } from '@/lib/constants';
 import type { ListingWithImages } from '@/lib/types';
 
@@ -58,6 +60,12 @@ export default async function MakerPage({ params }: { params: Params }) {
 
   const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://buymo.me';
 
+  const crumbs = [
+    { name: 'ホーム', url: `${BASE}/` },
+    { name: '車を探す', url: `${BASE}/listings` },
+    { name: `${maker}の中古車`, url: `${BASE}/makers/${encodedMaker}` },
+  ];
+
   return (
     <>
       <script
@@ -72,8 +80,19 @@ export default async function MakerPage({ params }: { params: Params }) {
           }),
         }}
       />
+      {listings.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(
+              itemListJsonLd(`${maker}の中古車`, listings.map((l) => `${SITE_BASE}/listings/${l.id}`)),
+            ),
+          }}
+        />
+      )}
 
       <div className="space-y-8">
+        <Breadcrumbs items={crumbs} />
         {/* ヘッダー */}
         <section className="rounded-2xl bg-gradient-to-br from-navy-500 to-navy-700 px-6 py-12 text-white">
           <p className="mb-2 text-sm font-bold text-navy-200">メーカーで探す</p>

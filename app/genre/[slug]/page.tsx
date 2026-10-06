@@ -5,6 +5,8 @@ import type { Metadata } from 'next';
 import { ChevronRight, ShieldCheck, Banknote } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import { ListingGrid } from '@/components/ListingGrid';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { SITE_BASE, itemListJsonLd } from '@/lib/seo';
 import { applyListingFilters } from '@/lib/listingQuery';
 import { GENRES, GENRE_BY_SLUG, CROSS_GENRE_SLUGS, CROSS_AREA_SLUGS, AREA_BY_SLUG } from '@/lib/catalog';
 import type { ListingWithImages } from '@/lib/types';
@@ -85,7 +87,24 @@ export default async function GenrePage({ params }: { params: Params }) {
           }),
         }}
       />
+      {listings.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(
+              itemListJsonLd(`${g.label}の中古車`, listings.map((l) => `${SITE_BASE}/listings/${l.id}`)),
+            ),
+          }}
+        />
+      )}
       <div className="space-y-8">
+        <Breadcrumbs
+          items={[
+            { name: 'ホーム', url: `${BASE}/` },
+            { name: '車を探す', url: `${BASE}/listings` },
+            { name: g.label, url: `${BASE}/genre/${slug}` },
+          ]}
+        />
         {/* ヒーロー */}
         <section className="relative overflow-hidden rounded-2xl">
           <Image src={`/genre/${g.slug}.jpg`} alt={g.label} fill className="object-cover" sizes="100vw" priority />

@@ -5,6 +5,8 @@ import type { Metadata } from 'next';
 import { ChevronRight, MapPin } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import { ListingGrid } from '@/components/ListingGrid';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { SITE_BASE, itemListJsonLd } from '@/lib/seo';
 import { AREAS, AREA_BY_SLUG } from '@/lib/catalog';
 import { BODY_TYPES } from '@/lib/constants';
 import type { ListingWithImages } from '@/lib/types';
@@ -66,7 +68,24 @@ export default async function AreaPage({ params }: { params: Params }) {
           }),
         }}
       />
+      {listings.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(
+              itemListJsonLd(`${area.name}の中古車`, listings.map((l) => `${SITE_BASE}/listings/${l.id}`)),
+            ),
+          }}
+        />
+      )}
       <div className="space-y-8">
+        <Breadcrumbs
+          items={[
+            { name: 'ホーム', url: `${BASE}/` },
+            { name: '車を探す', url: `${BASE}/listings` },
+            { name: `${area.name}の中古車`, url: `${BASE}/area/${slug}` },
+          ]}
+        />
         <section className="relative overflow-hidden rounded-2xl">
           <Image src={`/area/${slug}.jpg`} alt={`${area.name}の中古車・買取`} fill priority sizes="100vw" className="object-cover" />
           <div className="absolute inset-0 bg-gradient-to-r from-navy-900/85 to-navy-700/55" />
