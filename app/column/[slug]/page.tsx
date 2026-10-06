@@ -3,6 +3,8 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { ChevronRight } from 'lucide-react';
 import { COLUMNS, COLUMN_BY_SLUG } from '@/lib/columns';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
+import { SITE_BASE } from '@/lib/seo';
 
 export const revalidate = 3600;
 
@@ -30,8 +32,12 @@ export default async function ColumnArticlePage({ params }: { params: Params }) 
   const c = COLUMN_BY_SLUG[slug];
   if (!c) notFound();
 
-  const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://buymo.me';
-  const others = COLUMNS.filter((x) => x.slug !== slug).slice(0, 4);
+  const BASE = SITE_BASE;
+  // 同カテゴリを優先し、足りなければ他カテゴリで補完（最大4件）
+  const sameCat = COLUMNS.filter((x) => x.slug !== slug && x.cat === c.cat);
+  const otherCat = COLUMNS.filter((x) => x.slug !== slug && x.cat !== c.cat);
+  const others = [...sameCat, ...otherCat].slice(0, 4);
+  const enc = encodeURIComponent(c.cat);
 
   return (
     <>
@@ -50,10 +56,17 @@ export default async function ColumnArticlePage({ params }: { params: Params }) 
         }}
       />
       <article className="mx-auto max-w-3xl">
-        <nav className="mb-4 text-xs text-slate-400">
-          <Link href="/column" className="hover:underline">コラム</Link> › {c.cat}
-        </nav>
-        <span className="mb-2 inline-flex items-center rounded-full bg-accent-50 px-2.5 py-0.5 text-xs font-bold text-accent-600">{c.cat}</span>
+        <div className="mb-4">
+          <Breadcrumbs
+            items={[
+              { name: 'ホーム', url: `${BASE}/` },
+              { name: 'コラム', url: `${BASE}/column` },
+              { name: c.cat, url: `${BASE}/column/category/${enc}` },
+              { name: c.title, url: `${BASE}/column/${slug}` },
+            ]}
+          />
+        </div>
+        <Link href={`/column/category/${enc}`} className="mb-2 inline-flex items-center rounded-full bg-accent-50 px-2.5 py-0.5 text-xs font-bold text-accent-600 hover:bg-accent-100">{c.cat}</Link>
         <h1 className="text-2xl font-black leading-snug text-navy-900 sm:text-3xl">{c.title}</h1>
 
         <div className="column-body mt-6" dangerouslySetInnerHTML={{ __html: c.html }} />
@@ -68,9 +81,9 @@ export default async function ColumnArticlePage({ params }: { params: Params }) 
           </div>
         </div>
 
-        {/* 他の記事 */}
+        {/* 関連記事 */}
         <section className="mt-10">
-          <h2 className="mb-3 text-lg font-black">ほかのコラム</h2>
+          <h2 className="mb-3 text-lg font-black">関連記事</h2>
           <ul className="space-y-2">
             {others.map((o) => (
               <li key={o.slug}>
