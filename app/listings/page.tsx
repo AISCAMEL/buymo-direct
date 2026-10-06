@@ -9,6 +9,9 @@ import { SaveSearchButton } from '@/components/SaveSearchButton';
 import { PaginationBar } from '@/components/PaginationBar';
 import { MobileFilterButton } from '@/components/MobileFilterDrawer';
 import { ActiveFilters } from '@/components/ActiveFilters';
+import { QuickFilters } from '@/components/QuickFilters';
+import { ViewToggle } from '@/components/ViewToggle';
+import { ShareSearchButton } from '@/components/ShareSearchButton';
 import { MarketSummary, computeMarketStats } from '@/components/MarketSummary';
 import { applyListingFilters } from '@/lib/listingQuery';
 import { favoritedSet } from '@/lib/favorites';
@@ -40,6 +43,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
   const sort = get('sort') ?? 'new';
   const order = SORTS[sort] ?? SORTS.new;
   const page = Math.max(1, Number(get('page') ?? 1));
+  const view = get('view') === 'list' ? 'list' : 'grid';
 
   const filterParams = {
     q: get('q'),
@@ -127,10 +131,20 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
             <Link href="/listings/map" className="btn-outline flex items-center gap-1 text-sm">
               <MapPin className="h-4 w-4" /> 地図
             </Link>
+            <Suspense>
+              <ShareSearchButton />
+            </Suspense>
             <SaveSearchButton loggedIn={!!user} />
+            <Suspense>
+              <ViewToggle />
+            </Suspense>
             <SortSelect />
           </div>
         </div>
+        {/* 人気の検索条件 */}
+        <Suspense>
+          <QuickFilters />
+        </Suspense>
         {/* アクティブフィルターチップ */}
         <Suspense>
           <ActiveFilters />
@@ -138,7 +152,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
         {listings.length > 0 ? (
           <>
             {marketStats && <MarketSummary stats={marketStats} />}
-            <ListingGrid listings={listings} favoritedIds={favoritedIds} loggedIn={!!user} />
+            <ListingGrid listings={listings} favoritedIds={favoritedIds} loggedIn={!!user} view={view} medianPrice={marketStats?.medianPrice} />
             <PaginationBar page={page} totalPages={totalPages} searchParams={paginationParams} />
           </>
         ) : hasFilters ? (
