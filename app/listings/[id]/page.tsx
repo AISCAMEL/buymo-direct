@@ -16,6 +16,7 @@ import { FollowButton } from '@/components/FollowButton';
 import { favoritedSet } from '@/lib/favorites';
 import { ListingGrid } from '@/components/ListingGrid';
 import { getRelatedListings } from '@/lib/related';
+import { ShareButton } from '@/components/ShareButton';
 import { LOAN_APR_FROM } from '@/lib/constants';
 import { monthlyPayment } from '@/lib/loan';
 import { MakeOfferButton } from '@/components/MakeOfferButton';
@@ -413,7 +414,15 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
               {listing.maker} {listing.model}
             </p>
           </div>
-          <h1 className="mt-1 text-lg font-black leading-snug">{listing.title}</h1>
+          <div className="mt-1 flex items-start justify-between gap-2">
+            <h1 className="text-lg font-black leading-snug">{listing.title}</h1>
+            <ShareButton
+              compact
+              className="shrink-0"
+              url={`${SITE_URL}/listings/${listing.id}`}
+              title={`${listing.maker} ${listing.model}（${listing.year}年）${formatYen(listing.price)}｜BUYMO ダイレクト`}
+            />
+          </div>
           <p className="mt-0.5 text-xs text-slate-400">{SELLER_KIND_NOTE[sellerKind(listing)]}</p>
 
           <p className="mt-3 text-3xl font-black text-navy-600">{formatYen(listing.price)}</p>
