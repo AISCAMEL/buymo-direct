@@ -6,17 +6,21 @@ import Link from 'next/link';
 import { getCompareIds } from '@/lib/compare-store';
 import { createClient } from '@/lib/supabase/client';
 import { formatYen, formatMileage } from '@/lib/format';
+import { monthlyPayment } from '@/lib/loan';
+import { LOAN_APR_FROM } from '@/lib/constants';
 import type { ListingWithImages } from '@/lib/types';
 
 type Row = {
   label: string;
-  key: keyof ListingWithImages;
+  key?: keyof ListingWithImages;
+  compute?: (l: ListingWithImages) => number | string | null;
   format?: (v: unknown) => string;
   highlight?: 'min' | 'max';
 };
 
 const ROWS: Row[] = [
   { label: '価格', key: 'price', format: (v) => formatYen(v as number), highlight: 'min' },
+  { label: 'ローン月々(60回)', compute: (l) => monthlyPayment(l.price, LOAN_APR_FROM, 60), format: (v) => `${formatYen(v as number)}〜`, highlight: 'min' },
   { label: '年式', key: 'year', format: (v) => `${v}年`, highlight: 'max' },
   { label: '走行距離', key: 'mileage_km', format: (v) => formatMileage(v as number), highlight: 'min' },
   { label: 'メーカー', key: 'maker' },
@@ -25,6 +29,7 @@ const ROWS: Row[] = [
   { label: 'MT/AT', key: 'transmission', format: (v) => (v as string | null) ?? '—' },
   { label: '都道府県', key: 'prefecture' },
   { label: '修復歴', key: 'repair_history', format: (v) => (v ? 'あり' : 'なし') },
+  { label: '保証', compute: (l) => ((l as { warranty_fee?: number | null }).warranty_fee ?? 0) > 0 ? '保証つき' : '—' },
 ];
 
 function getCoverUrl(listing: ListingWithImages): string | null {
@@ -73,14 +78,29 @@ export default function ComparePage() {
     );
   }
 
+  function rowValue(row: Row, l: ListingWithImages): number | string | null {
+    if (row.compute) return row.compute(l);
+    return row.key ? (l[row.key] as number | string | null) : null;
+  }
+
   function getBestIndex(row: Row): number | null {
     if (!row.highlight) return null;
-    const values = listings.map((l) => Number(l[row.key]));
+    const values = listings.map((l) => Number(rowValue(row, l)));
     if (values.some((v) => isNaN(v))) return null;
     const target =
       row.highlight === 'min' ? Math.min(...values) : Math.max(...values);
+    // 全車同値ならベストなし（ハイライトしない）
+    if (values.every((v) => v === values[0])) return null;
     return values.indexOf(target);
   }
+
+  // 総合おすすめ：ハイライト行で「ベスト」を取った数を列ごとに集計
+  const bestCounts = listings.map(() => 0);
+  for (const row of ROWS) {
+    const bi = getBestIndex(row);
+    if (bi != null) bestCounts[bi] += 1;
+  }
+  const maxBest = Math.max(...bestCounts, 0);
 
   return (
     <div className="overflow-x-auto">
@@ -147,7 +167,7 @@ export default function ComparePage() {
                   {row.label}
                 </td>
                 {listings.map((listing, colIdx) => {
-                  const raw = listing[row.key];
+                  const raw = rowValue(row, listing);
                   const display = row.format ? row.format(raw) : String(raw ?? '—');
                   const isBest = bestIdx === colIdx;
                   return (
@@ -165,6 +185,28 @@ export default function ComparePage() {
               </tr>
             );
           })}
+
+          {/* 総合おすすめ（ベスト項目数） */}
+          {listings.length > 1 && maxBest > 0 && (
+            <tr className="bg-navy-50">
+              <td className="border border-slate-200 bg-white px-3 py-2 font-bold text-navy-700">総合おすすめ</td>
+              {listings.map((listing, colIdx) => {
+                const n = bestCounts[colIdx];
+                const isTop = n === maxBest && n > 0;
+                return (
+                  <td
+                    key={listing.id}
+                    className={[
+                      'border border-slate-200 px-3 py-2 text-center',
+                      isTop ? 'bg-navy-500 font-black text-white' : 'text-slate-500',
+                    ].join(' ')}
+                  >
+                    {isTop ? `★ 最有力（${n}項目でベスト）` : `${n}項目でベスト`}
+                  </td>
+                );
+              })}
+            </tr>
+          )}
         </tbody>
       </table>
     </div>
