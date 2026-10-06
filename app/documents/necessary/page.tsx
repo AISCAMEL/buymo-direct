@@ -46,7 +46,7 @@ const GROUPS: Group[] = [
     write: [
       { name: '委任状', note: '実印を押印', href: '/files/ininjo.pdf' },
       { name: 'ETCセットアップ委任状', note: 'オプション希望時' },
-      { name: '車庫証明取得代行委任状', note: 'オプション希望時' },
+      { name: '車庫証明取得代行委任状', note: '取得代行ご希望時・実印を押印', href: '/files/ininjo-shako.pdf' },
     ],
     prepare: [
       { name: '印鑑登録証明書', note: '発行から3ヶ月以内・1通' },
