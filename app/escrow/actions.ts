@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
-import { ESCROW_FEE, TITLE_OPTIONS, installmentFeeFor } from '@/lib/constants';
+import { ESCROW_FEE, TITLE_OPTIONS, installmentFeeFor, INSTALLMENT_FEE } from '@/lib/constants';
 import { createSquarePayment, refundSquarePayment, isSquareConfigured } from '@/lib/square';
 import type { EscrowStatus, TitleTransferOption, PaymentMethod } from '@/lib/types';
 import { dispatchWebhook } from '@/lib/dealer';
@@ -168,15 +168,49 @@ export async function setPaymentMethod(escrowId: string, method: PaymentMethod) 
 
   const { data: tx } = await supabase
     .from('escrow_transactions')
-    .select('amount, escrow_fee, title_fee, buyer_id, status')
+    .select('amount, escrow_fee, title_fee, buyer_id, status, installment_count')
     .eq('id', escrowId)
     .maybeSingle();
   if (!tx || tx.buyer_id !== user.id || tx.status !== 'initiated') return;
 
   const subtotal = tx.amount + tx.escrow_fee + tx.title_fee;
+  // 2回分割払いを選択済みの場合は定額の分割手数料を維持する
+  const fee = tx.installment_count === 2 ? INSTALLMENT_FEE : installmentFeeFor(method, subtotal);
   await supabase
     .from('escrow_transactions')
-    .update({ payment_method: method, installment_fee: installmentFeeFor(method, subtotal) })
+    .update({ payment_method: method, installment_fee: fee })
+    .eq('id', escrowId)
+    .eq('status', 'initiated');
+  revalidatePath(`/escrow/${escrowId}`);
+}
+
+/**
+ * クレジットカードの分割回数を設定（買主・initiated・未入金のみ）。
+ * 2回を選ぶと定額の分割手数料（INSTALLMENT_FEE）を上乗せする。
+ * ※ カード決済へのサーチャージはカードブランド/Square規約で制限される場合があるため、
+ *    本番で有効化する前に可否を確認すること。
+ */
+export async function setInstallment(escrowId: string, count: 1 | 2) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  const { data: tx } = await supabase
+    .from('escrow_transactions')
+    .select('amount, escrow_fee, title_fee, payment_method, buyer_id, status, installment_1_paid, installment_2_paid')
+    .eq('id', escrowId)
+    .maybeSingle();
+  if (!tx || tx.buyer_id !== user.id || tx.status !== 'initiated') return;
+  // すでに一部でも入金済みなら回数は変更できない
+  if (tx.installment_1_paid || tx.installment_2_paid) return;
+
+  const subtotal = tx.amount + tx.escrow_fee + tx.title_fee;
+  const fee = count === 2 ? INSTALLMENT_FEE : installmentFeeFor(tx.payment_method as PaymentMethod | null, subtotal);
+  await supabase
+    .from('escrow_transactions')
+    .update({ installment_count: count, installment_fee: fee })
     .eq('id', escrowId)
     .eq('status', 'initiated');
   revalidatePath(`/escrow/${escrowId}`);
@@ -200,11 +234,15 @@ export async function confirmEscrowPayment(
 
   const { data: tx } = await supabase
     .from('escrow_transactions')
-    .select('id, amount, escrow_fee, title_fee, payment_method, buyer_id, seller_id, listing_id, status')
+    .select('id, amount, escrow_fee, title_fee, payment_method, installment_count, buyer_id, seller_id, listing_id, status')
     .eq('id', escrowId)
     .maybeSingle();
   if (!tx || tx.buyer_id !== user.id) return { error: '権限がありません' };
   if (tx.status !== 'initiated') return { error: 'この取引はすでに入金済みです' };
+  // 2回分割払いは Square の決済ページ（リダイレクト）専用。インライン一括とは併用しない。
+  if ((tx as { installment_count?: number }).installment_count === 2) {
+    return { error: '2回に分けてのお支払いは「Squareの決済ページで支払う」からお手続きください。' };
+  }
   const method = tx.payment_method as PaymentMethod | null;
   if (!method) return { error: '支払い方法を選択してください' };
 

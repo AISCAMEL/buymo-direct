@@ -294,7 +294,11 @@ export interface EscrowTransaction {
   title_fee: number;
   payment_method: PaymentMethod | null;
   installment_fee: number;
+  installment_count: number;
+  installment_1_paid: boolean;
+  installment_2_paid: boolean;
   square_payment_id: string | null;
+  square_payment_id_2: string | null;
   status: EscrowStatus;
   created_at: string;
   updated_at: string;

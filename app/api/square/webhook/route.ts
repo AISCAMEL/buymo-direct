@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { verifySquareWebhook } from '@/lib/square';
+import { settleSquarePaymentCompleted, clearFailedSquarePayment } from '@/lib/escrow-payment';
 import { createServiceClient } from '@/lib/supabase/service';
 
 // Square Webhook の仕様:
@@ -48,26 +49,15 @@ export async function POST(req: Request) {
     const payment = (data?.object as Record<string, unknown>)?.payment as Record<string, unknown> | undefined;
     // 決済リンク経由では order_id が保存済みの識別子。payment.id もフォールバックで照合。
     const matchIds = [payment?.order_id as string | undefined, payment?.id as string | undefined].filter(Boolean) as string[];
-    if (matchIds.length) {
-      await supabase
-        .from('escrow_transactions')
-        .update({ status: 'funds_held' })
-        .in('square_payment_id', matchIds)
-        .eq('status', 'initiated'); // 冪等：既に funds_held なら更新なし
-    }
+    // 1回払い／2回分割払いのどちらも処理（2回払いは両回完了時のみ funds_held）
+    await settleSquarePaymentCompleted(supabase, matchIds);
   }
 
-  // payment.failed — 識別子をクリアして buyer に再入金を促す
+  // payment.failed — 該当する回の識別子をクリアして buyer に再入金を促す
   if (eventType === 'payment.failed') {
     const payment = (data?.object as Record<string, unknown>)?.payment as Record<string, unknown> | undefined;
     const matchIds = [payment?.order_id as string | undefined, payment?.id as string | undefined].filter(Boolean) as string[];
-    if (matchIds.length) {
-      await supabase
-        .from('escrow_transactions')
-        .update({ square_payment_id: null })
-        .in('square_payment_id', matchIds)
-        .eq('status', 'initiated');
-    }
+    await clearFailedSquarePayment(supabase, matchIds);
   }
 
   // refund.completed / refund.failed — ログのみ（運用対応）

@@ -8,10 +8,13 @@ export function EscrowPayButton({
   escrowId,
   amount,
   disabled,
+  note,
 }: {
   escrowId: string;
   amount: number;
   disabled?: boolean;
+  /** 2回払い時の回表示など（例：「2回のうち 1回目」）。 */
+  note?: string;
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +49,7 @@ export function EscrowPayButton({
         className="btn-accent flex w-full items-center justify-center gap-2 py-3 text-base"
       >
         {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-        {loading ? '決済ページに移動中…' : `Square で支払う（${formatYen(amount)}）`}
+        {loading ? '決済ページに移動中…' : `Square で支払う（${formatYen(amount)}${note ? ` / ${note}` : ''}）`}
       </button>
       {error && (
         <p className="rounded-lg bg-red-50 p-2 text-sm text-red-600">{error}</p>

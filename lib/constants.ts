@@ -115,6 +115,10 @@ export const ESCROW_FEE = 5500; // エスクロー手数料（円・固定）
 
 // 支払い方法（Square決済）
 export const INSTALLMENT_RATE = 0.042; // クレジット分割手数料 4.2%
+// クレジットカードの2回分割払いを選んだ場合に上乗せする定額手数料（円）。
+// ※ カード決済へのサーチャージはカードブランド/Square加盟店規約で制限される場合があります。
+//    本番で有効化する前に必ず可否をご確認ください。
+export const INSTALLMENT_FEE = 20000;
 export const LOAN_APR_FROM = 6.8;      // 提携ローン 年率 6.8%〜（審査で決定）
 
 export const PAYMENT_METHODS: Record<PaymentMethod, { label: string; desc: string; online: boolean }> = {

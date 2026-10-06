@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { verifySquareWebhook } from '@/lib/square';
+import { settleSquarePaymentCompleted } from '@/lib/escrow-payment';
 import { createServiceClient } from '@/lib/supabase/service';
 
 // Square Developer Dashboard > Webhooks > Endpoint URL に
@@ -51,18 +52,10 @@ export async function POST(req: Request) {
     const squarePaymentId = payment?.id as string | undefined;
     const matchIds = [orderId, squarePaymentId].filter(Boolean) as string[];
 
-    if (matchIds.length) {
-      const { data: updated } = await supabase
-        .from('escrow_transactions')
-        .update({ status: 'funds_held' })
-        .in('square_payment_id', matchIds)
-        .eq('status', 'initiated') // 冪等：既に funds_held なら更新なし
-        .select('id')
-        .maybeSingle();
-
-      if (updated) {
-        revalidatePath(`/escrow/${(updated as { id: string }).id}`);
-      }
+    // 1回払い／2回分割払いのどちらも処理（2回払いは両回完了時のみ funds_held）
+    const affectedId = await settleSquarePaymentCompleted(supabase, matchIds);
+    if (affectedId) {
+      revalidatePath(`/escrow/${affectedId}`);
     }
   }
 

@@ -5,8 +5,8 @@ import { createClient } from '@/lib/supabase/server';
 import { EscrowStepper } from '@/components/EscrowStepper';
 import { ReviewForm } from '@/components/ReviewForm';
 import { PaymentPanel } from '@/components/PaymentPanel';
-import { advanceEscrow, cancelEscrow, setTitleOption } from '@/app/escrow/actions';
-import { TITLE_OPTIONS, PAYMENT_METHODS } from '@/lib/constants';
+import { advanceEscrow, cancelEscrow, setTitleOption, setInstallment } from '@/app/escrow/actions';
+import { TITLE_OPTIONS, PAYMENT_METHODS, INSTALLMENT_FEE } from '@/lib/constants';
 import { isSquareConfigured } from '@/lib/square';
 import { formatYen } from '@/lib/format';
 import { EscrowPayButton } from '@/components/EscrowPayButton';
@@ -51,6 +51,21 @@ export default async function EscrowPage({ params }: { params: Params }) {
   const couponDiscount = (tx as any).coupon_discount ?? 0;
   const total = tx.amount + tx.escrow_fee + tx.title_fee + tx.installment_fee - couponDiscount;
   const paymentMethod = tx.payment_method as PaymentMethod | null;
+
+  // 2回分割払いの状態と、次に支払う回の金額
+  const installmentCount = (tx as any).installment_count ?? 1;
+  const paid1 = (tx as any).installment_1_paid ?? false;
+  const paid2 = (tx as any).installment_2_paid ?? false;
+  const installmentLocked = paid1 || paid2; // 一部入金後は回数変更不可
+  const half1 = Math.ceil(total / 2);
+  const half2 = total - half1;
+  let nextCharge = total;
+  let payStage = '';
+  if (installmentCount === 2) {
+    if (!paid1) { nextCharge = half1; payStage = '2回のうち 1回目'; }
+    else if (!paid2) { nextCharge = half2; payStage = '2回のうち 2回目'; }
+    else { nextCharge = 0; }
+  }
 
   const next = NEXT_ACTION[status];
   const canAct = next && (next.by === 'both' || next.by === role);
@@ -165,14 +180,53 @@ export default async function EscrowPage({ params }: { params: Params }) {
         />
       )}
 
-      {/* Square Checkout Link による支払い（ホスト型決済ページへリダイレクト） */}
+      {/* 支払い回数（カードの1回あたり上限が不安な場合に2回へ分割） */}
       {status === 'initiated' && isBuyer && (
+        <div className="card p-6">
+          <h2 className="mb-1 font-bold">お支払い回数</h2>
+          <p className="mb-3 text-sm text-slate-500">
+            カードの1回あたりの上限などで一括決済ができない場合、2回に分けてお支払いいただけます（分割時は手数料 {formatYen(INSTALLMENT_FEE)} を上乗せ）。
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {([1, 2] as const).map((n) => {
+              const selected = installmentCount === n;
+              const bound = setInstallment.bind(null, id, n);
+              return (
+                <form action={bound} key={n}>
+                  <button
+                    disabled={installmentLocked}
+                    className={`w-full rounded-lg border p-3 text-center transition disabled:opacity-60 ${
+                      selected ? 'border-navy-400 bg-navy-50 text-navy-700' : 'border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span className="block text-sm font-bold">{n === 1 ? '1回で支払う' : '2回に分けて支払う'}</span>
+                    <span className="block text-xs text-slate-500">
+                      {n === 1 ? '一括' : `手数料 +${formatYen(INSTALLMENT_FEE)}`}
+                    </span>
+                  </button>
+                </form>
+              );
+            })}
+          </div>
+          {installmentCount === 2 && (
+            <div className="mt-3 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
+              <p className="flex justify-between"><span>1回目</span><span className={`font-bold ${paid1 ? 'text-emerald-600' : ''}`}>{formatYen(half1)}{paid1 ? '（入金済み）' : ''}</span></p>
+              <p className="mt-1 flex justify-between"><span>2回目</span><span className={`font-bold ${paid2 ? 'text-emerald-600' : ''}`}>{formatYen(half2)}{paid2 ? '（入金済み）' : ''}</span></p>
+              {installmentLocked && <p className="mt-2 text-slate-400">※ 入金開始後は回数を変更できません。</p>}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Square Checkout Link による支払い（ホスト型決済ページへリダイレクト） */}
+      {status === 'initiated' && isBuyer && nextCharge > 0 && (
         <div className="card p-6">
           <h2 className="mb-2 font-bold">Squareの決済ページで支払う</h2>
           <p className="mb-4 text-sm text-slate-500">
             Square がホストする安全な決済ページにリダイレクトして、カード情報を入力いただけます。
+            {payStage && <span className="ml-1 font-bold text-navy-600">（{payStage}）</span>}
           </p>
-          <EscrowPayButton escrowId={id} amount={total} />
+          <EscrowPayButton escrowId={id} amount={nextCharge} note={payStage || undefined} />
         </div>
       )}
 
