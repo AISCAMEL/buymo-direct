@@ -304,6 +304,7 @@ export interface Favorite {
   user_id: string;
   listing_id: string;
   created_at: string;
+  price_at_save?: number | null;
 }
 
 export interface Review {

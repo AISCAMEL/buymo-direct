@@ -8,6 +8,7 @@ export async function ListingGrid({
   loggedIn = false,
   view = 'grid',
   medianPrice,
+  priceDrops,
 }: {
   listings: ListingWithImages[];
   favoritedIds?: Set<string>;
@@ -15,6 +16,8 @@ export async function ListingGrid({
   view?: 'grid' | 'list';
   /** 現在の検索条件の中央値（相場バッジ用）。 */
   medianPrice?: number;
+  /** listing.id → お気に入り登録時からの値下げ額（円）。 */
+  priceDrops?: Record<string, number>;
 }) {
   // 「本日お問い合わせ」を一覧ぶんまとめて集計（1クエリ）
   const inquiryMap = await getTodayInquiryMap(listings.map((l) => l.id));
@@ -31,6 +34,7 @@ export async function ListingGrid({
           loggedIn={loggedIn}
           todayInquiries={inquiryMap[l.id] ?? 0}
           medianPrice={medianPrice}
+          priceDrop={priceDrops?.[l.id]}
           variant={view}
         />
       ))}

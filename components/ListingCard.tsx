@@ -21,6 +21,7 @@ export function ListingCard({
   loggedIn = false,
   todayInquiries = 0,
   medianPrice,
+  priceDrop,
   variant = 'grid',
 }: {
   listing: ListingWithImages;
@@ -29,6 +30,8 @@ export function ListingCard({
   todayInquiries?: number;
   /** 現在の検索条件の中央値（相場バッジ用）。 */
   medianPrice?: number;
+  /** お気に入り登録時からの値下げ額（円・プラスのとき値下げ）。 */
+  priceDrop?: number;
   variant?: 'grid' | 'list';
 }) {
   const cover = listing.listing_images?.sort((a, b) => a.sort_order - b.sort_order)[0]?.url;
@@ -83,6 +86,11 @@ export function ListingCard({
       {goodDeal && (
         <span className="badge absolute right-2 top-2 inline-flex items-center gap-1 bg-teal-600 text-white shadow-sm">
           <TrendingDown className="h-3 w-3" />相場より安い
+        </span>
+      )}
+      {!goodDeal && listing.status === 'active' && !!priceDrop && priceDrop > 0 && (
+        <span className="badge absolute right-2 top-2 inline-flex items-center gap-1 bg-rose-500 text-white shadow-sm">
+          <TrendingDown className="h-3 w-3" />値下げ {formatYen(priceDrop)}
         </span>
       )}
       {listing.repair_history && (
