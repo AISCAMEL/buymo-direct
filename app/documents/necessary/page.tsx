@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { FileText, FilePen, FolderCheck, Car, AlertTriangle, ArrowRight } from 'lucide-react';
+import { FileText, FilePen, FolderCheck, Car, AlertTriangle, ArrowRight, Download } from 'lucide-react';
 
 export const dynamic = 'force-static';
 export const metadata = {
@@ -7,7 +7,7 @@ export const metadata = {
   description: '中古車の個人間売買・ダイレクト販売で必要な書類を、売る方・買う方／普通車・軽自動車に分けてご案内します。名義変更代行もご利用いただけます。',
 };
 
-type Doc = { name: string; note?: string };
+type Doc = { name: string; note?: string; href?: string };
 type Group = {
   key: string;
   title: string;
@@ -23,8 +23,8 @@ const GROUPS: Group[] = [
     key: 'std-sell',
     title: '普通車を売る方',
     write: [
-      { name: '譲渡証明書', note: '実印を押印' },
-      { name: '委任状', note: '実印を押印' },
+      { name: '譲渡証明書', note: '実印を押印', href: '/files/joto-shomeisho.pdf' },
+      { name: '委任状', note: '実印を押印', href: '/files/ininjo.pdf' },
     ],
     prepare: [
       { name: '自動車検査証（車検証）', note: '原本' },
@@ -44,7 +44,7 @@ const GROUPS: Group[] = [
     key: 'std-buy',
     title: '普通車を買う方',
     write: [
-      { name: '委任状', note: '実印を押印' },
+      { name: '委任状', note: '実印を押印', href: '/files/ininjo.pdf' },
       { name: 'ETCセットアップ委任状', note: 'オプション希望時' },
       { name: '車庫証明取得代行委任状', note: 'オプション希望時' },
     ],
@@ -101,7 +101,19 @@ function DocList({ icon: Icon, label, items, tone }: { icon: typeof FileText; la
       <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200">
         {items.map((d) => (
           <li key={d.name} className="flex flex-wrap items-center justify-between gap-2 px-3.5 py-2.5">
-            <span className="text-sm font-bold text-slate-800">{d.name}</span>
+            <span className="flex items-center gap-2 text-sm font-bold text-slate-800">
+              {d.name}
+              {d.href && (
+                <a
+                  href={d.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2.5 py-1 text-xs font-bold text-teal-700 hover:bg-teal-100"
+                >
+                  <Download className="h-3.5 w-3.5" />ダウンロード
+                </a>
+              )}
+            </span>
             {d.note && <span className="text-xs text-slate-500">{d.note}</span>}
           </li>
         ))}
@@ -152,7 +164,7 @@ export default function NecessaryDocumentsPage() {
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs leading-relaxed text-slate-500">
-        ※ 書類の要件は制度改定や管轄（運輸支局・軽自動車検査協会）により異なる場合があります。最新・正確な要件は管轄窓口でご確認ください。記入用テンプレートは名義変更代行のお申し込み時にご案内します。
+        ※ 書類の要件は制度改定や管轄（運輸支局・軽自動車検査協会）により異なる場合があります。最新・正確な要件は管轄窓口でご確認ください。「ダウンロード」付きの様式は印刷してご記入ください（委任状・譲渡証明書は実印を押印）。その他の様式は順次追加します。
       </div>
 
       <div className="flex flex-wrap gap-3">
