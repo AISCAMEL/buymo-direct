@@ -16,7 +16,7 @@ export default async function FavoritesPage() {
 
   const { data } = await supabase
     .from('favorites')
-    .select('created_at, price_at_save, listings(*, listing_images(*), profiles!listings_seller_id_fkey(id, display_name, prefecture, avatar_url))')
+    .select('created_at, listings(*, listing_images(*), profiles!listings_seller_id_fkey(id, display_name, prefecture, avatar_url))')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
@@ -24,13 +24,24 @@ export default async function FavoritesPage() {
   const listings = rows.map((row) => row.listings).filter(Boolean) as ListingWithImages[];
   const favoritedIds = new Set(listings.map((l) => l.id));
 
-  // お気に入り登録時からの値下げ額（円）
+  // お気に入り登録時からの値下げ額（円）。
+  // price_at_save 列はマイグレーション適用後に有効。未適用時は列不在で error となるため、
+  // 本体クエリとは分離し、エラー時は値下げ表示なし（＝従来挙動）に安全フォールバックする。
   const priceDrops: Record<string, number> = {};
-  for (const row of rows) {
-    const l = row.listings;
-    if (l && row.price_at_save != null) {
-      const drop = Number(row.price_at_save) - Number(l.price);
-      if (drop > 0) priceDrops[l.id] = drop;
+  if (listings.length > 0) {
+    const { data: snaps, error } = await supabase
+      .from('favorites')
+      .select('listing_id, price_at_save')
+      .eq('user_id', user.id);
+    if (!error && snaps) {
+      const snapMap = new Map((snaps as any[]).map((s) => [s.listing_id, s.price_at_save]));
+      for (const l of listings) {
+        const at = snapMap.get(l.id);
+        if (at != null) {
+          const drop = Number(at) - Number(l.price);
+          if (drop > 0) priceDrops[l.id] = drop;
+        }
+      }
     }
   }
   const dropCount = Object.keys(priceDrops).length;
