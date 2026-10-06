@@ -6,6 +6,7 @@ import { Calculator, TrendingDown, Loader2, ClipboardCheck, ArrowRight } from 'l
 import { VEHICLE_CATALOG, CATALOG_MAKERS } from '@/lib/vehicle-catalog';
 import { MILEAGE_OPTIONS } from '@/lib/mileage';
 import { formatYen } from '@/lib/format';
+import { PriceGuide } from '@/components/PriceGuide';
 
 type ValuationResult = { lower: number; upper: number; est: number; source: 'ai' | 'formula'; reasoning?: string };
 
@@ -230,6 +231,9 @@ export default function ValuationPage() {
               </p>
             )}
           </div>
+
+          {/* 実際の掲載相場（BUYMOの現役出品から・AI査定の裏付け） */}
+          <PriceGuide maker={maker} model={otherModel ? undefined : model} year={year} />
 
           {/* 売却コンバージョン（価格訴求） */}
           <div className="rounded-xl border border-gold-200 bg-gold-50 p-4">
