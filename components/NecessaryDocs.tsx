@@ -50,10 +50,10 @@ const GROUPS: Group[] = [
     ],
     parking: [
       { name: '自動車保管場所証明申請書', note: 'ひな形', href: '/files/hokan-shomei-shinsei.pdf' },
-      { name: '保管場所標章交付申請書', note: '記載例', href: '/files/hokan-hyosho.pdf' },
+      { name: '保管場所標章交付申請書', note: 'ひな形', href: '/files/hokan-hyosho.pdf' },
       { name: '保管場所の所在図・配置図', note: 'ひな形', href: '/files/shozaizu-haichizu.pdf' },
       { name: '保管場所使用権原疎明書面（自認書）', note: '自己所有の場合・ひな形', href: '/files/jininsho.pdf' },
-      { name: '保管場所使用承諾証明書', note: '賃貸の場合・記載例', href: '/files/hokan-shodaku.pdf' },
+      { name: '保管場所使用承諾証明書', note: '賃貸の場合・ひな形', href: '/files/hokan-shodaku.pdf' },
     ],
     notes: ['車庫証明の取得代行をご希望の場合は、BUYMOにてお手続きを代行できます。'],
   },
