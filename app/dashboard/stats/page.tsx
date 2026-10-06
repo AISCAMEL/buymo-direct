@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { redirect } from 'next/navigation';
-import { Eye, Heart, TrendingUp, Package } from 'lucide-react';
+import { Eye, Heart, TrendingUp, Package, TrendingDown, Minus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { formatYen, formatDate } from '@/lib/format';
+import { computeMarketStats } from '@/lib/market';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,7 +18,7 @@ export default async function DashboardStatsPage() {
   // Fetch all seller listings with view count
   const { data: listings } = await supabase
     .from('listings')
-    .select('id, title, maker, model, price, status, view_count, created_at, listing_images(url, sort_order)')
+    .select('id, title, maker, model, year, price, status, view_count, created_at, listing_images(url, sort_order)')
     .eq('seller_id', user.id)
     .order('view_count', { ascending: false });
 
@@ -26,6 +27,7 @@ export default async function DashboardStatsPage() {
     title: string;
     maker: string;
     model: string;
+    year: number;
     price: number;
     status: string;
     view_count: number;
@@ -43,6 +45,38 @@ export default async function DashboardStatsPage() {
   const favCount: Record<string, number> = {};
   for (const f of favData ?? []) {
     favCount[f.listing_id] = (favCount[f.listing_id] ?? 0) + 1;
+  }
+
+  // 出品別の相場比較（公開中の出品のみ・同条件の中央値と比較）。最大24件まで。
+  const cmpTargets = rows.filter((l) => l.status === 'active' && l.maker && l.model && l.year).slice(0, 24);
+  const marketMap: Record<string, { median: number; sample: number } | null> = {};
+  await Promise.all(
+    cmpTargets.map(async (l) => {
+      const { data: comp } = await supabase
+        .from('listings')
+        .select('price, mileage_km, year')
+        .eq('status', 'active')
+        .eq('maker', l.maker)
+        .eq('model', l.model)
+        .gte('year', l.year - 2)
+        .lte('year', l.year + 2)
+        .neq('id', l.id)
+        .range(0, 499);
+      const cs = computeMarketStats(
+        (comp ?? []) as { price: number | null; mileage_km: number | null; year: number | null }[],
+        (comp ?? []).length,
+      );
+      marketMap[l.id] = cs ? { median: cs.medianPrice, sample: cs.sample } : null;
+    }),
+  );
+
+  function priceVsMarket(l: { id: string; price: number }) {
+    const m = marketMap[l.id];
+    if (!m) return null;
+    const ratio = (l.price - m.median) / m.median;
+    if (ratio <= -0.1) return { tone: 'bg-teal-100 text-teal-700', Icon: TrendingDown, label: '相場より安い' };
+    if (ratio >= 0.1) return { tone: 'bg-amber-100 text-amber-700', Icon: TrendingUp, label: '相場より高め' };
+    return { tone: 'bg-slate-100 text-slate-500', Icon: Minus, label: '相場どおり' };
   }
 
   // Summary stats
@@ -219,6 +253,7 @@ export default async function DashboardStatsPage() {
                   <tr className="border-b border-slate-100 bg-slate-50 text-left text-xs text-slate-500">
                     <th className="px-5 py-3 font-bold">タイトル</th>
                     <th className="px-4 py-3 font-bold">価格</th>
+                    <th className="px-4 py-3 font-bold">相場</th>
                     <th className="px-4 py-3 font-bold text-center">
                       <Eye className="mx-auto h-3.5 w-3.5" />
                     </th>
@@ -241,6 +276,19 @@ export default async function DashboardStatsPage() {
                         </Link>
                       </td>
                       <td className="px-4 py-3 font-bold text-navy-600">{formatYen(l.price)}</td>
+                      <td className="px-4 py-3">
+                        {(() => {
+                          const a = priceVsMarket(l);
+                          if (!a) return <span className="text-xs text-slate-300">—</span>;
+                          const { tone, Icon, label } = a;
+                          return (
+                            <span className={`badge inline-flex items-center gap-1 ${tone}`}>
+                              <Icon className="h-3 w-3" />
+                              {label}
+                            </span>
+                          );
+                        })()}
+                      </td>
                       <td className="px-4 py-3 text-center font-bold">
                         {(l.view_count ?? 0).toLocaleString()}
                       </td>
