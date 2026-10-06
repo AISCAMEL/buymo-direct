@@ -8,6 +8,7 @@ import { compressImage } from '@/lib/image';
 import { MAKERS, BODY_TYPES, TRANSMISSIONS, FUELS, PREFECTURES, DRIVETRAINS, COLORS, EQUIPMENT_GROUPS } from '@/lib/constants';
 import type { Listing, ListingImage } from '@/lib/types';
 import { AiDescriptionButton } from '@/components/AiDescriptionButton';
+import { PriceGuide } from '@/components/PriceGuide';
 import { formatYen } from '@/lib/format';
 import { PHOTO_GUIDE, guideIndex } from '@/lib/photo-guide';
 
@@ -81,6 +82,7 @@ export function ListingForm({
   const wizardAiMax       = sp.get('ai_price_max') ? Number(sp.get('ai_price_max')) : null;
   const wizardType        = (sp.get('listing_type') ?? initial?.listing_type ?? 'direct') as 'direct' | 'proxy';
 
+  const priceRef = useRef<HTMLInputElement>(null);
   const [maker, setMaker] = useState(listing?.maker ?? wizardMaker);
   const [modelVal, setModelVal] = useState(listing?.model ?? wizardModel);
   const [year, setYear] = useState(listing?.year ?? wizardYear ?? CURRENT_YEAR - 3);
@@ -554,6 +556,7 @@ export function ListingForm({
               </p>
             )}
             <input
+              ref={priceRef}
               name="price"
               type="number"
               required
@@ -561,6 +564,14 @@ export function ListingForm({
               defaultValue={listing?.price ?? (wizardAiMin && wizardAiMax ? Math.round((wizardAiMin + wizardAiMax) / 2) : undefined)}
               className="input"
               placeholder="1500000"
+            />
+            <PriceGuide
+              maker={maker}
+              model={modelVal}
+              year={year}
+              onApply={(p) => {
+                if (priceRef.current) priceRef.current.value = String(p);
+              }}
             />
             {dealerId && <p className="mt-1 text-xs text-slate-400">※ ここは「車両本体価格」です。諸費用は下記に入力してください。</p>}
           </div>
