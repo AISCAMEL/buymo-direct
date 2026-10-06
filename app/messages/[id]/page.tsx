@@ -114,6 +114,7 @@ export default async function ThreadPage({ params }: { params: Params }) {
           conversationId={id}
           currentUserId={user.id}
           initialMessages={(msgs ?? []) as Message[]}
+          role={isBuyer ? 'buyer' : 'seller'}
         />
       </div>
     </div>

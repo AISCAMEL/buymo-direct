@@ -8,14 +8,31 @@ import { sendMessage } from '@/app/messages/[id]/actions';
 import { formatDateTime } from '@/lib/format';
 import type { Message } from '@/lib/types';
 
+const QUICK_REPLIES: Record<'buyer' | 'seller', string[]> = {
+  buyer: [
+    'はじめまして。こちらの車両は購入可能でしょうか？',
+    '現車確認は可能ですか？ご都合のよい日程を教えてください。',
+    '総額（諸費用込み）を教えていただけますか？',
+    '値引きのご相談は可能でしょうか？',
+  ],
+  seller: [
+    'お問い合わせありがとうございます。ご不明点があればお気軽にどうぞ。',
+    '現車確認は可能です。ご希望の日程を教えてください。',
+    '総額のお見積りをお送りします。少々お待ちください。',
+    'ご検討のほどよろしくお願いいたします。',
+  ],
+};
+
 export function MessageThread({
   conversationId,
   currentUserId,
   initialMessages,
+  role,
 }: {
   conversationId: string;
   currentUserId: string;
   initialMessages: Message[];
+  role?: 'buyer' | 'seller';
 }) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [text, setText] = useState('');
@@ -30,6 +47,7 @@ export function MessageThread({
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const presenceRef = useRef<RealtimeChannel | null>(null);
 
@@ -162,6 +180,13 @@ export function MessageThread({
 
   const canSend = !sending && (!!text.trim() || !!attachFile);
 
+  const quickReplies = role ? QUICK_REPLIES[role] : [];
+  function useQuickReply(phrase: string) {
+    setText(phrase);
+    trackTyping(true);
+    setTimeout(() => textareaRef.current?.focus(), 0);
+  }
+
   return (
     <div className="flex h-[65vh] flex-col">
       {/* メッセージ一覧 */}
@@ -251,6 +276,22 @@ export function MessageThread({
         </div>
       )}
 
+      {/* クイック返信（入力が空のときのみ） */}
+      {quickReplies.length > 0 && !text.trim() && !attachFile && (
+        <div className="flex gap-1.5 overflow-x-auto border-t border-slate-100 bg-slate-50 px-3 py-2">
+          {quickReplies.map((q) => (
+            <button
+              key={q}
+              type="button"
+              onClick={() => useQuickReply(q)}
+              className="shrink-0 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-bold text-slate-600 transition hover:border-teal-300 hover:text-teal-700"
+            >
+              {q.length > 18 ? `${q.slice(0, 18)}…` : q}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* 入力フォーム */}
       <form
         onSubmit={handleSend}
@@ -274,6 +315,7 @@ export function MessageThread({
         />
 
         <textarea
+          ref={textareaRef}
           value={text}
           onChange={(e) => onTextChange(e.target.value)}
           onKeyDown={(e) => {
