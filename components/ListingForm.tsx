@@ -335,10 +335,36 @@ export function ListingForm({
           <Camera className="h-4 w-4 text-navy-500" />
           <label className="label mb-0">車両写真</label>
         </div>
-        <p className="mb-4 text-xs text-slate-500">
+        <p className="mb-3 text-xs text-slate-500">
           下のガイドに沿って撮影・アップロードすると、購入者に伝わりやすくなります。
           先頭（フロント）が一覧のサムネイルになります。すべて任意ですが、多いほど反応が上がります。
         </p>
+
+        {/* 撮影達成度 */}
+        {(() => {
+          const filled = PHOTO_GUIDE.filter((g) => images.some((im) => im.caption === g.label)).length;
+          const total = PHOTO_GUIDE.length;
+          const pct = Math.round((filled / total) * 100);
+          const done = filled >= total;
+          return (
+            <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+              <div className="mb-1.5 flex items-center justify-between text-xs">
+                <span className="font-black text-navy-700">
+                  推奨カットの撮影状況：{filled} / {total} 枚
+                </span>
+                <span className={`font-bold ${done ? 'text-emerald-600' : 'text-slate-500'}`}>
+                  {done ? 'すべて撮影済み！' : `あと${total - filled}枚で反応アップ`}
+                </span>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+                <div
+                  className={`h-full rounded-full transition-all ${done ? 'bg-emerald-500' : 'bg-teal-500'}`}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+            </div>
+          );
+        })()}
 
         {/* 撮影ガイド スロット */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
