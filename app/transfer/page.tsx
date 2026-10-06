@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { FileText, ClipboardCheck, Send, CheckCircle2, Car, UserCheck } from 'lucide-react';
+import { FileText, ClipboardCheck, Send, CheckCircle2, Car, UserCheck, Download, ArrowRight } from 'lucide-react';
 
 export const revalidate = 3600;
 const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://buymo.me';
@@ -100,6 +100,16 @@ export default function TransferPage() {
         <p className="mt-3 rounded-lg bg-amber-50 p-3 text-xs text-amber-700">
           ※ 軽自動車は必要書類が異なります（印鑑証明・車庫証明が不要な地域もあります）。詳しくはお問い合わせください。
         </p>
+        <Link
+          href="/documents/necessary"
+          className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-teal-200 bg-teal-50 p-4 transition hover:bg-teal-100"
+        >
+          <span className="flex items-center gap-2 text-sm font-bold text-teal-800">
+            <Download className="h-5 w-5 shrink-0" />
+            売る方・買う方／普通車・軽ごとの必要書類と、記入用の様式ダウンロード
+          </span>
+          <ArrowRight className="h-5 w-5 shrink-0 text-teal-700" />
+        </Link>
       </section>
 
       {/* FAQ */}
@@ -123,6 +133,7 @@ export default function TransferPage() {
         <p className="mt-1 text-sm text-slate-500">必要書類のご案内から、手続き完了までサポートします。</p>
         <div className="mt-4 flex flex-wrap justify-center gap-3">
           <Link href="/contact" className="btn-primary px-6">相談する（無料）</Link>
+          <Link href="/documents/necessary" className="btn-outline px-6">必要書類・様式を見る</Link>
           <Link href="/escrow" className="btn-outline px-6">エスクロー決済について</Link>
         </div>
       </section>
