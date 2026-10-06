@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { MapPin, Gauge, Calendar, Fuel, Settings2, Palette, ShieldCheck, Eye, Heart, Hash, Banknote, Tag, ArrowRight, Check } from 'lucide-react';
+import { MapPin, Gauge, Calendar, Fuel, Settings2, Palette, ShieldCheck, Eye, Heart, Hash, Banknote, Tag, ArrowRight, Check, Calculator, ChevronDown } from 'lucide-react';
 import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { formatYen, formatMileage, formatDate } from '@/lib/format';
@@ -18,6 +18,7 @@ import { ListingGrid } from '@/components/ListingGrid';
 import { getRelatedListings } from '@/lib/related';
 import { computeMarketStats } from '@/lib/market';
 import { PriceAssessment } from '@/components/PriceAssessment';
+import { LoanSimulator } from '@/components/LoanSimulator';
 import { ShareButton } from '@/components/ShareButton';
 import { LOAN_APR_FROM } from '@/lib/constants';
 import { monthlyPayment } from '@/lib/loan';
@@ -470,6 +471,16 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
           >
             ローン仮審査を申し込む →
           </Link>
+
+          <details className="group mt-2 rounded-xl border border-slate-200 bg-slate-50/60 p-3">
+            <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-bold text-navy-700">
+              <span className="flex items-center gap-1.5"><Calculator className="h-4 w-4 text-navy-500" />ローン返済シミュレーション</span>
+              <ChevronDown className="h-4 w-4 text-slate-400 transition group-open:rotate-180" />
+            </summary>
+            <div className="mt-3">
+              <LoanSimulator principal={listing.price} aprFrom={LOAN_APR_FROM} />
+            </div>
+          </details>
 
           {(() => {
             const lp = listing as unknown as {
