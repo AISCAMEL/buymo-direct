@@ -47,8 +47,8 @@ export async function Header() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 text-navy-500">
           <Image src="/buymo-logo-mark.png" alt="BUYMO" width={32} height={32} className="h-8 w-8 object-contain" priority />
-          <span className="text-[22px] font-black tracking-tight leading-none">
-            BUYMO<span className="ml-1 align-middle rounded-md bg-navy-500 px-1.5 py-[3px] text-[11px] font-bold text-white">ダイレクト</span>
+          <span className="flex items-center gap-1.5 text-[22px] font-black tracking-tight leading-none">
+            BUYMO<span className="rounded-md bg-gold-500 px-2 py-0.5 text-[20px] font-black leading-none text-navy-900">BD</span>
           </span>
         </Link>
 

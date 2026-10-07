@@ -59,8 +59,8 @@ export function Footer() {
         <div className="mb-10 flex flex-col gap-1.5">
           <div className="flex items-center gap-2 text-white">
             <Car className="h-6 w-6" />
-            <span className="text-lg font-black tracking-tight">
-              BUYMO<span className="text-mint-500"> ダイレクト</span>
+            <span className="flex items-center gap-1.5 text-lg font-black tracking-tight">
+              BUYMO<span className="rounded-md bg-gold-500 px-1.5 py-0.5 text-base font-black leading-none text-navy-900">BD</span>
             </span>
           </div>
           <p className="text-sm">買取保証つき 中古車ダイレクト販売 ／ 合同会社アイズ</p>
