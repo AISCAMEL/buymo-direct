@@ -12,6 +12,7 @@ import {
   Tag,
   BookOpen,
   Car,
+  Recycle,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ListingGrid } from '@/components/ListingGrid';
@@ -313,6 +314,19 @@ export default async function HomePage() {
                 </div>
               </div>
             </div>
+
+            {/* 廃車・事故車・不動車（買取専門） */}
+            <Link
+              href="/haisha"
+              className="mt-5 flex flex-col items-start gap-3 rounded-2xl border border-navy-100 bg-navy-50 p-5 transition hover:border-navy-300 sm:flex-row sm:items-center"
+            >
+              <Recycle className="h-7 w-7 shrink-0 text-navy-500" />
+              <div className="min-w-0">
+                <p className="text-base font-black text-navy-800">廃車・事故車・不動車は「その場提示」買取</p>
+                <p className="text-sm text-slate-600">全国買取価格表をもとに金額を即提示。還付金も別枠で計算、無料引取り・抹消手続き対応。</p>
+              </div>
+              <span className="btn-primary shrink-0 px-5 py-2.5 text-sm sm:ml-auto">買取額を見る →</span>
+            </Link>
           </div>
         </section>
 

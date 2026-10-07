@@ -132,6 +132,9 @@ export default async function SellPage({
         <Link href="/listings/valuation" className="ml-auto text-accent-600 hover:underline">
           すぐ現金化したい方は「無料査定（買取）」→
         </Link>
+        <Link href="/haisha" className="text-accent-600 hover:underline">
+          廃車・事故車・不動車は「その場提示」買取→
+        </Link>
       </div>
 
       <Suspense>
