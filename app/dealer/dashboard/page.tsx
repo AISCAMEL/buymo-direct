@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Package, Users, TrendingUp, ShieldCheck, Clock, FileText, Receipt } from 'lucide-react';
+import { Package, Users, TrendingUp, ShieldCheck, Clock, FileText, Receipt, Sparkles } from 'lucide-react';
 import { requireDealer } from '@/lib/dealer';
 import { formatYen } from '@/lib/format';
 
@@ -71,9 +71,32 @@ export default async function DealerDashboardPage() {
     { icon: Users, label: 'スタッフ数', value: String(staffCount ?? 0) + '名', href: '/dealer/staff' },
   ];
 
+  // スキル（提供サービス）未登録の検知 → 依頼受注 or 買取加盟へ誘導
+  const { count: skillCount } = await s
+    .from('partner_skills')
+    .select('id', { count: 'exact', head: true })
+    .eq('dealer_id', dealer.dealerId)
+    .eq('active', true);
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-black">ダッシュボード</h1>
+
+      {skillCount === 0 && (
+        <div className="flex flex-col gap-3 rounded-2xl border-2 border-gold-300 bg-gold-50 p-4 sm:flex-row sm:items-center">
+          <Sparkles className="h-6 w-6 shrink-0 text-gold-600" />
+          <div className="flex-1">
+            <p className="font-black text-navy-800">まだスキル（提供サービス）が未登録です</p>
+            <p className="text-sm text-slate-600">
+              スキルを登録すると、顧客から<strong>依頼が届きます</strong>（成約時のみ手数料）。買取をやりたい場合は<strong>買取加盟</strong>へ。
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Link href="/dealer/skills" className="btn-accent px-4 py-2 text-sm">スキルを登録</Link>
+            <Link href="/join" className="btn-gold px-4 py-2 text-sm">買取を始める</Link>
+          </div>
+        </div>
+      )}
 
       <div className="flex items-start gap-3 rounded-2xl border border-navy-200 bg-navy-50 p-4">
         <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-navy-600" />

@@ -9,10 +9,11 @@ export const SKILL_CATEGORY: Record<string, string> = {
   appraisal: '査定・買取', buyback: '査定・買取', sales: '査定・買取',
   maintenance: '整備・修理', inspection: '整備・修理', bodywork: '整備・修理',
   painting: '整備・修理', tire: '整備・修理',
-  coating: '美装', cleaning: '美装',
+  coating: '美装', cleaning: '美装', wrapping: '美装',
   nav_install: '電装・取付', drive_recorder: '電装・取付', electrical: '電装・取付',
   transport: '物流・手続き', delivery: '物流・手続き', registration: '物流・手続き',
-  scrap: '物流・手続き', dismantle: '物流・手続き',
+  scrap: '物流・手続き', dismantle: '物流・手続き', roadservice: '物流・手続き',
+  rental: 'レンタカー・リース', lease: 'レンタカー・リース', subscription: 'レンタカー・リース',
   other: 'その他',
 };
 

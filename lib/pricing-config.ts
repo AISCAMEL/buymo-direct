@@ -69,6 +69,7 @@ export const PRICING_DEFAULTS: PricingConfig = {
     '美装': 0.10,
     '電装・取付': 0.10,
     '物流・手続き': 0.08,
+    'レンタカー・リース': 0.10,
     'その他': 0.10,
   },
   matchingFeeDefaultRate: 0.10,
