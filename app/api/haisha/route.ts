@@ -19,10 +19,12 @@ export async function POST(req: Request) {
   }
 
   const dispIdx = Number(body.dispIdx);
+  const weightIdx = Number(body.weightIdx);
   const input: HaishaInput = {
     pref: String(body.pref ?? ''),
     side: body.side ? String(body.side) : undefined,
     dispIdx: Number.isFinite(dispIdx) ? dispIdx : 0,
+    weightIdx: Number.isFinite(weightIdx) ? weightIdx : undefined,
     mileage: body.mileage ? String(body.mileage) : undefined,
     run: body.run ? String(body.run) : undefined,
     key: body.key ? String(body.key) : undefined,
@@ -61,6 +63,7 @@ export async function POST(req: Request) {
       pref: str(input.pref, 20),
       side: str(input.side, 20),
       disp_idx: input.dispIdx,
+      weight_idx: input.weightIdx ?? null,
       mileage: str(input.mileage, 20),
       run_state: str(input.run, 20),
       key_state: str(input.key, 20),

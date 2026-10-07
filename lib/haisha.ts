@@ -94,20 +94,30 @@ export const PREF_ORDER: string[] = [
 ];
 
 // 欠品・不足の減額（目安）。※実際は車両確認後に確定
+// タイヤなし・自走不可（完全に走らない）など、具体的な状態に減額を効かせる。
 const MISSING_CUT: Record<string, number> = {
   battery: 2000,
   muffler: 8000,
-  tire: 3000,
+  tire: 5000, // タイヤ・ホイールなし
   ext: 3000,
   doc: 3000,
 };
+const CUT_IMMOBILE = 3000; // 自走不可（完全に走らない＝積載車引取り）
+const CUT_ACCIDENT = 5000; // 事故・損傷大
+const CUT_NOKEY = 2000; // 鍵なし
 
 // リサイクル料金（概算・未預託時の差引用）。排気量区分indexで引く。
 const RECYCLE_FEE: Record<number, number> = { 0: 7000, 1: 9000, 2: 11000, 3: 12000, 4: 14000, 5: 16000, 6: 18000 };
 
-// 還付金の概算用テーブル（排気量区分index）
+// 還付金の概算用テーブル
 const JIDOSHA_ZEI: Record<number, number> = { 0: 0, 1: 30500, 2: 36000, 3: 36000, 4: 43500, 5: 50000, 6: 57000 }; // 自動車税 年額（軽は月割還付なし）
-const JURYO_ZEI_Y: Record<number, number> = { 0: 3300, 1: 8200, 2: 12300, 3: 16400, 4: 16400, 5: 20500, 6: 24600 }; // 重量税 年相当（概算）
+
+// 車両重量区分（車検証の車両重量）。重量税はこの区分で算定する。
+export const WEIGHT_CLASSES = ['軽自動車', '〜0.5t', '〜1.0t', '〜1.5t', '〜2.0t', '〜2.5t', '〜3.0t'] as const;
+// 自動車重量税 年額（自家用乗用・本則税率の概算）。index は WEIGHT_CLASSES に対応。
+const JURYO_BY_WEIGHT: Record<number, number> = { 0: 3300, 1: 4100, 2: 8200, 3: 12300, 4: 16400, 5: 20500, 6: 24600 };
+// 重量区分が未指定のときのフォールバック（排気量区分index → 重量税 年相当）
+const JURYO_ZEI_Y: Record<number, number> = { 0: 3300, 1: 8200, 2: 12300, 3: 16400, 4: 16400, 5: 20500, 6: 24600 };
 const JIBAI_MONTH = { kei: 840, normal: 950 }; // 自賠責 月額（概算）
 
 // 表示ラベル
@@ -144,6 +154,7 @@ export type HaishaInput = {
   pref: string;
   side?: string; // 京都府/兵庫県のとき '日本海側' | '太平洋側'
   dispIdx: number;
+  weightIdx?: number; // 車両重量区分（WEIGHT_CLASSES index）— 重量税の算定に使用
   mileage?: string;
   run?: string;
   key?: string; // 'ok' | 'nokey'
@@ -195,10 +206,14 @@ export function calcHaishaPrice(input: HaishaInput): HaishaPrice {
       lines.push({ label: `${MISSING_LABELS[m]} 減額`, amount: -MISSING_CUT[m] });
     }
   }
-  if (input.run === 'accident') lines.push({ label: '事故・損傷大 減額', amount: -5000 });
+  // 自走不可（完全に走らない）＝積載車での引取りが必要なため減額
+  if (input.run === 'nostart' || input.run === 'idle') {
+    lines.push({ label: '自走不可（不動）減額', amount: -CUT_IMMOBILE });
+  }
+  if (input.run === 'accident') lines.push({ label: '事故・損傷大 減額', amount: -CUT_ACCIDENT });
   if (input.run === 'flood') { blocked = true; warnings.push('水没・冠水 → 別途査定'); }
   if (input.run === 'burn') { blocked = true; warnings.push('火災・全焼 → 別途査定'); }
-  if (input.key === 'nokey') lines.push({ label: '鍵なし 減額', amount: -2000 });
+  if (input.key === 'nokey') lines.push({ label: '鍵なし 減額', amount: -CUT_NOKEY });
 
   const offer = Math.max(0, lines.reduce((s, l) => s + l.amount, 0));
   return { outOfTable: false, base, lines, offer, blocked, warnings };
@@ -223,7 +238,11 @@ export function calcHaishaRefund(input: HaishaInput, now: Date = new Date()): Ha
   const shakenMonths = input.shakenMonths ?? 0;
   const eikyu = (input.matsu ?? 'eikyu') === 'eikyu';
   const jidosha = isKei ? 0 : Math.round((JIDOSHA_ZEI[di] ?? 0) * taxRemain / 12);
-  const juryo = eikyu ? Math.round((JURYO_ZEI_Y[di] ?? 0) * shakenMonths / 12) : 0;
+  // 重量税は車両重量区分で算定（未指定なら排気量区分からの概算にフォールバック）
+  const juryoPerYear = input.weightIdx != null
+    ? (JURYO_BY_WEIGHT[input.weightIdx] ?? JURYO_ZEI_Y[di] ?? 0)
+    : (JURYO_ZEI_Y[di] ?? 0);
+  const juryo = eikyu ? Math.round(juryoPerYear * shakenMonths / 12) : 0;
   const jibai = (isKei ? JIBAI_MONTH.kei : JIBAI_MONTH.normal) * shakenMonths;
   return { jidosha, juryo, jibai, taxRemain, shakenMonths, eikyu, total: jidosha + juryo + jibai };
 }

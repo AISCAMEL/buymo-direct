@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { Calculator, Loader2, CheckCircle2, AlertTriangle, Info, FileText, ArrowRight } from 'lucide-react';
 import { formatYen } from '@/lib/format';
 import {
-  PREF_ORDER, PREF_NOTE, OUT_OF_TABLE, SIDE_PREFS, DISP_CLASSES, MILEAGE_OPTIONS,
+  PREF_ORDER, PREF_NOTE, OUT_OF_TABLE, SIDE_PREFS, DISP_CLASSES, WEIGHT_CLASSES, MILEAGE_OPTIONS,
   OWNER_LABELS, calcHaishaPrice, calcHaishaRefund, requiredHaishaDocs, type HaishaInput,
 } from '@/lib/haisha';
 
@@ -29,6 +29,7 @@ export function HaishaSimulator() {
   const [pref, setPref] = useState('東京都');
   const [side, setSide] = useState('太平洋側');
   const [dispIdx, setDispIdx] = useState(3);
+  const [weightIdx, setWeightIdx] = useState(3);
   const [mileage, setMileage] = useState('〜10万km');
   const [run, setRun] = useState('nostart');
   const [keyState, setKeyState] = useState('ok');
@@ -53,10 +54,10 @@ export function HaishaSimulator() {
 
   const sideNeeded = SIDE_PREFS.includes(pref);
   const input: HaishaInput = {
-    pref, side, dispIdx, mileage, run, key: keyState, shakenMonths: shaken, rep, missing, owner, matsu,
+    pref, side, dispIdx, weightIdx, mileage, run, key: keyState, shakenMonths: shaken, rep, missing, owner, matsu,
   };
   const price = useMemo(() => calcHaishaPrice(input), [pref, side, dispIdx, run, keyState, missing]);
-  const refund = useMemo(() => calcHaishaRefund(input), [dispIdx, shaken, matsu]);
+  const refund = useMemo(() => calcHaishaRefund(input), [dispIdx, weightIdx, shaken, matsu]);
   const docs = requiredHaishaDocs(owner);
 
   function toggleMissing(v: string) {
@@ -75,7 +76,7 @@ export function HaishaSimulator() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           maker, model, year, body, color,
-          pref, side: sideNeeded ? side : undefined, dispIdx, mileage,
+          pref, side: sideNeeded ? side : undefined, dispIdx, weightIdx, mileage,
           run, key: keyState, shakenMonths: shaken, rep, missing, owner, matsu,
           name, phone, email: email.trim() || undefined, preferredDate: date, notes,
         }),
@@ -159,6 +160,11 @@ export function HaishaSimulator() {
           <Field label="排気量区分">
             <select className="input" value={dispIdx} onChange={(e) => setDispIdx(Number(e.target.value))}>
               {DISP_CLASSES.map((d, i) => <option key={d} value={i}>{d}</option>)}
+            </select>
+          </Field>
+          <Field label="車両重量（車検証）">
+            <select className="input" value={weightIdx} onChange={(e) => setWeightIdx(Number(e.target.value))}>
+              {WEIGHT_CLASSES.map((w, i) => <option key={w} value={i}>{w}</option>)}
             </select>
           </Field>
           <Field label="走行距離">

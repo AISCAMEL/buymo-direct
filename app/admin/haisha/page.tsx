@@ -3,7 +3,7 @@ import { createServiceClient } from '@/lib/supabase/service';
 import { Recycle, Inbox, Phone, User } from 'lucide-react';
 import { formatYen } from '@/lib/format';
 import {
-  DISP_CLASSES, OWNER_LABELS, RUN_LABELS, MISSING_LABELS, requiredHaishaDocs,
+  DISP_CLASSES, WEIGHT_CLASSES, OWNER_LABELS, RUN_LABELS, MISSING_LABELS, requiredHaishaDocs,
 } from '@/lib/haisha';
 import { updateHaishaStatus, toggleHaishaFlag, saveHaishaMemo } from './actions';
 
@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 type Row = {
   id: string;
   maker: string | null; model: string | null; year: number | null; body: string | null; color: string | null;
-  pref: string | null; side: string | null; disp_idx: number | null; mileage: string | null;
+  pref: string | null; side: string | null; disp_idx: number | null; weight_idx: number | null; mileage: string | null;
   run_state: string | null; key_state: string | null; shaken_months: number | null; repaired: boolean | null; missing: string[] | null;
   owner_type: string | null; matsu_type: string | null;
   base_price: number | null; offer_price: number | null; refund_total: number | null; needs_assessment: boolean | null;
@@ -133,7 +133,7 @@ export default async function AdminHaishaPage({ searchParams }: { searchParams: 
                     {r.preferred_date && <KV k="希望引取日" v={r.preferred_date} />}
                     <KV k="車両" v={`${r.maker ?? ''} ${r.model ?? ''}（${r.year ?? '-'}年 / ${r.color ?? '-'}）`} />
                     <KV k="エリア / 排気量" v={`${r.pref ?? ''}${r.side ? ` ${r.side}` : ''} / ${r.disp_idx != null ? DISP_CLASSES[r.disp_idx] : '-'}`} />
-                    <KV k="走行 / 車検残" v={`${r.mileage ?? '-'} / ${r.shaken_months ?? 0}ヶ月`} />
+                    <KV k="車両重量 / 走行 / 車検残" v={`${r.weight_idx != null ? WEIGHT_CLASSES[r.weight_idx] : '-'} / ${r.mileage ?? '-'} / ${r.shaken_months ?? 0}ヶ月`} />
                     <KV k="状態" v={`${RUN_LABELS[r.run_state ?? ''] ?? '-'}${r.repaired ? ' / 修復歴あり' : ''}${r.key_state === 'nokey' ? ' / 鍵なし' : ''}`} />
                     <KV k="欠品" v={(r.missing && r.missing.length) ? r.missing.map((m) => MISSING_LABELS[m] ?? m).join('・') : 'なし'} />
                     <KV k="名義 / 抹消" v={`${OWNER_LABELS[r.owner_type ?? ''] ?? '-'} / ${r.matsu_type === 'eikyu' ? '永久抹消' : '一時抹消'}`} />
