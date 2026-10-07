@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Building2, MapPin, Package } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import { skillCategory } from '@/lib/matching-fee';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: '加盟店一覧 | BUYMO' };
@@ -66,6 +67,19 @@ export default async function DealersPage({
   const countMap: Record<string, number> = {};
   for (const row of counts ?? []) {
     countMap[row.dealer_id] = (countMap[row.dealer_id] ?? 0) + 1;
+  }
+
+  // 各加盟店の提供サービス（ジャンル）バッジ用
+  const { data: dealerSkillRows } = await s
+    .from('partner_skills')
+    .select('dealer_id, skill_key')
+    .eq('active', true)
+    .in('dealer_id', (dealers ?? []).map((d: any) => d.id));
+  const catMap: Record<string, string[]> = {};
+  for (const row of (dealerSkillRows ?? []) as { dealer_id: string; skill_key: string }[]) {
+    const c = skillCategory(row.skill_key);
+    const arr = (catMap[row.dealer_id] ??= []);
+    if (!arr.includes(c)) arr.push(c);
   }
 
   // prefecture options
@@ -148,6 +162,13 @@ export default async function DealersPage({
               {d.company_name && <p className="text-sm text-slate-500">{d.company_name}</p>}
               {d.description && (
                 <p className="mt-1 line-clamp-2 text-sm text-slate-600">{d.description}</p>
+              )}
+              {(catMap[d.id] ?? []).length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {(catMap[d.id] ?? []).slice(0, 4).map((c) => (
+                    <span key={c} className="rounded-full bg-accent-50 px-2 py-0.5 text-[11px] font-bold text-accent-600">{c}</span>
+                  ))}
+                </div>
               )}
             </div>
             <div className="flex items-center justify-between border-t border-slate-100 pt-3 text-sm">
