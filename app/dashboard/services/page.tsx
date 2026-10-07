@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import {
   Landmark, Star, ShieldCheck, Truck, ClipboardList,
-  Zap, Phone, Heart, BarChart2, FileCheck, Gift, Shield, Banknote,
+  Zap, Phone, Heart, BarChart2, FileCheck, Gift, Shield, Banknote, Recycle,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 
@@ -49,6 +49,14 @@ const SERVICES = [
     desc: '全国どこへでも。指定日に自宅まで安全にお届けします。',
     badge: null,
     color: 'text-orange-600 bg-orange-50',
+  },
+  {
+    href: '/dashboard/haisha',
+    icon: Recycle,
+    label: '廃車買取（その場提示）',
+    desc: '全国買取価格表をもとに金額をその場で提示。還付金も別枠で算定。無料引取り・抹消手続き対応。',
+    badge: '買取',
+    color: 'text-navy-600 bg-navy-50',
   },
   {
     href: '/dashboard/warranty',
