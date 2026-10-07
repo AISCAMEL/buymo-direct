@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
 import { calcHaishaPrice, calcHaishaRefund, type HaishaInput } from '@/lib/haisha';
+import { sendHaishaRequestEmails } from '@/lib/email';
+import { createNotification } from '@/lib/notifications';
 
 // 廃車買取のお申し込み（未ログインでも可）。金額はサーバー側で再計算して保存する。
 export async function POST(req: Request) {
@@ -80,6 +82,35 @@ export async function POST(req: Request) {
     });
   } catch (err) {
     console.error('[haisha] DB保存に失敗:', err instanceof Error ? err.message : err);
+  }
+
+  // 通知（ベストエフォート：失敗してもレスポンスは成功）
+  const vehicle = `${str(body.maker, 40) ?? ''} ${str(body.model, 60) ?? ''}`.trim() || '廃車車両';
+  try {
+    await sendHaishaRequestEmails({
+      applicantEmail: email || null,
+      name,
+      vehicle: `${vehicle}${body.year ? `（${Number(body.year)}年）` : ''}`,
+      pref: input.pref,
+      offer: price.outOfTable ? null : price.offer,
+      refund: refund.total,
+      needsAssessment: price.blocked || price.outOfTable,
+    });
+  } catch (err) {
+    console.error('[haisha] メール送信に失敗:', err instanceof Error ? err.message : err);
+  }
+  if (userId) {
+    try {
+      await createNotification(
+        userId,
+        'system',
+        '廃車買取のお申し込みを受け付けました',
+        `${vehicle} の買取申込を受け付けました。担当よりご連絡します。`,
+        '/dashboard/haisha',
+      );
+    } catch (err) {
+      console.error('[haisha] 通知作成に失敗:', err instanceof Error ? err.message : err);
+    }
   }
 
   return NextResponse.json({

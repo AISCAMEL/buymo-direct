@@ -311,3 +311,60 @@ export async function sendAppraisalResultEmail(
   `);
   await sendEmail({ to, subject: '【BUYMO】車両査定結果のお知らせ', html });
 }
+
+/** 廃車買取 新規申込メール（運営向け＋申込者の受付確認）。 */
+export async function sendHaishaRequestEmails(opts: {
+  applicantEmail?: string | null;
+  name: string;
+  vehicle: string;
+  pref: string;
+  offer: number | null;
+  refund: number;
+  needsAssessment: boolean;
+}): Promise<void> {
+  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const yen = (n: number) => '¥' + n.toLocaleString('ja-JP');
+  const offerTxt = opts.offer == null ? '別途見積り' : yen(opts.offer);
+
+  const ops = opsEmail();
+  if (ops) {
+    const html = _wrap(`
+      ${_h('廃車買取の新規申込')}
+      ${_p(`${_strong(esc(opts.name))} 様より廃車買取のお申し込みがありました。`)}
+      ${_p(`車両：${esc(opts.vehicle)}`)}
+      ${_p(`エリア：${esc(opts.pref)}`)}
+      ${_p(`その場提示額：${_strong(offerTxt)}／還付金（概算）：${yen(opts.refund)}`)}
+      ${opts.needsAssessment ? _p('⚠ 要別途査定（引取不可・水没・火災・エンジン欠品 等）') : ''}
+      ${_btn('管理画面で確認', `${_siteUrl()}/admin/haisha`)}
+    `);
+    await sendEmail({ to: ops, subject: '【廃車買取】新規申込', html });
+  }
+
+  if (opts.applicantEmail) {
+    const html = _wrap(`
+      ${_h('廃車買取のお申し込みを受け付けました')}
+      ${_p(`${_strong(esc(opts.name))} 様`)}
+      ${_p('以下の内容で受け付けました。担当より無料引取り・正式金額・必要書類をご案内します（通常1〜2営業日）。')}
+      ${_p(`車両：${esc(opts.vehicle)}`)}
+      ${_p(`その場提示額（概算）：${_strong(offerTxt)}`)}
+      ${_p(`還付金（別枠・概算）：${yen(opts.refund)}`)}
+      ${_btn('申込状況を確認', `${_siteUrl()}/dashboard/haisha`)}
+    `);
+    await sendEmail({ to: opts.applicantEmail, subject: '【BUYMO】廃車買取のお申し込みを受け付けました', html });
+  }
+}
+
+/** 廃車買取 進捗更新メール（申込者向け）。 */
+export async function sendHaishaStatusEmail(
+  to: string,
+  opts: { statusLabel: string; vehicle: string },
+): Promise<void> {
+  if (!to) return;
+  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const html = _wrap(`
+    ${_h('廃車買取の進捗が更新されました')}
+    ${_p(`お申し込みの廃車買取（${esc(opts.vehicle)}）のステータスが ${_strong(esc(opts.statusLabel))} に更新されました。`)}
+    ${_btn('申込状況を確認', `${_siteUrl()}/dashboard/haisha`)}
+  `);
+  await sendEmail({ to, subject: `【BUYMO】廃車買取の進捗：${opts.statusLabel}`, html });
+}
