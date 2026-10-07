@@ -13,7 +13,6 @@ export const SKILL_CATEGORY: Record<string, string> = {
   nav_install: '電装・取付', drive_recorder: '電装・取付', electrical: '電装・取付',
   transport: '物流・手続き', delivery: '物流・手続き', registration: '物流・手続き',
   scrap: '物流・手続き', dismantle: '物流・手続き', roadservice: '物流・手続き',
-  rental: 'レンタカー・リース', lease: 'レンタカー・リース', subscription: 'レンタカー・リース',
   other: 'その他',
 };
 

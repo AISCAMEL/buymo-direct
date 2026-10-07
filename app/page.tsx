@@ -337,7 +337,7 @@ export default async function HomePage() {
               <div>
                 <h2 className="text-xl font-black text-navy-800">車のプロに依頼する</h2>
                 <p className="mt-1 text-sm text-slate-600">
-                  整備・車検・板金・コーティング・電装・レンタカーまで、認定プロに直接依頼できます。
+                  整備・車検・板金・コーティング・電装まで、認定プロに直接依頼できます。
                 </p>
               </div>
               <Link href="/dealers" className="btn-primary px-5 py-2.5 text-sm">プロを探す →</Link>
@@ -347,7 +347,6 @@ export default async function HomePage() {
                 ['整備・修理', '整備・車検・板金'],
                 ['美装', 'コーティング・洗車'],
                 ['電装・取付', 'ナビ・ドラレコ'],
-                ['レンタカー・リース', 'レンタカー・リース'],
                 ['物流・手続き', '陸送・名義変更'],
                 ['査定・買取', '査定・買取'],
               ].map(([cat, label]) => (
