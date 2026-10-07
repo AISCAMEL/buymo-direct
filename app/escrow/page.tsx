@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import { ShieldCheck, Lock, HandCoins, CheckCircle2, UserCheck, FileCheck2, Headphones } from 'lucide-react';
 
@@ -34,16 +35,20 @@ export default function EscrowPage() {
   return (
     <div className="space-y-12">
       {/* ヒーロー */}
-      <section className="overflow-hidden rounded-2xl bg-gradient-to-br from-navy-700 to-navy-500 px-6 py-12 text-white">
-        <p className="mb-2 flex items-center gap-1.5 text-sm font-bold text-mint-200"><ShieldCheck className="h-4 w-4" />安心の決済</p>
-        <h1 className="text-3xl font-black sm:text-4xl">エスクロー決済で、はじめての個人間取引も安心</h1>
-        <p className="mt-3 max-w-2xl text-white/85">
-          代金を第三者（BUYMO）が一時お預かりし、<strong className="font-bold text-white">車両の受け渡しと名義変更が完了してから</strong>売主へ送金する仕組みです。
-          「お金を払ったのに車が来ない」「車を渡したのに入金されない」を防ぎます。
-        </p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link href="/listings" className="btn-accent px-6">車を探す</Link>
-          <Link href="/sell" className="rounded-xl border border-white/40 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-white/10">出品する</Link>
+      <section className="relative overflow-hidden rounded-2xl px-6 py-12 text-white">
+        <Image src="/hero-escrow.jpg" alt="" fill priority sizes="100vw" className="object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-br from-navy-800/92 to-navy-600/75" />
+        <div className="relative">
+          <p className="mb-2 flex items-center gap-1.5 text-sm font-bold text-mint-200"><ShieldCheck className="h-4 w-4" />安心の決済</p>
+          <h1 className="text-3xl font-black sm:text-4xl">エスクロー決済で、はじめての個人間取引も安心</h1>
+          <p className="mt-3 max-w-2xl text-white/85">
+            代金を第三者（BUYMO）が一時お預かりし、<strong className="font-bold text-white">車両の受け渡しと名義変更が完了してから</strong>売主へ送金する仕組みです。
+            「お金を払ったのに車が来ない」「車を渡したのに入金されない」を防ぎます。
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link href="/listings" className="btn-accent px-6">車を探す</Link>
+            <Link href="/sell" className="rounded-xl border border-white/40 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-white/10">出品する</Link>
+          </div>
         </div>
       </section>
 

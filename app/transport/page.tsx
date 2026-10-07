@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import { Truck, Phone, MapPin, ShieldCheck, Clock, Star } from 'lucide-react';
 import { TransportSimulator } from './TransportSimulator';
 
@@ -11,13 +12,17 @@ export default function TransportPage() {
   return (
     <div className="space-y-10">
       {/* ヒーロー */}
-      <section className="overflow-hidden rounded-2xl bg-gradient-to-br from-navy-700 to-navy-500 px-6 py-10 text-white">
-        <p className="mb-2 flex items-center gap-1.5 text-sm font-bold text-mint-200"><Truck className="h-4 w-4" />車の陸送</p>
-        <h1 className="text-2xl font-black sm:text-3xl">料金をその場で確認して、そのまま申し込み</h1>
-        <p className="mt-2 max-w-2xl text-white/85">
-          遠方の車もおまかせ。出発地・到着地・車のサイズを選ぶだけで概算料金が分かります。
-          全国対応の <strong className="font-bold text-white">ZERO（ゼロ）</strong> を基本に、BUYMOが手配します。
-        </p>
+      <section className="relative overflow-hidden rounded-2xl px-6 py-10 text-white">
+        <Image src="/hero-transport.jpg" alt="" fill priority sizes="100vw" className="object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-br from-navy-800/92 to-navy-600/75" />
+        <div className="relative">
+          <p className="mb-2 flex items-center gap-1.5 text-sm font-bold text-mint-200"><Truck className="h-4 w-4" />車の陸送</p>
+          <h1 className="text-2xl font-black sm:text-3xl">料金をその場で確認して、そのまま申し込み</h1>
+          <p className="mt-2 max-w-2xl text-white/85">
+            遠方の車もおまかせ。出発地・到着地・車のサイズを選ぶだけで概算料金が分かります。
+            全国対応の <strong className="font-bold text-white">ZERO（ゼロ）</strong> を基本に、BUYMOが手配します。
+          </p>
+        </div>
       </section>
 
       {/* シミュレーション＋申込 */}
