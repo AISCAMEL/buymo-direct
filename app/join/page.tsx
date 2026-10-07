@@ -9,7 +9,7 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
   const sp = await searchParams;
   const source = sp.source || 'join';
 
-  const freeItems = ['プロとしてスキル提供（整備・板金・コーティング等）', '案件の受注・チャット', '店舗プロフィールの公開', '出品（ダイレクト販売）'];
+  const freeItems = ['プロとしてスキル提供（整備・板金・コーティング・電装・レンタカー等）', '案件の受注・チャット', '店舗プロフィールの公開', '出品（ダイレクト販売）'];
   const paidItems = ['業販・仕入れ相場の詳細表示', 'オンライン講座「買取を学ぶ」実践編', '買取コミュニティ（初心者も安心・運営が見守り）', 'プロ向けの限定情報・非公開データ', '成約手数料の優遇', '上位表示・集客ブースト'];
 
   return (
@@ -21,6 +21,7 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
         <h1 className="mt-3 text-3xl font-black leading-tight">車のプロ・加盟店になる</h1>
         <p className="mt-2 text-sm text-slate-600">
           まずは<strong>無料</strong>でプロ登録。スキル提供・受注から始めて、ゆくゆくは<strong>買取加盟店</strong>として在庫販売・買取まで。
+          販売店以外（<strong>レンタカー・リース・板金・整備・コーティング</strong>など異業種）も登録・スキル提供できます。
         </p>
       </div>
 

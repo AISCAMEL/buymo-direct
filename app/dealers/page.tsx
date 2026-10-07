@@ -8,21 +8,42 @@ export const metadata = { title: '加盟店一覧 | BUYMO' };
 export default async function DealersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ prefecture?: string; skill?: string }>;
+  searchParams: Promise<{ prefecture?: string; skill?: string; category?: string }>;
 }) {
-  const { prefecture, skill } = await searchParams;
+  const { prefecture, skill, category } = await searchParams;
   const supabase = await createClient();
   const s = supabase as any;
 
-  // スキル絞り込み：該当スキルを提供する加盟店IDを取得
+  // スキルマスタ（絞り込みチップ用）
+  const { data: skillMaster } = await s.from('skills').select('key, name, category, sort').order('sort', { ascending: true });
+  const allSkills = (skillMaster ?? []) as { key: string; name: string; category: string | null; sort: number }[];
+  const categories = Array.from(new Set(allSkills.map((sk) => sk.category).filter(Boolean))) as string[];
+
+  // 絞り込み対象のスキルキー（個別スキル優先、なければ選択ジャンル内の全スキル）
+  let targetSkillKeys: string[] | null = null;
+  if (skill) targetSkillKeys = [skill];
+  else if (category) targetSkillKeys = allSkills.filter((sk) => sk.category === category).map((sk) => sk.key);
+
+  // 該当スキルを提供する加盟店IDを取得
   let skillDealerIds: string[] | null = null;
-  if (skill) {
-    const { data: ps } = await s.from('partner_skills').select('dealer_id').eq('skill_key', skill).eq('active', true);
+  if (targetSkillKeys) {
+    const { data: ps } = await s
+      .from('partner_skills')
+      .select('dealer_id')
+      .in('skill_key', targetSkillKeys.length ? targetSkillKeys : ['__none__'])
+      .eq('active', true);
     skillDealerIds = Array.from(new Set((ps ?? []).map((r: any) => r.dealer_id)));
   }
 
-  // スキルマスタ（絞り込みチップ用）
-  const { data: skillMaster } = await s.from('skills').select('key, name, sort').order('sort', { ascending: true });
+  const chipCls = (on: boolean) =>
+    `rounded-full border px-3 py-1 text-xs font-bold ${on ? 'border-accent-500 bg-accent-50 text-accent-600' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`;
+  const prefQ = (extra: Record<string, string>) => {
+    const qp = new URLSearchParams();
+    if (prefecture) qp.set('prefecture', prefecture);
+    for (const [k, v] of Object.entries(extra)) qp.set(k, v);
+    const str = qp.toString();
+    return str ? `/dealers?${str}` : '/dealers';
+  };
 
   let query = s
     .from('dealers')
@@ -60,27 +81,30 @@ export default async function DealersPage({
         </div>
       </div>
 
-      {/* Skill filter */}
+      {/* Category filter（ジャンル大分類） */}
       <div>
-        <p className="mb-1.5 text-xs font-bold text-slate-400">サービスで探す</p>
+        <p className="mb-1.5 text-xs font-bold text-slate-400">サービスのジャンルで探す</p>
         <div className="flex flex-wrap gap-2">
-          <a href={prefecture ? `/dealers?prefecture=${encodeURIComponent(prefecture)}` : '/dealers'}
-            className={`rounded-full border px-3 py-1 text-xs font-bold ${!skill ? 'border-accent-500 bg-accent-50 text-accent-600' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}>
-            すべて
-          </a>
-          {(skillMaster ?? []).map((sk: any) => {
-            const qp = new URLSearchParams();
-            if (prefecture) qp.set('prefecture', prefecture);
-            qp.set('skill', sk.key);
-            return (
-              <a key={sk.key} href={`/dealers?${qp.toString()}`}
-                className={`rounded-full border px-3 py-1 text-xs font-bold ${skill === sk.key ? 'border-accent-500 bg-accent-50 text-accent-600' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}>
-                {sk.name}
-              </a>
-            );
-          })}
+          <a href={prefQ({})} className={chipCls(!category && !skill)}>すべて</a>
+          {categories.map((c) => (
+            <a key={c} href={prefQ({ category: c })} className={chipCls(category === c)}>{c}</a>
+          ))}
         </div>
       </div>
+
+      {/* Skill filter（選択ジャンルの詳細サービス） */}
+      {(category || skill) && (
+        <div>
+          <p className="mb-1.5 text-xs font-bold text-slate-400">詳細サービス</p>
+          <div className="flex flex-wrap gap-2">
+            {allSkills
+              .filter((sk) => !category || sk.category === category)
+              .map((sk) => (
+                <a key={sk.key} href={prefQ({ skill: sk.key })} className={chipCls(skill === sk.key)}>{sk.name}</a>
+              ))}
+          </div>
+        </div>
+      )}
 
       {/* Prefecture filter */}
       <div className="flex flex-wrap gap-2">
