@@ -330,6 +330,39 @@ export default async function HomePage() {
           </div>
         </section>
 
+        {/* ── 2.6 車のプロに依頼する ── */}
+        <section className="bg-white px-4 pb-12">
+          <div className="mx-auto max-w-5xl rounded-2xl border border-slate-200 bg-navy-50 p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-black text-navy-800">車のプロに依頼する</h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  整備・車検・板金・コーティング・電装・レンタカーまで、認定プロに直接依頼できます。
+                </p>
+              </div>
+              <Link href="/dealers" className="btn-primary px-5 py-2.5 text-sm">プロを探す →</Link>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {[
+                ['整備・修理', '整備・車検・板金'],
+                ['美装', 'コーティング・洗車'],
+                ['電装・取付', 'ナビ・ドラレコ'],
+                ['レンタカー・リース', 'レンタカー・リース'],
+                ['物流・手続き', '陸送・名義変更'],
+                ['査定・買取', '査定・買取'],
+              ].map(([cat, label]) => (
+                <Link
+                  key={cat}
+                  href={`/dealers?category=${encodeURIComponent(cat)}`}
+                  className="rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-sm font-bold text-slate-600 transition hover:border-accent-500 hover:text-accent-600"
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* ── 3. 車種から探す ── */}
         <section className="bg-white px-4 py-12">
           <div className="mx-auto max-w-5xl">

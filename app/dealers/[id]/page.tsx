@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { ListingCard } from '@/components/ListingCard';
 import { RequestPartnerForm } from '@/components/RequestPartnerForm';
 import { skillLabel } from '@/lib/cases';
+import { skillCategory } from '@/lib/matching-fee';
 import { formatYen } from '@/lib/format';
 import type { ListingWithImages } from '@/lib/types';
 
@@ -198,10 +199,15 @@ export default async function DealerShopPage({ params }: { params: Promise<{ id:
           ) : (
             <div className="grid gap-2 sm:grid-cols-2">
               {skills.map((sk) => (
-                <div key={sk.skill_key} className="rounded-xl border border-slate-200 p-3">
-                  <p className="font-bold text-navy-800">{skillLabel(sk.skill_key)}</p>
-                  <p className="mt-0.5 text-sm text-accent-600">{sk.price_from != null ? `${formatYen(sk.price_from)}〜` : '要見積り'}</p>
-                  {sk.area && <p className="text-xs text-slate-400">対応エリア: {sk.area}</p>}
+                <div key={sk.skill_key} className="rounded-xl border border-slate-200 p-3.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-bold text-navy-800">{skillLabel(sk.skill_key)}</p>
+                    <span className="shrink-0 rounded-full bg-navy-50 px-2 py-0.5 text-[10px] font-bold text-navy-600">{skillCategory(sk.skill_key)}</span>
+                  </div>
+                  <p className="mt-1 text-lg font-black tabular-nums text-accent-600">
+                    {sk.price_from != null ? <>{formatYen(sk.price_from)}<span className="text-sm font-bold">〜</span></> : <span className="text-base">要見積り</span>}
+                  </p>
+                  {sk.area && <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-500"><MapPin className="h-3 w-3" />対応エリア: {sk.area}</p>}
                   {sk.note && <p className="mt-1 text-xs text-slate-500">{sk.note}</p>}
                 </div>
               ))}
