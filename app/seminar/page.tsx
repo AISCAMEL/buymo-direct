@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { TrendingUp, ShieldCheck, Users, PlayCircle } from 'lucide-react';
 import { JoinLeadForm } from '@/components/JoinLeadForm';
 
@@ -24,6 +25,10 @@ export default function SeminarPage() {
     <div className="mx-auto max-w-2xl space-y-8 py-8">
       {/* Problem / Agitation */}
       <section className="text-center">
+        <div className="relative mb-5 overflow-hidden rounded-2xl">
+          <Image src="/hero-seminar.jpg" alt="" width={1200} height={480} className="h-40 w-full object-cover sm:h-48" priority />
+          <div className="absolute inset-0 bg-gradient-to-t from-navy-900/70 to-transparent" />
+        </div>
         <span className="inline-flex items-center gap-1 rounded-full bg-navy-50 px-3 py-1 text-xs font-black text-navy-600">
           <PlayCircle className="h-3.5 w-3.5" /> 無料オンラインセミナー
         </span>

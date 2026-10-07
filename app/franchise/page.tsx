@@ -1,6 +1,7 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { redirect } from 'next/navigation';
-import { Building2, CheckCircle2, Clock, ShieldCheck, TrendingUp, Users } from 'lucide-react';
+import { CheckCircle2, Clock, ShieldCheck, TrendingUp, Users } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getViewerAccess } from '@/lib/viewer';
 import { getPricingConfig } from '@/lib/settings';
@@ -51,10 +52,13 @@ export default async function FranchisePage() {
 
   return (
     <div className="mx-auto max-w-xl space-y-6 py-6">
-      <div className="text-center">
-        <Building2 className="mx-auto h-10 w-10 text-gold-500" />
-        <h1 className="mt-2 text-3xl font-black">買取加盟のご案内</h1>
-        <p className="mt-2 text-sm text-slate-600">BUYMO の買取加盟店として、買取ビジネスを始めませんか。</p>
+      <div className="relative overflow-hidden rounded-2xl">
+        <Image src="/hero-franchise.jpg" alt="" width={1200} height={480} className="h-40 w-full object-cover sm:h-48" priority />
+        <div className="absolute inset-0 bg-gradient-to-t from-navy-900/80 to-navy-700/30" />
+        <div className="absolute inset-x-0 bottom-0 p-5 text-white">
+          <h1 className="text-2xl font-black sm:text-3xl">買取加盟のご案内</h1>
+          <p className="mt-1 text-sm text-white/85">BUYMO の買取加盟店として、買取ビジネスを始めませんか。</p>
+        </div>
       </div>
 
       {/* 加盟中/申込中の状態 */}
