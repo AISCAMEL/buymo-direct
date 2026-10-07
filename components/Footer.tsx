@@ -30,6 +30,7 @@ const FOOTER_LINKS = [
       { label: '必要書類案内', href: '/documents/necessary' },
       { label: '写真の撮り方', href: '/documents/pictures' },
       { label: '陸送手配', href: '/transport' },
+      { label: '廃車買取（その場提示）', href: '/haisha' },
       { label: '加盟店・プロ登録（無料）', href: '/join' },
     ],
   },

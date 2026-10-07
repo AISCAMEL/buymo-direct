@@ -13,6 +13,9 @@ import type { ListingWithImages } from '@/lib/types';
 
 export const revalidate = 3600;
 
+// 廃車・事故車・不動車は「その場提示」買取フロー（/haisha）へ誘導する
+const HAISHA_SLUGS = ['haisha', 'jiko', 'fudou'];
+
 type Params = Promise<{ slug: string }>;
 
 export async function generateStaticParams() {
@@ -24,7 +27,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const g = GENRE_BY_SLUG[slug];
   if (!g) return { title: '見つかりません' };
   const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://buymo.me';
-  const title = `${g.buyback}・ダイレクト販売｜${g.label}`;
+  const title = g.buybackOnly ? `${g.buyback}｜${g.label}` : `${g.buyback}・ダイレクト販売｜${g.label}`;
   return {
     title,
     description: `${g.desc} 手数料0円・買取保証つき・エスクロー決済で安心のBUYMO ダイレクト。`,
@@ -111,12 +114,16 @@ export default async function GenrePage({ params }: { params: Params }) {
           <div className="absolute inset-0 bg-gradient-to-r from-navy-900/85 to-navy-700/60" />
           <div className="relative px-6 py-12 text-white">
             <span className="mb-2 inline-block rounded-full bg-gold-500 px-3 py-1 text-xs font-black text-[#2E2408]">買取保証つき</span>
-            <h1 className="text-3xl font-black sm:text-4xl">{g.label}の買取・ダイレクト販売</h1>
+            <h1 className="text-3xl font-black sm:text-4xl">{g.buybackOnly ? `${g.label}の買取` : `${g.label}の買取・ダイレクト販売`}</h1>
             <p className="mt-2 max-w-xl text-white/85">{g.desc}</p>
             <div className="mt-5 flex flex-wrap gap-2">
-              <Link href="/listings/valuation" className="btn-gold">無料査定を申し込む（買取）</Link>
+              {HAISHA_SLUGS.includes(g.slug) ? (
+                <Link href="/haisha" className="btn-gold">その場提示で買取額を見る</Link>
+              ) : (
+                <Link href="/listings/valuation" className="btn-gold">無料査定を申し込む（買取）</Link>
+              )}
               {g.filter && <Link href={listHref} className="btn-accent">出品車を探す（ダイレクト）</Link>}
-              <Link href="/sell" className="inline-flex items-center gap-1 rounded-full border-2 border-white/70 px-5 py-2.5 text-sm font-bold text-white hover:bg-white/10">この車を出品する</Link>
+              {!g.buybackOnly && <Link href="/sell" className="inline-flex items-center gap-1 rounded-full border-2 border-white/70 px-5 py-2.5 text-sm font-bold text-white hover:bg-white/10">この車を出品する</Link>}
             </div>
           </div>
         </section>
@@ -162,7 +169,9 @@ export default async function GenrePage({ params }: { params: Params }) {
             <h2 className="text-lg font-black text-navy-800">{g.buyback}はBUYMOにおまかせ</h2>
             <p className="mx-auto mt-2 max-w-lg text-sm text-slate-600">{g.desc}</p>
             <div className="mt-4 flex justify-center gap-2">
-              <Link href="/listings/valuation" className="btn-gold">無料査定を申し込む</Link>
+              {HAISHA_SLUGS.includes(g.slug)
+                ? <Link href="/haisha" className="btn-gold">その場提示で買取額を見る</Link>
+                : <Link href="/listings/valuation" className="btn-gold">無料査定を申し込む</Link>}
               <Link href="/contact" className="btn-outline">相談する</Link>
             </div>
           </section>

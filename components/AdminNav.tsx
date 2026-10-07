@@ -34,6 +34,7 @@ const GROUPS: Group[] = [
       { href: '/admin/loans', label: 'ローン審査' },
       { href: '/admin/warranty', label: '保証見積り' },
       { href: '/admin/transport', label: '陸送申込' },
+      { href: '/admin/haisha', label: '廃車買取' },
       { href: '/admin/kyc', label: '本人確認審査' },
     ],
   },
