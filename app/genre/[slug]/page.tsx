@@ -2,11 +2,12 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Metadata } from 'next';
-import { ChevronRight, ShieldCheck, Banknote } from 'lucide-react';
+import { ChevronRight, ShieldCheck, Banknote, CheckCircle2, HelpCircle, TrendingUp } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import { ListingGrid } from '@/components/ListingGrid';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
-import { SITE_BASE, itemListJsonLd } from '@/lib/seo';
+import { SITE_BASE, itemListJsonLd, faqPageJsonLd } from '@/lib/seo';
+import { getGenreContent } from '@/lib/genre-content';
 import { applyListingFilters } from '@/lib/listingQuery';
 import { GENRES, GENRE_BY_SLUG, CROSS_GENRE_SLUGS, CROSS_AREA_SLUGS, AREA_BY_SLUG } from '@/lib/catalog';
 import type { ListingWithImages } from '@/lib/types';
@@ -40,6 +41,8 @@ export default async function GenrePage({ params }: { params: Params }) {
   const { slug } = await params;
   const g = GENRE_BY_SLUG[slug];
   if (!g) notFound();
+
+  const content = getGenreContent(g);
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -100,6 +103,10 @@ export default async function GenrePage({ params }: { params: Params }) {
           }}
         />
       )}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqPageJsonLd(content.faqs)) }}
+      />
       <div className="space-y-8">
         <Breadcrumbs
           items={[
@@ -142,6 +149,14 @@ export default async function GenrePage({ params }: { params: Params }) {
           ))}
         </section>
 
+        {/* 解説（本文） */}
+        <section className="card p-6">
+          <h2 className="text-lg font-black text-navy-800">{g.label}の買取・売却について</h2>
+          <div className="mt-3 space-y-3 text-sm leading-relaxed text-slate-600">
+            {content.intro.map((p, i) => <p key={i}>{p}</p>)}
+          </div>
+        </section>
+
         {/* 出品一覧（ダイレクト在庫があるジャンルのみ） */}
         {g.filter && (
           <section>
@@ -176,6 +191,50 @@ export default async function GenrePage({ params }: { params: Params }) {
             </div>
           </section>
         )}
+
+        {/* 高く売るコツ・特徴 */}
+        <section>
+          <h2 className="mb-3 flex items-center gap-2 text-lg font-black text-navy-800">
+            <TrendingUp className="h-5 w-5 text-accent-600" />{g.label}を高く売るポイント
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {content.points.map((p) => (
+              <div key={p.t} className="card flex items-start gap-3 p-4">
+                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-accent-600" />
+                <div><p className="text-sm font-bold text-navy-800">{p.t}</p><p className="text-xs text-slate-500">{p.d}</p></div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 売却ステップ */}
+        <section>
+          <h2 className="mb-3 text-lg font-black text-navy-800">{g.label}の{g.buybackOnly ? '買取' : '売却'}の流れ</h2>
+          <div className="grid gap-3 sm:grid-cols-4">
+            {content.steps.map((s, i) => (
+              <div key={s.t} className="card p-4">
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-navy-700 text-xs font-black text-white">{i + 1}</span>
+                <p className="mt-2 text-sm font-bold text-navy-800">{s.t}</p>
+                <p className="mt-0.5 text-xs text-slate-500">{s.d}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* よくある質問 */}
+        <section>
+          <h2 className="mb-3 flex items-center gap-2 text-lg font-black text-navy-800">
+            <HelpCircle className="h-5 w-5 text-accent-600" />よくある質問
+          </h2>
+          <div className="space-y-2">
+            {content.faqs.map((f) => (
+              <details key={f.q} className="card p-4">
+                <summary className="cursor-pointer list-none text-sm font-bold text-navy-800">Q. {f.q}</summary>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">A. {f.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
 
         {/* ジャンル×エリア（該当ジャンルのみ） */}
         {isCross && (
