@@ -124,7 +124,6 @@ export default async function HomePage() {
             </Link>
           </div>
           <div className="mt-2 flex justify-center gap-4 text-[11px] font-bold text-slate-400">
-            <Link href="/learn" className="hover:text-slate-600">買取を学ぶ</Link>
             <Link href="/join" className="hover:text-slate-600">加盟店・プロ登録</Link>
           </div>
         </section>

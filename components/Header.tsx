@@ -45,15 +45,15 @@ export async function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2 text-navy-500">
-          <Image src="/buymo-logo-mark.png" alt="BUYMO" width={32} height={32} className="h-8 w-8 object-contain" priority />
-          <span className="flex items-center gap-1.5 text-[22px] font-black tracking-tight leading-none">
-            BUYMO<span className="rounded-md bg-gold-500 px-2 py-0.5 text-[20px] font-black leading-none text-navy-900">BD</span>
+        <Link href="/" className="flex shrink-0 items-center gap-1.5 text-navy-500">
+          <Image src="/buymo-logo-mark.png" alt="BUYMO" width={32} height={32} className="h-7 w-7 object-contain sm:h-8 sm:w-8" priority />
+          <span className="flex items-center gap-1 text-lg font-black tracking-tight leading-none sm:gap-1.5 sm:text-[22px]">
+            BUYMO<span className="rounded-md bg-gold-500 px-1.5 py-0.5 text-base font-black leading-none text-navy-900 sm:px-2 sm:text-[20px]">BD</span>
           </span>
         </Link>
 
-        <nav className="flex items-center gap-1 sm:gap-2">
-          <Link href="/listings" className="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100">
+        <nav className="flex items-center gap-0.5 sm:gap-2">
+          <Link href="/listings" className="hidden whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 sm:inline-block">
             車を探す
           </Link>
           <Link href="/about" className="hidden whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 lg:inline-block">
@@ -87,10 +87,10 @@ export async function Header() {
             </>
           ) : (
             <>
-              <Link href="/login" className="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100">
+              <Link href="/login" className="whitespace-nowrap rounded-lg px-2 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 sm:px-3">
                 ログイン
               </Link>
-              <Link href="/signup" className="btn-primary whitespace-nowrap">
+              <Link href="/signup" className="btn-primary whitespace-nowrap px-3 sm:px-4">
                 無料登録
               </Link>
             </>
