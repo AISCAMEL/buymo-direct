@@ -37,8 +37,9 @@ export async function updateSession(request: NextRequest) {
   // 未ログインでも利用できる例外（完全一致）：サービス紹介ページ（/escrow は取引ページ /escrow/[id] と区別）
   const exactPublic = ['/escrow'];
   const path = request.nextUrl.pathname;
+  // 完全一致またはサブパスのみ保護（例：'/dealer' が公開の '/dealers' に誤一致しないように）
   const needsAuth =
-    protectedPaths.some((p) => path.startsWith(p)) &&
+    protectedPaths.some((p) => path === p || path.startsWith(p + '/')) &&
     !publicExceptions.some((p) => path.startsWith(p)) &&
     !exactPublic.includes(path);
 
