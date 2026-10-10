@@ -16,18 +16,28 @@ export type AdminBuybackRow = {
   status: string;
   seller_name: string;
   created_at: string;
+  from_pref: string | null;
+  base_pref: string;
+  transport_estimate: number;
+  transport_fee: number | null;
+  payout_amount: number | null;
 };
 
 export function BuybackReviewButton({ row }: { row: AdminBuybackRow }) {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  // 遠方の陸送費（控除）。確定済みがあればそれを、なければ目安を初期値に。
+  const [transport, setTransport] = useState<number>(row.transport_fee ?? row.transport_estimate ?? 0);
+
+  const payout = Math.max(0, row.buyback_price - (Number(transport) || 0));
 
   async function submit(status: string) {
     setSubmitting(true);
     const fd = new FormData();
     fd.set('id', row.id);
     fd.set('status', status);
+    fd.set('transport_fee', String(Math.max(0, Math.round(Number(transport) || 0))));
     if (status === 'rejected') fd.set('rejection_reason', reason);
     await updateBuybackStatus(fd);
     setSubmitting(false);
@@ -61,6 +71,28 @@ export function BuybackReviewButton({ row }: { row: AdminBuybackRow }) {
               </div>
             </div>
 
+            {/* 遠方の陸送費控除 */}
+            <div className="rounded-xl border border-slate-200 p-4 mb-4 space-y-2 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500">発送元 → 拠点</span>
+                <span className="font-bold">{row.from_pref || '（未登録）'} → {row.base_pref}</span>
+              </div>
+              <label className="block">
+                <span className="text-slate-500">陸送費（遠方のみ控除・目安 {formatYen(row.transport_estimate)}）</span>
+                <input
+                  type="number" min={0} step={1000} inputMode="numeric"
+                  className="input mt-1 text-sm"
+                  value={transport}
+                  onChange={(e) => setTransport(Math.max(0, Math.round(Number(e.target.value) || 0)))}
+                />
+                <span className="mt-1 block text-xs text-slate-400">近隣（陸送不要）なら 0 円に。保証額から差し引いて取引します。</span>
+              </label>
+              <div className="flex justify-between border-t pt-2">
+                <span className="font-bold text-navy-800">実支払額（保証額 − 陸送費）</span>
+                <span className="text-lg font-black text-emerald-600">{formatYen(payout)}</span>
+              </div>
+            </div>
+
             {row.status === 'pending' && (
               <button onClick={() => submit('in_review')} disabled={submitting}
                 className="w-full mb-2 rounded-xl bg-navy-600 py-2.5 text-sm font-bold text-white hover:bg-navy-700 disabled:opacity-50">
@@ -70,7 +102,7 @@ export function BuybackReviewButton({ row }: { row: AdminBuybackRow }) {
 
             <button onClick={() => submit('approved')} disabled={submitting}
               className="w-full mb-2 rounded-xl bg-emerald-600 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50">
-              {submitting ? '処理中...' : `✅ 承認する（${formatYen(row.buyback_price)}で買取）`}
+              {submitting ? '処理中...' : `✅ 承認する（${formatYen(payout)}で買取）`}
             </button>
 
             {row.status === 'approved' && (

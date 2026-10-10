@@ -4,7 +4,9 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
-import { ESCROW_FEE, TITLE_OPTIONS, installmentFeeFor, INSTALLMENT_FEE } from '@/lib/constants';
+import { TITLE_OPTIONS, installmentFeeFor, INSTALLMENT_FEE } from '@/lib/constants';
+import { escrowFee, loanFee } from '@/lib/fees';
+import { getPricingConfig } from '@/lib/settings';
 import { createSquarePayment, refundSquarePayment, isSquareConfigured } from '@/lib/square';
 import type { EscrowStatus, TitleTransferOption, PaymentMethod } from '@/lib/types';
 import { dispatchWebhook } from '@/lib/dealer';
@@ -36,6 +38,9 @@ export async function createEscrow(conversationId: string) {
   if (existing) redirect(`/escrow/${existing.id}`);
 
   const price = (conv as any).listings?.price ?? 0;
+  // エスクロー手数料は規定の段階制。売り手・買い手の両方に同額を課す（履歴として両方を記録）。
+  const cfg = await getPricingConfig();
+  const fee = escrowFee(price, cfg);
   const { data: created, error } = await supabase
     .from('escrow_transactions')
     .insert({
@@ -44,7 +49,8 @@ export async function createEscrow(conversationId: string) {
       buyer_id: conv.buyer_id,
       seller_id: conv.seller_id,
       amount: price,
-      escrow_fee: ESCROW_FEE,
+      escrow_fee: fee,
+      seller_fee: fee,
       title_option: 'standard',
       title_fee: TITLE_OPTIONS.standard.fee,
       status: 'initiated',
@@ -176,9 +182,12 @@ export async function setPaymentMethod(escrowId: string, method: PaymentMethod) 
   const subtotal = tx.amount + tx.escrow_fee + tx.title_fee;
   // 2回分割払いを選択済みの場合は定額の分割手数料を維持する
   const fee = tx.installment_count === 2 ? INSTALLMENT_FEE : installmentFeeFor(method, subtotal);
+  // 買い手がローンを使う場合はローン手数料を算出・記録（頭金なし＝小計を元金とみなす）。他の方法では0。
+  const cfg = await getPricingConfig();
+  const loan = method === 'loan' ? loanFee(subtotal, cfg) : 0;
   await supabase
     .from('escrow_transactions')
-    .update({ payment_method: method, installment_fee: fee })
+    .update({ payment_method: method, installment_fee: fee, loan_fee: loan })
     .eq('id', escrowId)
     .eq('status', 'initiated');
   revalidatePath(`/escrow/${escrowId}`);

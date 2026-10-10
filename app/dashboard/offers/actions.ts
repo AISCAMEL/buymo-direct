@@ -3,7 +3,9 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
-import { ESCROW_FEE, TITLE_OPTIONS } from '@/lib/constants';
+import { TITLE_OPTIONS } from '@/lib/constants';
+import { escrowFee } from '@/lib/fees';
+import { getPricingConfig } from '@/lib/settings';
 
 async function getAuth() {
   const supabase = await createClient();
@@ -94,7 +96,9 @@ export async function sellerAcceptOffer(offerId: string): Promise<{ error: strin
     convId = newConv.id;
   }
 
-  // エスクロー取引を作成（合意額で）
+  // エスクロー取引を作成（合意額で）。規定の段階制手数料を売り手・買い手の両方に課す。
+  const cfgA = await getPricingConfig();
+  const feeA = escrowFee(agreedAmount, cfgA);
   const { data: escrow, error: escrowErr } = await supabase
     .from('escrow_transactions')
     .insert({
@@ -103,7 +107,8 @@ export async function sellerAcceptOffer(offerId: string): Promise<{ error: strin
       buyer_id: offer.buyer_id,
       seller_id: user.id,
       amount: agreedAmount,
-      escrow_fee: ESCROW_FEE,
+      escrow_fee: feeA,
+      seller_fee: feeA,
       title_option: 'standard',
       title_fee: TITLE_OPTIONS.standard.fee,
       status: 'initiated',
@@ -218,7 +223,9 @@ export async function buyerAcceptCounter(offerId: string): Promise<{ error: stri
     convId = newConv.id;
   }
 
-  // エスクロー取引を作成（反対提示額で）
+  // エスクロー取引を作成（反対提示額で）。規定の段階制手数料を売り手・買い手の両方に課す。
+  const cfgB = await getPricingConfig();
+  const feeB = escrowFee(agreedAmount, cfgB);
   const { data: escrow, error: escrowErr } = await supabase
     .from('escrow_transactions')
     .insert({
@@ -227,7 +234,8 @@ export async function buyerAcceptCounter(offerId: string): Promise<{ error: stri
       buyer_id: user.id,
       seller_id: offer.seller_id,
       amount: agreedAmount,
-      escrow_fee: ESCROW_FEE,
+      escrow_fee: feeB,
+      seller_fee: feeB,
       title_option: 'standard',
       title_fee: TITLE_OPTIONS.standard.fee,
       status: 'initiated',

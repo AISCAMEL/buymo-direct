@@ -1,6 +1,23 @@
 // 買取保証（個人会員の出品のみ対象）の共通ロジック。
 // 出品画面には出さず、会員のマイページ内でのみ提示する。
 
+import { estimateTransport } from '@/lib/transport';
+
+/** 買取車両を集約する拠点の都道府県（陸送費の着地点）。 */
+export const BUYBACK_BASE_PREF = '東京都';
+
+/**
+ * 遠方の場合に買取保証額から差し引く陸送費の目安（発送元→拠点）。
+ * 同一拠点・不明は 0。普通車・通常車両を基準に中央値を1,000円丸めで算出する。
+ * 最終額は管理画面で確認・調整できる（あくまで目安）。
+ */
+export function estimateBuybackTransport(fromPref: string | null | undefined): number {
+  if (!fromPref || fromPref === BUYBACK_BASE_PREF) return 0;
+  const est = estimateTransport(fromPref, BUYBACK_BASE_PREF, 'normal', 'standard');
+  if (!est) return 0;
+  return Math.round((est.low + est.high) / 2 / 1000) * 1000;
+}
+
 /** 出品からの保証期間（日）。この期間内に売れなければ買取保証の対象。 */
 export const GUARANTEE_DAYS = 30;
 /** 期限の何日前からリマインドするか。 */

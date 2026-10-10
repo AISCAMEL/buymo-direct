@@ -126,7 +126,9 @@ create table if not exists public.escrow_transactions (
   buyer_id         uuid not null references public.profiles(id) on delete cascade,
   seller_id        uuid not null references public.profiles(id) on delete cascade,
   amount           int  not null,                -- 車両代金（円）
-  escrow_fee       int  not null default 5500,   -- エスクロー手数料（円）
+  escrow_fee       int  not null default 5500,   -- エスクロー手数料（買い手負担・円）
+  seller_fee       int  not null default 0,       -- エスクロー手数料（売り手負担・受取額から控除・円）
+  loan_fee         int  not null default 0,       -- ローン手数料（買い手がローン利用時・円）
   title_option     title_transfer_option not null default 'standard',
   title_fee        int  not null default 49800,  -- 名義変更代行費（円）
   payment_method   payment_method,               -- 現金 / ローン / クレジット

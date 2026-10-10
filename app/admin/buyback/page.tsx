@@ -3,6 +3,7 @@ import { ShieldCheck, Clock, CheckCircle2, XCircle, Eye } from 'lucide-react';
 import { requireAdmin } from '@/lib/admin';
 import { createServiceClient } from '@/lib/supabase/service';
 import { formatYen } from '@/lib/format';
+import { estimateBuybackTransport, BUYBACK_BASE_PREF } from '@/lib/buyback';
 import { BuybackReviewButton, type AdminBuybackRow } from './BuybackReview';
 
 export const dynamic = 'force-dynamic';
@@ -36,7 +37,7 @@ export default async function AdminBuybackPage({
   try {
     const { data, error } = await service
       .from('buyback_requests')
-      .select('id, seller_id, maker, model, year, mileage_km, ai_price_min, ai_price_max, buyback_price, status, created_at')
+      .select('id, seller_id, maker, model, year, mileage_km, ai_price_min, ai_price_max, buyback_price, status, created_at, from_pref, transport_fee, payout_amount')
       .order('created_at', { ascending: false })
       .limit(300);
     if (error) tableMissing = true;
@@ -53,19 +54,29 @@ export default async function AdminBuybackPage({
       (profs ?? []).forEach((p) => nameMap.set(p.id, p.display_name));
     }
 
-    rows = reqs.map((r) => ({
-      id: r.id,
-      maker: r.maker,
-      model: r.model,
-      year: r.year,
-      mileage_km: r.mileage_km,
-      ai_price_min: r.ai_price_min,
-      ai_price_max: r.ai_price_max,
-      buyback_price: r.buyback_price,
-      status: r.status,
-      seller_name: (r.seller_id && nameMap.get(r.seller_id)) || '（不明）',
-      created_at: r.created_at,
-    }));
+    rows = reqs.map((r) => {
+      const fromPref = (r as { from_pref?: string | null }).from_pref ?? null;
+      const savedTransport = (r as { transport_fee?: number | null }).transport_fee;
+      const estimate = estimateBuybackTransport(fromPref);
+      return {
+        id: r.id,
+        maker: r.maker,
+        model: r.model,
+        year: r.year,
+        mileage_km: r.mileage_km,
+        ai_price_min: r.ai_price_min,
+        ai_price_max: r.ai_price_max,
+        buyback_price: r.buyback_price,
+        status: r.status,
+        seller_name: (r.seller_id && nameMap.get(r.seller_id)) || '（不明）',
+        created_at: r.created_at,
+        from_pref: fromPref,
+        base_pref: BUYBACK_BASE_PREF,
+        transport_estimate: estimate,
+        transport_fee: (savedTransport ?? null) as number | null,
+        payout_amount: ((r as { payout_amount?: number | null }).payout_amount ?? null) as number | null,
+      };
+    });
 
     counts = {
       pending: rows.filter((r) => r.status === 'pending').length,

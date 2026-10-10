@@ -59,7 +59,7 @@ async function BuybackForIndividual({ userId }: { userId: string }) {
       .order('created_at', { ascending: false }),
     supabase
       .from('buyback_requests')
-      .select('id, listing_id, maker, model, year, buyback_price, status, rejection_reason, created_at')
+      .select('id, listing_id, maker, model, year, buyback_price, status, rejection_reason, created_at, transport_fee, payout_amount')
       .eq('seller_id', userId)
       .order('created_at', { ascending: false }),
   ]);
@@ -196,6 +196,14 @@ async function BuybackForIndividual({ userId }: { userId: string }) {
                   <div>
                     <p className="font-bold">{r.year}年 {r.maker} {r.model}</p>
                     <p className="mt-0.5 text-sm text-slate-500">買取保証価格 {formatYen(r.buyback_price)}</p>
+                    {(r as { transport_fee?: number | null }).transport_fee ? (
+                      <p className="mt-0.5 text-xs text-slate-500">
+                        陸送費 −{formatYen((r as { transport_fee?: number | null }).transport_fee ?? 0)}
+                        {typeof (r as { payout_amount?: number | null }).payout_amount === 'number' && (
+                          <> ・ 実支払額 <span className="font-black text-emerald-600">{formatYen((r as { payout_amount?: number | null }).payout_amount ?? 0)}</span></>
+                        )}
+                      </p>
+                    ) : null}
                     {r.rejection_reason && <p className="mt-0.5 text-xs text-red-500">理由: {r.rejection_reason}</p>}
                   </div>
                   <span className={`badge flex items-center gap-1 ${s.cls}`}><Icon className="h-3 w-3" />{s.label}</span>

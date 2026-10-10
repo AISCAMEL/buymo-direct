@@ -49,7 +49,11 @@ export default async function EscrowPage({ params }: { params: Params }) {
   const role: 'buyer' | 'seller' = isBuyer ? 'buyer' : 'seller';
   const status = tx.status as EscrowStatus;
   const couponDiscount = (tx as any).coupon_discount ?? 0;
-  const total = tx.amount + tx.escrow_fee + tx.title_fee + tx.installment_fee - couponDiscount;
+  const loanFeeAmt = (tx as any).loan_fee ?? 0;
+  const total = tx.amount + tx.escrow_fee + tx.title_fee + tx.installment_fee + loanFeeAmt - couponDiscount;
+  // 売り手の受取内訳：車両代金からエスクロー手数料（売り手負担）を控除
+  const sellerFeeAmt = (tx as any).seller_fee ?? 0;
+  const sellerPayout = Math.max(0, tx.amount - sellerFeeAmt);
   const paymentMethod = tx.payment_method as PaymentMethod | null;
 
   // 2回分割払いの状態と、次に支払う回の金額
@@ -121,6 +125,12 @@ export default async function EscrowPage({ params }: { params: Params }) {
               <dd className="font-bold">{formatYen(tx.installment_fee)}</dd>
             </div>
           )}
+          {loanFeeAmt > 0 && (
+            <div className="flex justify-between">
+              <dt className="text-slate-500">ローン手数料</dt>
+              <dd className="font-bold">{formatYen(loanFeeAmt)}</dd>
+            </div>
+          )}
           {couponDiscount > 0 && (
             <div className="flex justify-between text-emerald-600">
               <dt>クーポン割引</dt>
@@ -135,6 +145,21 @@ export default async function EscrowPage({ params }: { params: Params }) {
               <dt>お支払い方法</dt><dd>{PAYMENT_METHODS[paymentMethod].label}</dd>
             </div>
           )}
+        </dl>
+      </div>
+
+      {/* 売り手の受取内訳（当事者双方に表示：透明性のため） */}
+      <div className="card p-6">
+        <h2 className="mb-3 font-bold">売主の受取内訳</h2>
+        <dl className="space-y-2 text-sm">
+          <div className="flex justify-between"><dt className="text-slate-500">車両代金</dt><dd className="font-bold">{formatYen(tx.amount)}</dd></div>
+          <div className="flex justify-between">
+            <dt className="text-slate-500">エスクロー手数料（売主負担）</dt>
+            <dd className="font-bold">{sellerFeeAmt === 0 ? '—' : `−${formatYen(sellerFeeAmt)}`}</dd>
+          </div>
+          <div className="flex justify-between border-t border-slate-200 pt-2 text-base">
+            <dt className="font-bold">受取額（売主）</dt><dd className="font-black text-emerald-600">{formatYen(sellerPayout)}</dd>
+          </div>
         </dl>
       </div>
 

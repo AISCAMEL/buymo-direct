@@ -1,11 +1,14 @@
 import { LegalLayout } from '@/components/LegalLayout';
-import { ESCROW_FEE, TITLE_OPTIONS, INSTALLMENT_RATE, LOAN_APR_FROM } from '@/lib/constants';
+import { TITLE_OPTIONS, INSTALLMENT_RATE, LOAN_APR_FROM } from '@/lib/constants';
 import { formatYen } from '@/lib/format';
 import { OPERATOR } from '@/lib/operator';
+import { getPricingConfig } from '@/lib/settings';
 
+export const dynamic = 'force-dynamic';
 export const metadata = { title: '特定商取引法に基づく表記 | BUYMO ダイレクト' };
 
-const ROWS: { label: string; value: string }[] = [
+function buildRows(escrowFeeLabel: string): { label: string; value: string }[] {
+  return [
   { label: '販売事業者', value: OPERATOR.corporateNumber ? `${OPERATOR.companyName}（法人番号 ${OPERATOR.corporateNumber}）` : OPERATOR.companyName },
   { label: '運営統括責任者', value: OPERATOR.representative },
   { label: '所在地', value: OPERATOR.address },
@@ -23,7 +26,7 @@ const ROWS: { label: string; value: string }[] = [
   },
   {
     label: '商品代金以外の必要料金',
-    value: `エスクロー手数料 ${formatYen(ESCROW_FEE)}／名義変更代行 ${formatYen(TITLE_OPTIONS.standard.fee)}（遠隔 ${formatYen(TITLE_OPTIONS.remote.fee)}）／クレジット分割手数料 ${(INSTALLMENT_RATE * 100).toFixed(1)}%／提携ローン 年率${LOAN_APR_FROM}%〜（審査により決定）。陸送費等は別途。`,
+    value: `エスクロー手数料 ${escrowFeeLabel}（売主・買主の双方に適用）／名義変更代行 ${formatYen(TITLE_OPTIONS.standard.fee)}（遠隔 ${formatYen(TITLE_OPTIONS.remote.fee)}）／クレジット分割手数料 ${(INSTALLMENT_RATE * 100).toFixed(1)}%／提携ローン 年率${LOAN_APR_FROM}%〜（審査により決定）。陸送費等は別途。`,
   },
   { label: '支払方法', value: '現金、クレジットカード（Square）、提携ローン。' },
   { label: '支払時期', value: 'エスクロー決済：購入手続き時に代金を保全。現金：受け渡し時。' },
@@ -39,9 +42,17 @@ const ROWS: { label: string; value: string }[] = [
     label: '動作・品質',
     value: '車両は中古品であり、状態は各出品ページの記載および現車確認によります。修復歴は出品者に表示義務があります。',
   },
-];
+  ];
+}
 
-export default function TokushohoPage() {
+export default async function TokushohoPage() {
+  const cfg = await getPricingConfig();
+  const tiers = cfg.escrowTiers ?? [];
+  const escrowFeeLabel =
+    tiers.length > 0
+      ? `${formatYen(tiers[0].fee)}〜${formatYen(tiers[tiers.length - 1].fee)}（車両価格により区分）`
+      : '規定額';
+  const ROWS = buildRows(escrowFeeLabel);
   return (
     <LegalLayout title="特定商取引法に基づく表記" updated="2026-06-16">
       <p>

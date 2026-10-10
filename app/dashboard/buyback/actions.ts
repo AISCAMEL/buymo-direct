@@ -55,6 +55,7 @@ export async function applyBuyback(listingId: string) {
       ai_price_min: aiMin,
       ai_price_max: aiMax,
       buyback_price: buybackPrice,
+      from_pref: (listing as { prefecture?: string | null }).prefecture ?? null,
       status: 'pending',
     });
 
