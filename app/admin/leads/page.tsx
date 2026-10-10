@@ -1,8 +1,9 @@
 import { UserPlus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { formatDateTime } from '@/lib/format';
-import { adminSetLeadStatus, adminConvertLeadToDealer } from '@/app/admin/actions';
+import { adminSetLeadStatus, adminConvertLeadToDealer, adminSetLeadCampaign } from '@/app/admin/actions';
 import { LEAD_WISH_LABEL, LEAD_STATUS_LABEL, LEAD_STATUS_CLS } from '@/lib/membership';
+import { OFFER_INTERVALS_DAYS } from '@/lib/lead-campaign';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,6 +11,14 @@ type Row = {
   id: string; name: string | null; email: string | null; phone: string | null;
   business_type_wish: string | null; message: string | null; source: string | null;
   status: string; created_at: string; user_id: string | null;
+  campaign_status?: string | null; offers_sent?: number | null; last_offer_at?: string | null;
+};
+
+const CAMPAIGN_META: Record<string, { label: string; cls: string }> = {
+  active: { label: '配信中', cls: 'bg-teal-100 text-teal-700' },
+  stopped: { label: '停止中', cls: 'bg-slate-100 text-slate-500' },
+  converted: { label: '加盟済み（停止）', cls: 'bg-emerald-100 text-emerald-700' },
+  done: { label: '配信完了', cls: 'bg-slate-100 text-slate-500' },
 };
 
 const NEXT: { status: string; label: string; cls: string }[] = [
@@ -40,6 +49,16 @@ export default async function AdminLeadsPage() {
                   <p className="flex flex-wrap items-center gap-2 font-bold">
                     {r.name ?? '—'}
                     <span className={`badge ${LEAD_STATUS_CLS[r.status] ?? 'bg-slate-100 text-slate-500'}`}>{LEAD_STATUS_LABEL[r.status] ?? r.status}</span>
+                    {(() => {
+                      const camp = r.campaign_status ?? 'active';
+                      const cm = CAMPAIGN_META[camp] ?? CAMPAIGN_META.active;
+                      return (
+                        <span className={`badge ${cm.cls}`} title="買取オファー・ローンチ">
+                          ローンチ: {cm.label}
+                          {camp === 'active' && ` ${r.offers_sent ?? 0}/${OFFER_INTERVALS_DAYS.length}`}
+                        </span>
+                      );
+                    })()}
                   </p>
                   <p className="mt-0.5 text-xs text-slate-500">
                     {LEAD_WISH_LABEL[r.business_type_wish ?? ''] ?? r.business_type_wish} ・ {formatDateTime(r.created_at)}
@@ -69,6 +88,20 @@ export default async function AdminLeadsPage() {
                       </form>
                     ))}
                   </div>
+                  {/* ローンチ手動制御（配信中は停止、停止中は再開） */}
+                  {(r.campaign_status ?? 'active') === 'active' ? (
+                    <form action={adminSetLeadCampaign.bind(null, r.id, 'stopped')}>
+                      <button className="rounded-md border border-amber-300 px-2.5 py-1 text-xs font-bold text-amber-700 transition hover:bg-amber-50">
+                        ローンチ停止
+                      </button>
+                    </form>
+                  ) : (r.campaign_status ?? 'active') === 'stopped' ? (
+                    <form action={adminSetLeadCampaign.bind(null, r.id, 'active')}>
+                      <button className="rounded-md border border-teal-300 px-2.5 py-1 text-xs font-bold text-teal-700 transition hover:bg-teal-50">
+                        ローンチ再開
+                      </button>
+                    </form>
+                  ) : null}
                 </div>
               </div>
             </li>

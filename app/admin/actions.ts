@@ -275,6 +275,18 @@ export async function adminSetLeadStatus(leadId: string, status: string) {
   revalidatePath('/admin/leads');
 }
 
+/** 買取オファー・ローンチの手動制御（stopped=停止 / active=再開）。 */
+export async function adminSetLeadCampaign(leadId: string, campaignStatus: 'active' | 'stopped') {
+  const ctx = await adminContext();
+  if (!ctx) return;
+  await ctx.supabase
+    .from('dealer_leads')
+    .update({ campaign_status: campaignStatus, updated_at: new Date().toISOString() })
+    .eq('id', leadId);
+  await logAdminAction(ctx, `lead.campaign.${campaignStatus}`, 'dealer_lead', leadId);
+  revalidatePath('/admin/leads');
+}
+
 /** 有料会員の申込を承認（member_tier=paid）／却下。 */
 export async function adminDecideMembership(appId: string, approve: boolean) {
   const ctx = await adminContext();

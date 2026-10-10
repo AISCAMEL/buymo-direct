@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/service';
 import { getPricingConfig } from '@/lib/settings';
 import { computeFranchiseFee, type FranchisePaymentMethod } from '@/lib/franchise';
 
@@ -45,6 +46,20 @@ export async function submitFranchise(formData: FormData): Promise<{ ok: boolean
 
   // 業者トラック（買取加盟）として明示
   await supabase.from('profiles').update({ account_type: 'business', business_kind: 'buyback' }).eq('id', user.id);
+
+  // 買取加盟に至ったので、この申込者宛の買取オファー・ローンチは停止する（user_id またはメール一致）。
+  try {
+    const svc = createServiceClient();
+    const filters = [`user_id.eq.${user.id}`];
+    if (user.email) filters.push(`email.eq.${user.email}`);
+    await svc
+      .from('dealer_leads')
+      .update({ campaign_status: 'converted', updated_at: new Date().toISOString() })
+      .or(filters.join(','))
+      .in('campaign_status', ['active', 'stopped']);
+  } catch {
+    /* ベストエフォート：失敗しても申込は成立 */
+  }
 
   revalidatePath('/franchise');
   redirect('/franchise?applied=1');

@@ -587,3 +587,8 @@ create policy "appointments_update_parties" on public.appointments for update
 
 -- 前日リマインド送信管理（二重送信防止）
 alter table public.appointments add column if not exists reminded_at timestamptz;
+
+-- 加盟店リードの買取オファー・ローンチ管理
+alter table public.dealer_leads add column if not exists campaign_status text not null default 'active';
+alter table public.dealer_leads add column if not exists offers_sent int not null default 0;
+alter table public.dealer_leads add column if not exists last_offer_at timestamptz;
