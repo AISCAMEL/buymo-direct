@@ -146,6 +146,33 @@ export default function ContactPage() {
         ))}
       </div>
 
+      {/* 事業者情報 */}
+      <div className="card p-5">
+        <h2 className="mb-3 font-black text-navy-800">事業者情報</h2>
+        <dl className="divide-y divide-slate-100 text-sm">
+          {[
+            { k: '運営会社', v: OPERATOR.companyName },
+            { k: '代表者', v: OPERATOR.representative },
+            { k: '所在地', v: OPERATOR.address },
+            { k: '買取センター', v: OPERATOR.centerAddress },
+            { k: '電話番号', v: OPERATOR.phone },
+            { k: 'メール', v: OPERATOR.email },
+            { k: '古物商許可', v: OPERATOR.antiqueDealerLicense },
+            { k: '運営サービス', v: `${OPERATOR.brandName}／${OPERATOR.serviceName}` },
+          ].map(({ k, v }) => (
+            <div key={k} className="flex flex-wrap gap-x-3 py-2">
+              <dt className="w-28 shrink-0 font-bold text-slate-500">{k}</dt>
+              <dd className="flex-1 text-slate-700">{v}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="mt-3 text-xs text-slate-400">
+          <Link href="/company" className="text-accent-600 underline">会社概要</Link> ／
+          <Link href="/tokushoho" className="text-accent-600 underline">特定商取引法に基づく表記</Link> ／
+          <Link href="/privacy" className="text-accent-600 underline">プライバシーポリシー</Link>
+        </p>
+      </div>
+
       {/* よくある質問 */}
       <div>
         <h2 className="mb-4 text-lg font-black">よくある質問</h2>
