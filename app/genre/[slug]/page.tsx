@@ -189,7 +189,7 @@ export default async function GenrePage({ params }: { params: Params }) {
 
         {/* 解説（本文） */}
         <section className="card p-6">
-          <h2 className="text-lg font-black text-navy-800">{g.label}の買取・売却について</h2>
+          <h2 className="text-lg font-black text-navy-800">{isParts ? `${g.label}の出品について` : `${g.label}の買取・売却について`}</h2>
           <div className="mt-3 space-y-3 text-sm leading-relaxed text-slate-600">
             {content.intro.map((p, i) => <p key={i}>{p}</p>)}
           </div>
@@ -216,16 +216,30 @@ export default async function GenrePage({ params }: { params: Params }) {
           </section>
         )}
 
-        {/* 買取専門ジャンル（廃車・パーツ等）: 査定訴求 */}
+        {/* 買取専門ジャンル／パーツの訴求 */}
         {!g.filter && (
           <section className="card bg-navy-50 p-6 text-center">
-            <h2 className="text-lg font-black text-navy-800">{g.buyback}はBUYMOにおまかせ</h2>
+            <h2 className="text-lg font-black text-navy-800">
+              {isParts ? `${g.label}はオークションに出品` : `${g.buyback}はBUYMOにおまかせ`}
+            </h2>
             <p className="mx-auto mt-2 max-w-lg text-sm text-slate-600">{g.desc}</p>
             <div className="mt-4 flex justify-center gap-2">
-              {HAISHA_SLUGS.includes(g.slug)
-                ? <Link href="/haisha" className="btn-gold">その場提示で買取額を見る</Link>
-                : <Link href="/listings/valuation" className="btn-gold">無料査定を申し込む</Link>}
-              <Link href="/contact" className="btn-outline">相談する</Link>
+              {isParts ? (
+                <>
+                  <Link href="/parts/new" className="btn-gold">オークションに出品する</Link>
+                  <Link href={`/parts?cat=${g.slug === 'parts' ? 'other' : g.slug}`} className="btn-outline">入札で探す</Link>
+                </>
+              ) : HAISHA_SLUGS.includes(g.slug) ? (
+                <>
+                  <Link href="/haisha" className="btn-gold">その場提示で買取額を見る</Link>
+                  <Link href="/contact" className="btn-outline">相談する</Link>
+                </>
+              ) : (
+                <>
+                  <Link href="/listings/valuation" className="btn-gold">無料査定を申し込む</Link>
+                  <Link href="/contact" className="btn-outline">相談する</Link>
+                </>
+              )}
             </div>
           </section>
         )}
@@ -247,7 +261,7 @@ export default async function GenrePage({ params }: { params: Params }) {
 
         {/* 売却ステップ */}
         <section>
-          <h2 className="mb-3 text-lg font-black text-navy-800">{g.label}の{g.buybackOnly ? '買取' : '売却'}の流れ</h2>
+          <h2 className="mb-3 text-lg font-black text-navy-800">{g.label}の{isParts ? '出品' : g.buybackOnly ? '買取' : '売却'}の流れ</h2>
           <div className="grid gap-3 sm:grid-cols-4">
             {content.steps.map((s, i) => (
               <div key={s.t} className="card p-4">
