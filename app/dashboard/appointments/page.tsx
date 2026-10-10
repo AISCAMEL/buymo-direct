@@ -94,9 +94,16 @@ export default async function AppointmentsPage() {
                   {r.listing_title ? ` ・ ${r.listing_title}` : ''}
                 </p>
               </div>
-              <Link href={`/messages/${r.conversation_id}`} className="btn-outline shrink-0 text-sm">
-                <MessageSquare className="h-4 w-4" /> チャットへ
-              </Link>
+              <div className="flex shrink-0 items-center gap-2">
+                {r.status === 'confirmed' && r.confirmed_slot && (
+                  <a href={`/api/appointments/${r.id}/ics`} className="btn-outline text-sm">
+                    <CalendarClock className="h-4 w-4" /> カレンダー
+                  </a>
+                )}
+                <Link href={`/messages/${r.conversation_id}`} className="btn-outline text-sm">
+                  <MessageSquare className="h-4 w-4" /> チャットへ
+                </Link>
+              </div>
             </li>
           ))}
         </ul>

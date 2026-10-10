@@ -60,6 +60,12 @@ export function SchedulePanel({
             <p className="mt-1 text-xl font-black text-emerald-700">{formatDateTime(active.confirmed_slot)}</p>
           </div>
           {active.note && <p className="text-xs text-slate-500">メモ: {active.note}</p>}
+          <a
+            href={`/api/appointments/${active.id}/ics`}
+            className="btn-outline w-full"
+          >
+            <CalendarClock className="h-4 w-4" /> カレンダーに追加（.ics）
+          </a>
           <form action={cancelAppointment}>
             <input type="hidden" name="appointment_id" value={active.id} />
             <button className="w-full rounded-lg border border-slate-200 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50">

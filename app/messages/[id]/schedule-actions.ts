@@ -47,6 +47,13 @@ export async function proposeAppointment(formData: FormData): Promise<void> {
   });
   if (error) return;
 
+  // チャットにも残す（会話の記録として）
+  await supabase.from('messages').insert({
+    conversation_id: conv.id,
+    sender_id: user.id,
+    body: `📅 ${APPT_KIND_LABEL[kind]}の候補日時を${slots.length}件提案しました。上の「日程調整」からお選びください。`,
+  });
+
   const counterparty = conv.buyer_id === user.id ? conv.seller_id : conv.buyer_id;
   await createNotification(
     counterparty,
@@ -95,6 +102,16 @@ export async function respondAppointment(formData: FormData): Promise<void> {
   if (error) return;
 
   const kindLabel = APPT_KIND_LABEL[(appt.kind as AppointmentKind) ?? 'visit'];
+  // チャットに結果を自動投稿
+  await supabase.from('messages').insert({
+    conversation_id: appt.conversation_id,
+    sender_id: user.id,
+    body:
+      action === 'confirm'
+        ? `✅ ${kindLabel}の日程が確定しました：${formatDateTime(slot)}`
+        : `🙏 ${kindLabel}の候補日程を見送りました。別の候補日時を調整できます。`,
+  });
+
   if (action === 'confirm') {
     await createNotification(
       appt.proposed_by,
@@ -140,11 +157,18 @@ export async function cancelAppointment(formData: FormData): Promise<void> {
     .in('status', ['proposed', 'confirmed']);
   if (error) return;
 
+  const kindLabel = APPT_KIND_LABEL[(appt.kind as AppointmentKind) ?? 'visit'];
+  await supabase.from('messages').insert({
+    conversation_id: appt.conversation_id,
+    sender_id: user.id,
+    body: `❌ ${kindLabel}の予定をキャンセルしました。`,
+  });
+
   const counterparty = appt.buyer_id === user.id ? appt.seller_id : appt.buyer_id;
   await createNotification(
     counterparty,
     'message',
-    `${APPT_KIND_LABEL[(appt.kind as AppointmentKind) ?? 'visit']}の予定がキャンセルされました`,
+    `${kindLabel}の予定がキャンセルされました`,
     '相手が予定をキャンセルしました。必要に応じて再度日程を調整してください。',
     `/messages/${appt.conversation_id}`
   );
