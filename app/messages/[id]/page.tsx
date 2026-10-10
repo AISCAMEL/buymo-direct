@@ -4,6 +4,8 @@ import { ArrowLeft, ShieldCheck, Flag } from 'lucide-react';
 import { ReportButton } from '@/components/ReportButton';
 import { createClient } from '@/lib/supabase/server';
 import { MessageThread } from '@/components/MessageThread';
+import { SchedulePanel } from '@/components/SchedulePanel';
+import type { Appointment } from '@/lib/appointments';
 import { createEscrow } from '@/app/escrow/actions';
 import { formatYen } from '@/lib/format';
 import { skillLabel, formatCaseNo, CASE_STATUS_LABEL, CASE_STATUS_CLS, type CaseStatus } from '@/lib/cases';
@@ -53,6 +55,21 @@ export default async function ThreadPage({ params }: { params: Params }) {
     .eq('conversation_id', id)
     .maybeSingle();
 
+  // 最新の日程調整（見学・試乗）。テーブル未適用時はベストエフォートで null。
+  let appointment: Appointment | null = null;
+  try {
+    const { data: apptRow } = await supabase
+      .from('appointments')
+      .select('*')
+      .eq('conversation_id', id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    appointment = (apptRow as Appointment | null) ?? null;
+  } catch {
+    appointment = null;
+  }
+
   const createEscrowBound = createEscrow.bind(null, id);
 
   return (
@@ -100,6 +117,13 @@ export default async function ThreadPage({ params }: { params: Params }) {
               </button>
             </form>
           ) : null}
+        </div>
+      )}
+
+      {/* 日程調整（見学・試乗）：車両の取引チャットのみ */}
+      {!kase && (
+        <div className="mb-3">
+          <SchedulePanel conversationId={id} appointment={appointment} currentUserId={user.id} />
         </div>
       )}
 
