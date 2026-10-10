@@ -81,8 +81,8 @@ export default function SellWizardPage() {
     maker: '', model: '', year: currentYear - 3, mileage_km: 0, condition: 'good',
   });
   const [estimate, setEstimate] = useState<Estimate | null>(null);
-  // 出品は手数料0円の直接取引に一本化（エスクロー利用時のみ手数料）。
-  const [listingType] = useState<'direct' | 'proxy'>('direct');
+  // 出品はどちらも手数料0円。「自分で交渉」か「BUYMOに任せる（無料サポート）」かを選ぶ。
+  const [listingType, setListingType] = useState<'direct' | 'proxy'>('direct');
   const [error, setError] = useState('');
   const [modelOptions, setModelOptions] = useState<string[]>([]);
   const [otherModel, setOtherModel] = useState(false);
@@ -349,40 +349,78 @@ export default function SellWizardPage() {
       {step === 'type' && estimate && (
         <div className="space-y-4">
           <div className="card p-6">
-            <h2 className="text-xl font-black text-navy-800 mb-1">出品内容の確認</h2>
-            <p className="text-sm text-slate-500 mb-5">出品・取引は手数料0円。安心のエスクローを使う場合のみ手数料がかかります（任意）。</p>
+            <h2 className="text-xl font-black text-navy-800 mb-1">出品方法を選択</h2>
+            <p className="text-sm text-slate-500 mb-5">どちらも手数料0円。安心のエスクローを使う場合のみ手数料がかかります（任意）。</p>
 
             <div className="space-y-3">
-              <div
-                className="flex gap-4 rounded-2xl border-2 p-5"
-                style={{ borderColor: '#0F766E', background: '#E6F2EF' }}
+              {/* 自分で交渉する（0円） */}
+              <label
+                className="flex cursor-pointer gap-4 rounded-2xl border-2 p-5 transition-all"
+                style={{
+                  borderColor: listingType === 'direct' ? '#0F766E' : '#e5e7eb',
+                  background: listingType === 'direct' ? '#E6F2EF' : '#fff',
+                }}
               >
+                <input type="radio" name="ltype" value="direct" className="mt-1"
+                  checked={listingType === 'direct'} onChange={() => setListingType('direct')} />
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
                     <p className="font-bold text-navy-800 flex items-center gap-2">
-                      <Users className="h-4 w-4" />チャットで取引
+                      <Users className="h-4 w-4" />自分で交渉する
                     </p>
                     <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-700">手数料 0円</span>
                   </div>
-                  <p className="text-sm text-slate-500">購入希望者とサイト内チャットで直接やりとり。価格交渉もご自身で進められます。</p>
+                  <p className="text-sm text-slate-500">購入希望者とサイト内チャットで直接やりとり。価格交渉もご自身で。</p>
                   <div className="mt-2 grid grid-cols-2 gap-1 text-xs text-slate-500">
                     <span>✅ 出品・取引は無料</span>
                     <span>✅ 好きな価格で売れる</span>
                     <span>✅ 買取保証つきで安心</span>
-                    <span>🛡 希望者はエスクロー利用可</span>
+                    <span>⚠️ 交渉・対応はご自身で</span>
                   </div>
-                  {estimate && (
+                  {estimate && listingType === 'direct' && (
                     <div className="mt-3 rounded-lg bg-white border p-2 text-xs text-slate-600">
                       手取り目安: <strong>{formatYen(Math.round((estimate.price_low + estimate.price_high) / 2))}</strong>
                     </div>
                   )}
                 </div>
-              </div>
+              </label>
 
-              <p className="text-xs text-slate-400">
-                ※ エスクロー（代金保全・名義変更サポート）を使う場合のみ、規定の手数料が売主・買主の双方にかかります。使わない通常のチャット取引は0円です。
-              </p>
+              {/* BUYMOに任せる（無料サポート） */}
+              <label
+                className="flex cursor-pointer gap-4 rounded-2xl border-2 p-5 transition-all"
+                style={{
+                  borderColor: listingType === 'proxy' ? '#0F766E' : '#e5e7eb',
+                  background: listingType === 'proxy' ? '#E6F2EF' : '#fff',
+                }}
+              >
+                <input type="radio" name="ltype" value="proxy" className="mt-1"
+                  checked={listingType === 'proxy'} onChange={() => setListingType('proxy')} />
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="font-bold text-navy-800 flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4" />BUYMOに任せる
+                    </p>
+                    <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-700">無料サポート</span>
+                  </div>
+                  <p className="text-sm text-slate-500">BUYMOスタッフが問い合わせ対応・交渉を代行。手数料は同じく0円です。</p>
+                  <div className="mt-2 grid grid-cols-2 gap-1 text-xs text-slate-500">
+                    <span>✅ 手間ゼロ</span>
+                    <span>✅ プロが交渉</span>
+                    <span>✅ 安心サポート</span>
+                    <span>✅ 手数料0円</span>
+                  </div>
+                  {estimate && listingType === 'proxy' && (
+                    <div className="mt-3 rounded-lg bg-white border p-2 text-xs text-slate-600">
+                      手取り目安: <strong>{formatYen(Math.round((estimate.price_low + estimate.price_high) / 2))}</strong>
+                    </div>
+                  )}
+                </div>
+              </label>
             </div>
+
+            <p className="mt-3 text-xs text-slate-400">
+              ※ どちらも出品・取引は0円です。エスクロー（代金保全・名義変更サポート）を使う場合のみ、規定の手数料が売主・買主の双方にかかります（任意）。
+            </p>
           </div>
 
           {/* 買取保証リマインダー */}
@@ -398,7 +436,7 @@ export default function SellWizardPage() {
             onClick={goSell}
             className="btn-primary w-full flex items-center justify-center gap-2 py-3"
           >
-            🚗 出品する
+            {listingType === 'proxy' ? '🤝 BUYMOに任せて出品する' : '🚗 自分で出品する'}
             <ChevronRight className="h-4 w-4" />
           </button>
           <button onClick={() => setStep('result')} className="w-full text-center text-sm text-slate-400 hover:text-slate-600">
