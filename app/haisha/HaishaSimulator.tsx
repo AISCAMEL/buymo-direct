@@ -111,7 +111,7 @@ export function HaishaSimulator() {
         <h2 className="text-lg font-black text-navy-800">その場提示 買取シミュレーション</h2>
       </div>
       <p className="mb-4 text-sm text-slate-500">
-        全国買取価格表（都道府県 × 排気量）から <span className="font-bold text-red-600">−5,000円</span> した「その場提示額」を表示。還付金は買取価格とは別枠で概算します。
+        全国買取価格表（都道府県 × 排気量）をもとに「その場提示額」を表示します。還付金は買取価格とは別枠で概算します。
       </p>
 
       {/* 1. 車両 */}
@@ -250,28 +250,34 @@ export function HaishaSimulator() {
             </div>
           ) : (
             <>
-              {/* 買取額内訳 */}
-              <div className="overflow-hidden rounded-2xl border-2 border-navy-500">
-                <div className="bg-navy-50 px-4 py-3 text-sm font-bold text-navy-700">
-                  🧾 その場提示 買取額（内訳）— {pref}{sideNeeded ? ` ${side}` : ''} / {DISP_CLASSES[dispIdx]}
-                </div>
-                <div className="px-4 py-3">
-                  {price.lines.map((l, i) => (
-                    <div key={i} className="flex justify-between border-t border-slate-100 py-1.5 text-sm first:border-t-0 tabular-nums">
-                      <span>{l.label}</span>
-                      <span className={l.base ? '' : l.amount < 0 ? 'text-red-600' : 'text-emerald-600'}>
-                        {l.amount < 0 ? '−' : ''}{formatYen(Math.abs(l.amount))}
-                      </span>
+              {/* 買取額（基準額・割引は非表示。顧客にはその場提示額のみ。欠品・状態の減額は明示） */}
+              {(() => {
+                // 基準額（定価）と「その場提示割引」はお客様に出さない。状態・欠品の減額のみ表示。
+                const dedLines = price.lines.filter((l) => !l.base && l.label !== 'その場提示割引');
+                return (
+                  <div className="overflow-hidden rounded-2xl border-2 border-navy-500">
+                    <div className="bg-navy-50 px-4 py-3 text-sm font-bold text-navy-700">
+                      🧾 その場提示 買取額{dedLines.length > 0 ? '（内訳）' : ''} — {pref}{sideNeeded ? ` ${side}` : ''} / {DISP_CLASSES[dispIdx]}
                     </div>
-                  ))}
-                  <div className="mt-1 flex items-center justify-between border-t-2 border-navy-500 pt-2.5">
-                    <span className="font-black">{price.blocked ? '概算（要別途査定）' : 'その場提示 買取額'}</span>
-                    <span className="text-2xl font-black text-accent-600 tabular-nums">
-                      {price.offer <= 0 ? '¥0（無料引取り）' : formatYen(price.offer)}
-                    </span>
+                    <div className="px-4 py-3">
+                      {dedLines.map((l, i) => (
+                        <div key={i} className="flex justify-between border-t border-slate-100 py-1.5 text-sm first:border-t-0 tabular-nums">
+                          <span>{l.label}</span>
+                          <span className={l.amount < 0 ? 'text-red-600' : 'text-emerald-600'}>
+                            {l.amount < 0 ? '−' : ''}{formatYen(Math.abs(l.amount))}
+                          </span>
+                        </div>
+                      ))}
+                      <div className={`flex items-center justify-between border-navy-500 ${dedLines.length > 0 ? 'mt-1 border-t-2 pt-2.5' : ''}`}>
+                        <span className="font-black">{price.blocked ? '概算（要別途査定）' : 'その場提示 買取額'}</span>
+                        <span className="text-2xl font-black text-accent-600 tabular-nums">
+                          {price.offer <= 0 ? '¥0（無料引取り）' : formatYen(price.offer)}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                );
+              })()}
 
               {/* 還付金（別枠） */}
               <div className="overflow-hidden rounded-2xl border-2 border-gold-400">

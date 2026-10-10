@@ -14,8 +14,8 @@ import type { ListingWithImages } from '@/lib/types';
 
 export const revalidate = 3600;
 
-// 廃車・事故車・不動車は「その場提示」買取フロー（/haisha）へ誘導する
-const HAISHA_SLUGS = ['haisha', 'jiko', 'fudou'];
+// 廃車・事故車・不動車・過走行車は「その場提示」買取フロー（/haisha）へ誘導する
+const HAISHA_SLUGS = ['haisha', 'jiko', 'fudou', 'kasoukou'];
 
 type Params = Promise<{ slug: string }>;
 
@@ -134,6 +134,28 @@ export default async function GenrePage({ params }: { params: Params }) {
             </div>
           </div>
         </section>
+
+        {/* その場提示買取（廃車・事故車・不動車・過走行車に共通で埋め込み） */}
+        {HAISHA_SLUGS.includes(g.slug) && (
+          <section className="relative overflow-hidden rounded-2xl border border-navy-700 bg-gradient-to-br from-navy-800 to-navy-600 p-6 text-white sm:p-7">
+            <span className="inline-flex items-center gap-1 rounded-full bg-gold-500 px-3 py-1 text-xs font-black text-[#2E2408]">
+              <Banknote className="h-3.5 w-3.5" /> その場提示買取
+            </span>
+            <h2 className="mt-3 text-2xl font-black sm:text-3xl">金額をその場で提示。還付金も別枠で計算。</h2>
+            <p className="mt-2 max-w-2xl text-sm text-white/85">
+              全国買取価格表（都道府県 × 排気量）をもとに、{g.label}の買取額をその場で概算。
+              無料出張引取り・廃車（抹消）手続き・還付金のご案内までワンストップです。
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold">
+              {['無料出張引取り', '抹消手続き無料', 'リサイクル料金込み買取', '還付金は別枠でお戻し'].map((t) => (
+                <span key={t} className="rounded-full bg-white/12 px-3 py-1 ring-1 ring-white/20">{t}</span>
+              ))}
+            </div>
+            <Link href="/haisha" className="btn-gold mt-5 inline-flex">
+              その場で買取額を見る <ChevronRight className="h-4 w-4" />
+            </Link>
+          </section>
+        )}
 
         {/* 安心ポイント */}
         <section className="grid gap-3 sm:grid-cols-3">
