@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Camera, ImagePlus, X, Loader2, ShieldCheck, Users, Check, Wand2 } from 'lucide-react';
+import { Camera, ImagePlus, X, Loader2, Users, Check, Wand2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { compressImage } from '@/lib/image';
 import { MAKERS, BODY_TYPES, TRANSMISSIONS, FUELS, PREFECTURES, DRIVETRAINS, COLORS, EQUIPMENT_GROUPS } from '@/lib/constants';
@@ -87,7 +87,8 @@ export function ListingForm({
   const [modelVal, setModelVal] = useState(listing?.model ?? wizardModel);
   const [year, setYear] = useState(listing?.year ?? wizardYear ?? CURRENT_YEAR - 3);
   const [mileageKm, setMileageKm] = useState(listing?.mileage_km ?? wizardMileage ?? 0);
-  const [listingType, setListingType] = useState<'direct' | 'proxy'>(listing?.listing_type ?? wizardType);
+  // 出品は手数料0円の直接取引に一本化（代行7%は廃止）。
+  const [listingType] = useState<'direct' | 'proxy'>(listing?.listing_type ?? wizardType);
   const [description, setDescription] = useState(listing?.description ?? initial?.description ?? '');
   const [ownerComment, setOwnerComment] = useState((listing as unknown as { owner_comment?: string | null } | undefined)?.owner_comment ?? '');
   const [images, setImages] = useState<ImageItem[]>(() => {
@@ -217,7 +218,8 @@ export function ListingForm({
       video_url: String(fd.get('video_url') || '').trim() || null,
       expires_at: expiresVal ? new Date(expiresVal).toISOString() : null,
       listing_type: listingType,
-      fee_rate: listingType === 'proxy' ? 7.00 : 3.00,
+      // 個人のダイレクト販売は手数料0円（エスクロー利用時のみ別途）。加盟店（業販）は従来どおり。
+      fee_rate: dealerId ? 3.00 : 0,
       ai_price_min: wizardAiMin,
       ai_price_max: wizardAiMax,
       // 加盟店の出品なら販売店(B2C)として分類。ダイレクト販売の価格内訳も保存。
@@ -645,44 +647,24 @@ export function ListingForm({
           </div>
         )}
 
-        {/* 出品方法 */}
+        {/* 出品方法（手数料0円に一本化） */}
         <div>
-          <label className="label">出品方法 *</label>
-          <div className="grid gap-2 sm:grid-cols-2">
-            <label
-              className="flex cursor-pointer gap-3 rounded-xl border-2 p-4 transition-colors"
-              style={{
-                borderColor: listingType === 'direct' ? '#0F766E' : '#e5e7eb',
-                background: listingType === 'direct' ? '#E6F2EF' : '#fff',
-              }}
-            >
-              <input type="radio" name="listing_type_ui" value="direct" className="mt-0.5"
-                checked={listingType === 'direct'} onChange={() => setListingType('direct')} />
-              <div>
-                <p className="font-bold text-sm text-navy-800 flex items-center gap-1">
-                  <Users className="h-3.5 w-3.5" /> 自分で交渉する
-                </p>
-                <p className="text-xs text-slate-500 mt-0.5">購入者と直接やり取り</p>
-                <span className="mt-1 inline-block rounded-full bg-navy-100 px-2 py-0.5 text-xs font-bold text-navy-700">手数料 3%</span>
-              </div>
-            </label>
-            <label
-              className="flex cursor-pointer gap-3 rounded-xl border-2 p-4 transition-colors"
-              style={{
-                borderColor: listingType === 'proxy' ? '#d97706' : '#e5e7eb',
-                background: listingType === 'proxy' ? '#fffbeb' : '#fff',
-              }}
-            >
-              <input type="radio" name="listing_type_ui" value="proxy" className="mt-0.5"
-                checked={listingType === 'proxy'} onChange={() => setListingType('proxy')} />
-              <div>
-                <p className="font-bold text-sm text-amber-800 flex items-center gap-1">
-                  <ShieldCheck className="h-3.5 w-3.5" /> BUYMOに任せる
-                </p>
-                <p className="text-xs text-slate-500 mt-0.5">スタッフが交渉を代行</p>
-                <span className="mt-1 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700">手数料 7%</span>
-              </div>
-            </label>
+          <label className="label">出品方法</label>
+          <div
+            className="flex gap-3 rounded-xl border-2 p-4"
+            style={{ borderColor: '#0F766E', background: '#E6F2EF' }}
+          >
+            <Users className="mt-0.5 h-4 w-4 shrink-0 text-navy-700" />
+            <div>
+              <p className="font-bold text-sm text-navy-800 flex items-center gap-2">
+                チャットで取引
+                <span className="inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-700">手数料 0円</span>
+              </p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                購入者とサイト内チャットで直接やり取り。出品・取引は無料です。
+                安心のエスクロー（代金保全・名義変更サポート）を使う場合のみ、規定の手数料が売主・買主の双方にかかります（任意）。
+              </p>
+            </div>
           </div>
         </div>
 
