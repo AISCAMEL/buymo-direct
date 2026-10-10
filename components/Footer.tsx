@@ -18,6 +18,7 @@ const FOOTER_LINKS = [
       { label: 'ジャンルから探す', href: '/genre' },
       { label: 'エリアから探す', href: '/area' },
       { label: '地図から探す', href: '/listings/map' },
+      { label: 'パーツオークション', href: '/parts' },
       { label: 'ローン審査', href: '/loan/apply' },
       { label: '加盟店一覧', href: '/dealers' },
     ],

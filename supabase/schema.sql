@@ -592,3 +592,52 @@ alter table public.appointments add column if not exists reminded_at timestamptz
 alter table public.dealer_leads add column if not exists campaign_status text not null default 'active';
 alter table public.dealer_leads add column if not exists offers_sent int not null default 0;
 alter table public.dealer_leads add column if not exists last_offer_at timestamptz;
+
+-- ---------------------------------------------------------------------------
+-- part_auctions / part_bids : パーツのヤフオク形式オークション（買取保証なし）
+-- ---------------------------------------------------------------------------
+create table if not exists public.part_auctions (
+  id                uuid primary key default gen_random_uuid(),
+  seller_id         uuid not null references public.profiles(id) on delete cascade,
+  title             text not null,
+  description       text,
+  category          text not null default 'other',
+  item_condition    text not null default 'used',
+  images            jsonb not null default '[]'::jsonb,
+  start_price       int  not null default 0,
+  buy_now_price     int,
+  current_price     int  not null default 0,
+  bid_count         int  not null default 0,
+  highest_bidder_id uuid references public.profiles(id) on delete set null,
+  ends_at           timestamptz not null,
+  status            text not null default 'active'
+    check (status in ('active','ended','sold','cancelled')),
+  winner_id         uuid references public.profiles(id) on delete set null,
+  closed_at         timestamptz,
+  created_at        timestamptz not null default now(),
+  updated_at        timestamptz not null default now()
+);
+create index if not exists part_auctions_status_idx on public.part_auctions (status, ends_at);
+create index if not exists part_auctions_seller_idx on public.part_auctions (seller_id, created_at desc);
+
+create table if not exists public.part_bids (
+  id          uuid primary key default gen_random_uuid(),
+  auction_id  uuid not null references public.part_auctions(id) on delete cascade,
+  bidder_id   uuid not null references public.profiles(id) on delete cascade,
+  amount      int  not null,
+  created_at  timestamptz not null default now()
+);
+create index if not exists part_bids_auction_idx on public.part_bids (auction_id, created_at desc);
+
+alter table public.part_auctions enable row level security;
+alter table public.part_bids     enable row level security;
+drop policy if exists "part_auctions_select_all" on public.part_auctions;
+create policy "part_auctions_select_all" on public.part_auctions for select using (true);
+drop policy if exists "part_auctions_insert_own" on public.part_auctions;
+create policy "part_auctions_insert_own" on public.part_auctions for insert with check (seller_id = auth.uid());
+drop policy if exists "part_auctions_update_own" on public.part_auctions;
+create policy "part_auctions_update_own" on public.part_auctions for update using (seller_id = auth.uid());
+drop policy if exists "part_bids_select_all" on public.part_bids;
+create policy "part_bids_select_all" on public.part_bids for select using (true);
+drop policy if exists "part_bids_insert_own" on public.part_bids;
+create policy "part_bids_insert_own" on public.part_bids for insert with check (bidder_id = auth.uid());

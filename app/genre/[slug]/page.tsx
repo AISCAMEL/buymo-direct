@@ -28,10 +28,13 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const g = GENRE_BY_SLUG[slug];
   if (!g) return { title: '見つかりません' };
   const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://buymo.me';
-  const title = g.buybackOnly ? `${g.buyback}｜${g.label}` : `${g.buyback}・ダイレクト販売｜${g.label}`;
+  const isParts = g.cat === 'parts';
+  const title = isParts ? `${g.label}のオークション出品・入札｜BUYMO` : g.buybackOnly ? `${g.buyback}｜${g.label}` : `${g.buyback}・ダイレクト販売｜${g.label}`;
   return {
     title,
-    description: `${g.desc} 手数料0円・買取保証つき・エスクロー決済で安心のBUYMO ダイレクト。`,
+    description: isParts
+      ? `${g.desc} ヤフオク形式で${g.label}を出品・入札。即決にも対応（買取保証対象外）。`
+      : `${g.desc} 手数料0円・買取保証つき・エスクロー決済で安心のBUYMO ダイレクト。`,
     alternates: { canonical: `${BASE}/genre/${slug}` },
     openGraph: { title: `${title} | BUYMO ダイレクト`, description: g.desc, url: `${BASE}/genre/${slug}` },
   };
@@ -43,6 +46,7 @@ export default async function GenrePage({ params }: { params: Params }) {
   if (!g) notFound();
 
   const content = getGenreContent(g);
+  const isParts = g.cat === 'parts'; // パーツ系はヤフオク形式・買取保証なし
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -120,17 +124,22 @@ export default async function GenrePage({ params }: { params: Params }) {
           <Image src={`/genre/${g.slug}.jpg`} alt={g.label} fill className="object-cover" sizes="100vw" priority />
           <div className="absolute inset-0 bg-gradient-to-r from-navy-900/85 to-navy-700/60" />
           <div className="relative px-6 py-12 text-white">
-            <span className="mb-2 inline-block rounded-full bg-gold-500 px-3 py-1 text-xs font-black text-[#2E2408]">買取保証つき</span>
-            <h1 className="text-3xl font-black sm:text-4xl">{g.buybackOnly ? `${g.label}の買取` : `${g.label}の買取・ダイレクト販売`}</h1>
+            <span className="mb-2 inline-block rounded-full bg-gold-500 px-3 py-1 text-xs font-black text-[#2E2408]">{isParts ? 'オークション形式' : '買取保証つき'}</span>
+            <h1 className="text-3xl font-black sm:text-4xl">{isParts ? `${g.label}のオークション` : g.buybackOnly ? `${g.label}の買取` : `${g.label}の買取・ダイレクト販売`}</h1>
             <p className="mt-2 max-w-xl text-white/85">{g.desc}</p>
             <div className="mt-5 flex flex-wrap gap-2">
-              {HAISHA_SLUGS.includes(g.slug) ? (
+              {isParts ? (
+                <>
+                  <Link href="/parts/new" className="btn-gold">このパーツを出品する</Link>
+                  <Link href={`/parts?cat=${g.slug === 'parts' ? 'other' : g.slug}`} className="btn-accent">パーツを探す（入札）</Link>
+                </>
+              ) : HAISHA_SLUGS.includes(g.slug) ? (
                 <Link href="/haisha" className="btn-gold">その場提示で買取額を見る</Link>
               ) : (
                 <Link href="/listings/valuation" className="btn-gold">無料査定を申し込む（買取）</Link>
               )}
-              {g.filter && <Link href={listHref} className="btn-accent">出品車を探す（ダイレクト）</Link>}
-              {!g.buybackOnly && <Link href="/sell" className="inline-flex items-center gap-1 rounded-full border-2 border-white/70 px-5 py-2.5 text-sm font-bold text-white hover:bg-white/10">この車を出品する</Link>}
+              {!isParts && g.filter && <Link href={listHref} className="btn-accent">出品車を探す（ダイレクト）</Link>}
+              {!isParts && !g.buybackOnly && <Link href="/sell" className="inline-flex items-center gap-1 rounded-full border-2 border-white/70 px-5 py-2.5 text-sm font-bold text-white hover:bg-white/10">この車を出品する</Link>}
             </div>
           </div>
         </section>
@@ -157,13 +166,20 @@ export default async function GenrePage({ params }: { params: Params }) {
           </section>
         )}
 
-        {/* 安心ポイント */}
+        {/* 安心ポイント（パーツはオークション向けに差し替え） */}
         <section className="grid gap-3 sm:grid-cols-3">
-          {[
-            { icon: ShieldCheck, t: '買取保証つき', d: '売れなくてもBUYMOが買取' },
-            { icon: Banknote, t: '手数料0円・査定無料', d: '写真査定でネット完結' },
-            { icon: ShieldCheck, t: 'エスクロー決済', d: '代金を第三者が一時保全' },
-          ].map(({ icon: Icon, t, d }) => (
+          {(isParts
+            ? [
+                { icon: Banknote, t: 'オークション形式', d: '入札で高く売れるチャンス' },
+                { icon: TrendingUp, t: '即決にも対応', d: 'すぐ売りたい時は即決価格を設定' },
+                { icon: ShieldCheck, t: '写真で手軽に出品', d: '型番・サイズを載せるだけ' },
+              ]
+            : [
+                { icon: ShieldCheck, t: '買取保証つき', d: '売れなくてもBUYMOが買取' },
+                { icon: Banknote, t: '手数料0円・査定無料', d: '写真査定でネット完結' },
+                { icon: ShieldCheck, t: 'エスクロー決済', d: '代金を第三者が一時保全' },
+              ]
+          ).map(({ icon: Icon, t, d }) => (
             <div key={t} className="card flex items-center gap-3 p-4">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-50"><Icon className="h-5 w-5 text-accent-600" /></span>
               <div><p className="text-sm font-bold text-navy-800">{t}</p><p className="text-xs text-slate-500">{d}</p></div>

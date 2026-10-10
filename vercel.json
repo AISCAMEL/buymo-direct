@@ -18,6 +18,10 @@
     {
       "path": "/api/lead-campaign",
       "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/parts-auction-close",
+      "schedule": "0 * * * *"
     }
   ],
   "functions": {
