@@ -531,7 +531,7 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
             チャットで納得 → エスクローで安全に購入
           </div>
           <p className="mt-1.5 text-[11px] leading-relaxed text-slate-500">
-            見に行かなくてもOK。気になる点はチャットで質問して、<strong className="text-slate-700">納得してから</strong>ご購入いただけます。全国どこでもオンラインで完結します。
+            オンラインで完結もOK。気になる点はチャットで質問、ご希望なら<strong className="text-slate-700">現車確認（見に行く）・試乗</strong>も相談できます。<strong className="text-slate-700">納得してから</strong>ご購入ください。
           </p>
           <ul className="mt-2 grid grid-cols-3 gap-1.5 text-center text-[10px] font-bold text-slate-600">
             <li className="rounded-lg bg-slate-50 px-1 py-1.5">代金は<br />第三者保全</li>
@@ -606,6 +606,24 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
                   {dealerBiz ? '販売店にメッセージを送る' : '出品者にメッセージを送る'}
                 </button>
               </form>
+
+              {/* クイックアクション：定型メッセージで会話を開始 */}
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { intent: 'visit', label: '見に行く', sub: '現車確認' },
+                  { intent: 'testdrive', label: '試乗を相談', sub: '可否を確認' },
+                  { intent: 'condition', label: '状態を質問', sub: 'キズ・記録' },
+                ].map((o) => (
+                  <form key={o.intent} action={startConversation}>
+                    <input type="hidden" name="listing_id" value={listing.id} />
+                    <input type="hidden" name="intent" value={o.intent} />
+                    <button className="w-full rounded-lg border border-slate-200 px-2 py-2 text-center text-xs font-bold text-slate-600 hover:border-navy-200 hover:bg-slate-50">
+                      {o.label}
+                      <span className="mt-0.5 block text-[10px] font-normal text-slate-400">{o.sub}</span>
+                    </button>
+                  </form>
+                ))}
+              </div>
               {user && !isOwner && (
                 <MakeOfferButton
                   listingId={listing.id}
