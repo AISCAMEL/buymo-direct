@@ -1,6 +1,6 @@
 // ローン返済シミュレーション（元利均等返済）
 
-export const LOAN_TERMS = [12, 24, 36, 48, 60, 72]; // 支払回数（月）
+export const LOAN_TERMS = [12, 24, 36, 48, 60, 72, 84, 96, 108]; // 支払回数（月）最長108回
 
 /** 元利均等の毎月返済額（円・四捨五入）。M = P·r / (1 − (1+r)^−n) */
 export function monthlyPayment(principal: number, aprPercent: number, months: number): number {

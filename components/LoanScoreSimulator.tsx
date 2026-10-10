@@ -6,7 +6,7 @@ import { calculateLoanScore } from '@/lib/loan-score';
 import { monthlyPayment } from '@/lib/loan';
 import { LoanScoreDisplay } from '@/components/LoanScoreDisplay';
 
-const TERMS = [12, 24, 36, 48, 60, 84];
+const TERMS = [12, 24, 36, 48, 60, 72, 84, 96, 108];
 
 export function LoanScoreSimulator() {
   const [vehiclePrice, setVehiclePrice] = useState(2000000);

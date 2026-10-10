@@ -9,7 +9,7 @@ interface Props {
   onApply?: (amount: number, months: number) => void;
 }
 
-const TERMS = [12, 24, 36, 48, 60, 84];
+const TERMS = [12, 24, 36, 48, 60, 72, 84, 96, 108];
 
 export function LoanCalculator({ initialPrice = 2000000, onApply }: Props) {
   const [price, setPrice] = useState(initialPrice);
