@@ -584,3 +584,6 @@ create policy "appointments_insert_parties" on public.appointments for insert
 drop policy if exists "appointments_update_parties" on public.appointments;
 create policy "appointments_update_parties" on public.appointments for update
   using (buyer_id = auth.uid() or seller_id = auth.uid());
+
+-- 前日リマインド送信管理（二重送信防止）
+alter table public.appointments add column if not exists reminded_at timestamptz;
