@@ -202,16 +202,29 @@ export async function seedDemoData(): Promise<{ ok: boolean; message: string }> 
       const endsSoon = new Date(Date.now() + 2 * 86_400_000).toISOString();
       const endsLater = new Date(Date.now() + 5 * 86_400_000).toISOString();
       const { data: paRows } = await svc.from('part_auctions').insert([
-        { seller_id: proId, title: '純正アルミホイール 17インチ 4本セット', description: '純正アルミホイール 17インチの4本セットです。目立つガリ傷なし、タイヤは別売り。発送は西濃運輸の着払いを予定しています。', category: 'wheel', item_condition: 'used', images: ['/genre/wheel.jpg'], start_price: 15000, buy_now_price: 40000, current_price: 15000, ends_at: endsLater, status: 'active' },
-        { seller_id: proId, title: 'スタッドレスタイヤ 205/55R16 4本', description: '2シーズン使用のスタッドレス 205/55R16。残り溝は約6mm。ホイールなし・タイヤのみ4本です。', category: 'tire', item_condition: 'used', images: ['/genre/tire.jpg'], start_price: 8000, buy_now_price: null, current_price: 8000, ends_at: endsSoon, status: 'active' },
-        { seller_id: proId, title: '社外ナビ 7インチ Bluetooth/フルセグ対応', description: '動作確認済みの7インチ社外ナビ。Bluetooth・フルセグ対応。本体＋配線一式。取付はご自身でお願いします。', category: 'nav', item_condition: 'used', images: ['/genre/parts.jpg'], start_price: 5000, buy_now_price: 12000, current_price: 5000, ends_at: endsLater, status: 'active' },
+        { seller_id: proId, title: '純正アルミホイール 17インチ 4本セット', description: '純正アルミホイール 17インチの4本セットです。目立つガリ傷なし、タイヤは別売り。発送は西濃運輸の着払いを予定しています。', category: 'wheel', item_condition: 'used', images: ['/genre/wheel.jpg'], start_price: 15000, reserve_price: 25000, buy_now_price: 40000, current_price: 15000, ends_at: endsLater, status: 'active', fit_maker: 'トヨタ', fit_model: 'プリウス 30系 / ZVW30', fit_year_from: 2009, fit_year_to: 2015 },
+        { seller_id: proId, title: 'スタッドレスタイヤ 205/55R16 4本', description: '2シーズン使用のスタッドレス 205/55R16。残り溝は約6mm。ホイールなし・タイヤのみ4本です。', category: 'tire', item_condition: 'used', images: ['/genre/tire.jpg'], start_price: 8000, buy_now_price: null, current_price: 8000, ends_at: endsSoon, status: 'active', fit_maker: 'ホンダ', fit_model: 'フィット GE系', fit_year_from: 2007, fit_year_to: 2013 },
+        { seller_id: proId, title: '社外ナビ 7インチ Bluetooth/フルセグ対応', description: '動作確認済みの7インチ社外ナビ。Bluetooth・フルセグ対応。本体＋配線一式。取付はご自身でお願いします。', category: 'nav', item_condition: 'used', images: ['/genre/parts.jpg'], start_price: 5000, buy_now_price: 12000, current_price: 5000, ends_at: endsLater, status: 'active', fit_maker: '日産', fit_model: '汎用（2DINサイズ）' },
       ]).select('id');
       const first = (paRows ?? [])[0] as { id: string } | undefined;
-      if (first && buyerId) {
+      if (first && buyerId && skillId) {
+        // 代理入札の競り合いを再現：
+        //  田中(skill) 上限 22,000 ／ 山田(buyer) 上限 30,000 → buyer が 22,500 でリード（最低落札価格25,000には未達）
+        await svc.from('part_auto_bids').upsert([
+          { auction_id: first.id, bidder_id: skillId, max_amount: 22000 },
+          { auction_id: first.id, bidder_id: buyerId, max_amount: 30000 },
+        ], { onConflict: 'auction_id,bidder_id' });
+        await svc.from('part_bids').insert([
+          { auction_id: first.id, bidder_id: buyerId, amount: 16000 },
+          { auction_id: first.id, bidder_id: skillId, amount: 22000 },
+          { auction_id: first.id, bidder_id: buyerId, amount: 22500 },
+        ]);
+        await svc.from('part_auctions').update({ current_price: 22500, bid_count: 3, highest_bidder_id: buyerId, updated_at: now }).eq('id', first.id);
+      } else if (first && buyerId) {
         await svc.from('part_bids').insert({ auction_id: first.id, bidder_id: buyerId, amount: 16000 });
         await svc.from('part_auctions').update({ current_price: 16000, bid_count: 1, highest_bidder_id: buyerId, updated_at: now }).eq('id', first.id);
       }
-      log.push('パーツオークション3点（うち1点は入札あり）を作成');
+      log.push('パーツオークション3点（適合車種つき・代理入札の競り合い/最低落札価格つき1点）を作成');
     } catch { log.push('※ パーツオークションはスキップ（20240769のSQL未実行の可能性）'); }
 
     revalidatePath('/admin');
