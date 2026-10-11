@@ -12,8 +12,8 @@ interface Props {
   /** 現在の説明文（添削に使用） */
   currentText?: string;
   onGenerated: (s: string) => void;
-  /** 添削の文脈。owner=オーナーの一言、vehicle=出品説明 など */
-  kind?: 'vehicle' | 'profile' | 'skill' | 'owner';
+  /** 添削の文脈。owner=オーナーの一言、vehicle=出品説明、parts=パーツ出品 など */
+  kind?: 'vehicle' | 'profile' | 'skill' | 'owner' | 'parts';
   /** 「AIで作成」ボタンを出すか（オーナーの一言は添削のみ） */
   showGenerate?: boolean;
 }

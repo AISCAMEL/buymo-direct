@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({})) as {
     mode?: 'generate' | 'polish';
     text?: string;
-    kind?: 'vehicle' | 'profile' | 'skill' | 'owner';
+    kind?: 'vehicle' | 'profile' | 'skill' | 'owner' | 'parts';
     maker?: string;
     model?: string;
     year?: number;
@@ -40,6 +40,20 @@ export async function POST(req: Request) {
 --- 下書き ---
 ${text}`;
       const description = await generateWithClaude(ownerPrompt);
+      return NextResponse.json({ description, ai: true });
+    }
+
+    // パーツ・用品のオークション出品説明文（中古車ではない）
+    if (body.kind === 'parts') {
+      const partsPrompt = `次はカーパーツ・用品のオークション出品説明文の下書きです。添削してください。
+・事実や数値（型番・サイズ・本数・状態・残り溝など）は変えない（誇張・虚偽は禁止）
+・誤字脱字・不自然な表現を直す
+・入札者が安心して入札できるよう、状態・付属品・発送方法が伝わる丁寧で読みやすい日本語に
+・150〜250字程度。説明文のみを返す（前置き不要）
+
+--- 元の文章 ---
+${text}`;
+      const description = await generateWithClaude(partsPrompt);
       return NextResponse.json({ description, ai: true });
     }
 

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ImagePlus, Loader2, X, Gavel } from 'lucide-react';
 import { createPartAuction } from '@/app/parts/actions';
 import { createClient } from '@/lib/supabase/client';
+import { AiDescriptionButton } from '@/components/AiDescriptionButton';
 import { PART_CATEGORY_LABEL, DURATION_OPTIONS, type PartCategory } from '@/lib/part-auction';
 
 const supabase = createClient();
@@ -25,6 +26,7 @@ async function uploadFile(file: File): Promise<string> {
 
 export function PartAuctionForm() {
   const [images, setImages] = useState<string[]>([]);
+  const [description, setDescription] = useState('');
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -104,8 +106,19 @@ export function PartAuctionForm() {
       </div>
 
       <div>
-        <label className="label">説明</label>
-        <textarea name="description" rows={4} className="input" placeholder="メーカー・型番・サイズ・使用状況・付属品・発送方法など" />
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <label className="label mb-0">説明</label>
+          <AiDescriptionButton kind="parts" currentText={description} onGenerated={setDescription} showGenerate={false} />
+        </div>
+        <textarea
+          name="description"
+          rows={4}
+          className="input"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="メーカー・型番・サイズ・使用状況・付属品・発送方法など"
+        />
+        <p className="mt-1 text-xs text-slate-400">少し書いて「AIで添削」を押すと、状態・発送が伝わる文章に整えます（事実は変えません）。</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">

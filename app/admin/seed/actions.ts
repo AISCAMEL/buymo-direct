@@ -196,7 +196,26 @@ export async function seedDemoData(): Promise<{ ok: boolean; message: string }> 
       log.push('オークション出品2台（うち1台は決算済み＝成約手数料を算出）を作成');
     } catch { log.push('※ オークションはスキップ（新テーブルのSQL未実行の可能性）'); }
 
+    // --- パーツオークション（ヤフオク形式）デモ ---
+    try {
+      await svc.from('part_auctions').delete().eq('seller_id', proId); // part_bids は cascade
+      const endsSoon = new Date(Date.now() + 2 * 86_400_000).toISOString();
+      const endsLater = new Date(Date.now() + 5 * 86_400_000).toISOString();
+      const { data: paRows } = await svc.from('part_auctions').insert([
+        { seller_id: proId, title: '純正アルミホイール 17インチ 4本セット', description: '純正アルミホイール 17インチの4本セットです。目立つガリ傷なし、タイヤは別売り。発送は西濃運輸の着払いを予定しています。', category: 'wheel', item_condition: 'used', images: ['/genre/wheel.jpg'], start_price: 15000, buy_now_price: 40000, current_price: 15000, ends_at: endsLater, status: 'active' },
+        { seller_id: proId, title: 'スタッドレスタイヤ 205/55R16 4本', description: '2シーズン使用のスタッドレス 205/55R16。残り溝は約6mm。ホイールなし・タイヤのみ4本です。', category: 'tire', item_condition: 'used', images: ['/genre/tire.jpg'], start_price: 8000, buy_now_price: null, current_price: 8000, ends_at: endsSoon, status: 'active' },
+        { seller_id: proId, title: '社外ナビ 7インチ Bluetooth/フルセグ対応', description: '動作確認済みの7インチ社外ナビ。Bluetooth・フルセグ対応。本体＋配線一式。取付はご自身でお願いします。', category: 'nav', item_condition: 'used', images: ['/genre/parts.jpg'], start_price: 5000, buy_now_price: 12000, current_price: 5000, ends_at: endsLater, status: 'active' },
+      ]).select('id');
+      const first = (paRows ?? [])[0] as { id: string } | undefined;
+      if (first && buyerId) {
+        await svc.from('part_bids').insert({ auction_id: first.id, bidder_id: buyerId, amount: 16000 });
+        await svc.from('part_auctions').update({ current_price: 16000, bid_count: 1, highest_bidder_id: buyerId, updated_at: now }).eq('id', first.id);
+      }
+      log.push('パーツオークション3点（うち1点は入札あり）を作成');
+    } catch { log.push('※ パーツオークションはスキップ（20240769のSQL未実行の可能性）'); }
+
     revalidatePath('/admin');
+    revalidatePath('/parts');
     revalidatePath('/admin/billing');
     revalidatePath('/admin/franchise');
     revalidatePath('/dealers');
