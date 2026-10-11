@@ -868,3 +868,19 @@ begin
   begin execute 'alter publication supabase_realtime add table public.part_auctions'; exception when others then null; end;
   begin execute 'alter publication supabase_realtime add table public.part_bids';     exception when others then null; end;
 end $$;
+
+-- 通報
+create table if not exists public.part_reports (
+  id          uuid primary key default gen_random_uuid(),
+  auction_id  uuid not null references public.part_auctions(id) on delete cascade,
+  reporter_id uuid not null references public.profiles(id) on delete cascade,
+  reason      text not null,
+  note        text,
+  created_at  timestamptz not null default now()
+);
+create index if not exists part_reports_auction_idx on public.part_reports (auction_id, created_at desc);
+alter table public.part_reports enable row level security;
+drop policy if exists "part_reports_select_own" on public.part_reports;
+create policy "part_reports_select_own" on public.part_reports for select using (reporter_id = auth.uid());
+drop policy if exists "part_reports_insert_own" on public.part_reports;
+create policy "part_reports_insert_own" on public.part_reports for insert with check (reporter_id = auth.uid());

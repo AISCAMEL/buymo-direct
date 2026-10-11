@@ -8,6 +8,7 @@ import { BidForm } from '@/components/BidForm';
 import { WatchButton } from '@/components/WatchButton';
 import { QuestionsPanel, type QAItem } from '@/components/QuestionsPanel';
 import { PartAuctionLive } from '@/components/PartAuctionLive';
+import { PartReportButton } from '@/components/PartReportButton';
 import {
   PART_CATEGORY_LABEL,
   CONDITION_LABEL,
@@ -241,6 +242,13 @@ export default async function PartAuctionPage({ params }: { params: Params }) {
 
       {/* 商品Q&A */}
       <QuestionsPanel auctionId={a.id} items={qaItems} isOwner={isOwner} loggedIn={!!user} />
+
+      {/* 通報 */}
+      {!isOwner && (
+        <div className="pt-2 text-center">
+          <PartReportButton auctionId={a.id} />
+        </div>
+      )}
     </div>
   );
 }

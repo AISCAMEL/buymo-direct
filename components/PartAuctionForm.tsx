@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { ImagePlus, Loader2, X, Gavel } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { ImagePlus, Loader2, X, Gavel, Sparkles, TrendingUp } from 'lucide-react';
 import { createPartAuction } from '@/app/parts/actions';
 import { createClient } from '@/lib/supabase/client';
 import { AiDescriptionButton } from '@/components/AiDescriptionButton';
@@ -24,12 +24,53 @@ async function uploadFile(file: File): Promise<string> {
   return pub.publicUrl;
 }
 
+interface PriceSuggestion {
+  ai: boolean; sample_count: number; median: number;
+  start: number; buy_now: number; low: number; high: number; note: string;
+}
+
 export function PartAuctionForm() {
+  const formRef = useRef<HTMLFormElement>(null);
   const [images, setImages] = useState<string[]>([]);
   const [description, setDescription] = useState('');
+  const [startPrice, setStartPrice] = useState('');
+  const [buyNow, setBuyNow] = useState('');
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestion, setSuggestion] = useState<PriceSuggestion | null>(null);
+
+  async function suggestPrice() {
+    setSuggesting(true); setError(null);
+    try {
+      const fd = new FormData(formRef.current ?? undefined);
+      const res = await fetch('/api/parts/price-suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: String(fd.get('title') || ''),
+          category: String(fd.get('category') || 'other'),
+          item_condition: String(fd.get('item_condition') || 'used'),
+          fit_maker: String(fd.get('fit_maker') || ''),
+          fit_model: String(fd.get('fit_model') || ''),
+        }),
+      });
+      if (!res.ok) throw new Error('相場の取得に失敗しました');
+      const data = (await res.json()) as PriceSuggestion;
+      setSuggestion(data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '相場の取得に失敗しました');
+    } finally {
+      setSuggesting(false);
+    }
+  }
+
+  function applySuggestion() {
+    if (!suggestion) return;
+    if (suggestion.start > 0) setStartPrice(String(suggestion.start));
+    if (suggestion.buy_now > 0) setBuyNow(String(suggestion.buy_now));
+  }
 
   async function onPick(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
@@ -62,7 +103,7 @@ export function PartAuctionForm() {
   const cats = Object.keys(PART_CATEGORY_LABEL) as PartCategory[];
 
   return (
-    <form onSubmit={onSubmit} className="card space-y-4 p-6">
+    <form ref={formRef} onSubmit={onSubmit} className="card space-y-4 p-6">
       <div>
         <label className="label">商品名 *</label>
         <input name="title" required className="input" placeholder="例）純正アルミホイール 17インチ 4本セット" />
@@ -121,10 +162,34 @@ export function PartAuctionForm() {
         <p className="mt-1 text-xs text-slate-400">少し書いて「AIで添削」を押すと、状態・発送が伝わる文章に整えます（事実は変えません）。</p>
       </div>
 
+      {/* AI相場 */}
+      <div className="rounded-xl border border-accent-100 bg-accent-50/40 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="flex items-center gap-1.5 text-sm font-bold text-accent-700"><TrendingUp className="h-4 w-4" /> AIで相場を調べる</p>
+          <button type="button" onClick={suggestPrice} disabled={suggesting}
+            className="flex items-center gap-1.5 rounded-lg bg-accent-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-accent-600 disabled:opacity-50">
+            {suggesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} 相場を調べる
+          </button>
+        </div>
+        {suggestion && (
+          <div className="mt-3 space-y-2 text-sm">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className="rounded-lg bg-white p-2 text-center"><p className="text-[10px] text-slate-400">推奨開始</p><p className="font-black text-navy-800">¥{suggestion.start.toLocaleString()}</p></div>
+              <div className="rounded-lg bg-white p-2 text-center"><p className="text-[10px] text-slate-400">想定落札（下限〜上限）</p><p className="font-black text-navy-800">¥{suggestion.low.toLocaleString()}〜{suggestion.high.toLocaleString()}</p></div>
+              <div className="rounded-lg bg-white p-2 text-center"><p className="text-[10px] text-slate-400">推奨即決</p><p className="font-black text-navy-800">¥{suggestion.buy_now.toLocaleString()}</p></div>
+              <div className="rounded-lg bg-white p-2 text-center"><p className="text-[10px] text-slate-400">参照データ</p><p className="font-black text-navy-800">{suggestion.sample_count}件{suggestion.ai ? ' +AI' : ''}</p></div>
+            </div>
+            <p className="text-xs text-slate-500">{suggestion.note}</p>
+            <button type="button" onClick={applySuggestion} className="rounded-lg border border-accent-300 px-3 py-1.5 text-xs font-bold text-accent-700 hover:bg-accent-50">この価格を反映する</button>
+          </div>
+        )}
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-3">
         <div>
           <label className="label">開始価格（円）*</label>
-          <input name="start_price" type="number" min={0} step={100} required className="input" placeholder="1000" />
+          <input name="start_price" type="number" min={0} step={100} required className="input" placeholder="1000"
+            value={startPrice} onChange={(e) => setStartPrice(e.target.value)} />
         </div>
         <div>
           <label className="label">最低落札価格（任意）</label>
@@ -132,7 +197,8 @@ export function PartAuctionForm() {
         </div>
         <div>
           <label className="label">即決価格（任意）</label>
-          <input name="buy_now_price" type="number" min={0} step={100} className="input" placeholder="未設定可" />
+          <input name="buy_now_price" type="number" min={0} step={100} className="input" placeholder="未設定可"
+            value={buyNow} onChange={(e) => setBuyNow(e.target.value)} />
         </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-3">

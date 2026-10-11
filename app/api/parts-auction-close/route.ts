@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
   const nowIso = new Date().toISOString();
   const { data, error } = await svc
     .from('part_auctions')
-    .select('id, title, seller_id, current_price, bid_count, highest_bidder_id')
+    .select('id')
     .eq('status', 'active')
     .lte('ends_at', nowIso)
     .limit(500);
@@ -36,23 +36,21 @@ export async function GET(req: NextRequest) {
 
   let closed = 0;
   for (const a of data ?? []) {
-    const sold = (a.bid_count ?? 0) > 0 && a.highest_bidder_id;
-    const { error: upErr } = await svc
-      .from('part_auctions')
-      .update({
-        status: sold ? 'sold' : 'ended',
-        winner_id: sold ? a.highest_bidder_id : null,
-        closed_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', a.id)
-      .eq('status', 'active');
-    if (upErr) continue;
+    // reserve 反映の確定処理（SECURITY DEFINER 関数）
+    const { data: r } = await svc.rpc('close_part_auction', { p_auction_id: a.id });
+    const res = (r ?? {}) as {
+      ok?: boolean; noop?: boolean; sold?: boolean; winner_id?: string | null;
+      seller_id?: string; title?: string; price?: number; reserve_missed?: boolean;
+    };
+    if (!res.ok || res.noop) continue;
     closed++;
-    if (sold && a.highest_bidder_id) {
-      const amt = `¥${(a.current_price ?? 0).toLocaleString()}`;
-      await createNotification(a.highest_bidder_id as string, 'system', '落札しました', `「${a.title}」を ${amt} で落札しました。`, `/parts/${a.id}`);
-      await createNotification(a.seller_id as string, 'system', '落札されました', `「${a.title}」が ${amt} で落札されました。`, `/parts/${a.id}`);
+    const amt = `¥${(res.price ?? 0).toLocaleString()}`;
+    const title = res.title ?? '出品商品';
+    if (res.sold && res.winner_id) {
+      await createNotification(res.winner_id, 'system', '落札しました', `「${title}」を ${amt} で落札しました。`, `/parts/${a.id}`);
+      if (res.seller_id) await createNotification(res.seller_id, 'system', '落札されました', `「${title}」が ${amt} で落札されました。`, `/parts/${a.id}`);
+    } else if (res.reserve_missed && res.seller_id) {
+      await createNotification(res.seller_id, 'system', '最低落札価格に未達で終了', `「${title}」は最低落札価格に届かず、落札なしで終了しました。`, `/parts/${a.id}`);
     }
   }
 

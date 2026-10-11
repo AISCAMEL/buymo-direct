@@ -20,6 +20,7 @@ const TASKS = [
   '/api/appointment-reminders',
   '/api/lead-campaign',
   '/api/parts-auction-close',
+  '/api/parts-watch-remind',
 ];
 
 export async function GET(req: NextRequest) {

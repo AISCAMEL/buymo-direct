@@ -252,6 +252,28 @@ export async function askQuestion(formData: FormData): Promise<{ ok: boolean; er
   return { ok: true };
 }
 
+/** 出品を通報する。 */
+export async function reportAuction(formData: FormData): Promise<{ ok: boolean; error?: string } | void> {
+  const auctionId = String(formData.get('auction_id') || '');
+  const reason = String(formData.get('reason') || 'other');
+  const note = String(formData.get('note') || '').trim().slice(0, 500) || null;
+  const okReasons = ['prohibited', 'fake', 'shill', 'other'];
+  if (!auctionId) return { ok: false, error: '対象が不明です。' };
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect(`/login?redirect=/parts/${auctionId}`);
+
+  const { error } = await supabase.from('part_reports').insert({
+    auction_id: auctionId,
+    reporter_id: user.id,
+    reason: okReasons.includes(reason) ? reason : 'other',
+    note,
+  });
+  if (error) return { ok: false, error: '通報の送信に失敗しました。' };
+  return { ok: true };
+}
+
 /** 出品者が質問に回答する。 */
 export async function answerQuestion(formData: FormData): Promise<{ ok: boolean; error?: string } | void> {
   const questionId = String(formData.get('question_id') || '');

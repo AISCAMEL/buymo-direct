@@ -19,11 +19,20 @@ export const metadata = {
 
 const CATS: (PartCategory | 'all')[] = ['all', 'wheel', 'tire', 'nav', 'aero', 'audio', 'exterior', 'interior', 'other'];
 
-export default async function PartsPage({ searchParams }: { searchParams: Promise<{ cat?: string; maker?: string; q?: string }> }) {
+const SORTS = [
+  { key: 'ending', label: '終了が近い順' },
+  { key: 'popular', label: '人気順（入札数）' },
+  { key: 'new', label: '新着順' },
+  { key: 'price_desc', label: '価格が高い順' },
+  { key: 'price_asc', label: '価格が安い順' },
+];
+
+export default async function PartsPage({ searchParams }: { searchParams: Promise<{ cat?: string; maker?: string; q?: string; sort?: string }> }) {
   const sp = await searchParams;
   const cat = sp.cat && CATS.includes(sp.cat as PartCategory) ? (sp.cat as PartCategory) : 'all';
   const maker = sp.maker && (CAR_MAKERS as readonly string[]).includes(sp.maker) ? sp.maker : '';
   const keyword = (sp.q ?? '').replace(/[%,]/g, '').trim().slice(0, 40);
+  const sort = SORTS.some((s) => s.key === sp.sort) ? sp.sort! : 'ending';
 
   const supabase = await createClient();
   let rows: PartAuction[] = [];
@@ -33,8 +42,12 @@ export default async function PartsPage({ searchParams }: { searchParams: Promis
       .from('part_auctions')
       .select('*')
       .eq('status', 'active')
-      .order('ends_at', { ascending: true })
       .limit(60);
+    if (sort === 'popular') q = q.order('bid_count', { ascending: false }).order('ends_at', { ascending: true });
+    else if (sort === 'new') q = q.order('created_at', { ascending: false });
+    else if (sort === 'price_desc') q = q.order('current_price', { ascending: false });
+    else if (sort === 'price_asc') q = q.order('current_price', { ascending: true });
+    else q = q.order('ends_at', { ascending: true });
     if (cat !== 'all') q = q.eq('category', cat);
     if (maker) q = q.eq('fit_maker', maker);
     if (keyword) q = q.or(`title.ilike.%${keyword}%,fit_model.ilike.%${keyword}%,description.ilike.%${keyword}%`);
@@ -52,14 +65,16 @@ export default async function PartsPage({ searchParams }: { searchParams: Promis
     return parts.join(' ');
   };
 
-  const makeHref = (over: Partial<{ cat: string; maker: string; q: string }>) => {
+  const makeHref = (over: Partial<{ cat: string; maker: string; q: string; sort: string }>) => {
     const p = new URLSearchParams();
     const c = over.cat ?? (cat === 'all' ? '' : cat);
     const m = over.maker ?? maker;
     const k = over.q ?? keyword;
+    const s2 = over.sort ?? (sort === 'ending' ? '' : sort);
     if (c) p.set('cat', c);
     if (m) p.set('maker', m);
     if (k) p.set('q', k);
+    if (s2) p.set('sort', s2);
     const s = p.toString();
     return s ? `/parts?${s}` : '/parts';
   };
@@ -109,6 +124,20 @@ export default async function PartsPage({ searchParams }: { searchParams: Promis
             className={`rounded-full px-3 py-1 text-xs font-bold transition ${cat === c ? 'bg-navy-700 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
           >
             {c === 'all' ? 'すべて' : PART_CATEGORY_LABEL[c]}
+          </Link>
+        ))}
+      </div>
+
+      {/* 並び替え */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-bold text-slate-400">並び替え:</span>
+        {SORTS.map((s) => (
+          <Link
+            key={s.key}
+            href={makeHref({ sort: s.key === 'ending' ? '' : s.key })}
+            className={`rounded-full px-3 py-1 text-xs font-bold transition ${sort === s.key ? 'bg-accent-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+          >
+            {s.label}
           </Link>
         ))}
       </div>
