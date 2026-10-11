@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 import { submitLead } from '@/app/join/actions';
-import { LEAD_WISH_LABEL } from '@/lib/membership';
 
 export function JoinLeadForm({ source = 'join' }: { source?: string }) {
   const [saving, setSaving] = useState(false);
@@ -33,6 +32,7 @@ export function JoinLeadForm({ source = 'join' }: { source?: string }) {
   return (
     <form onSubmit={onSubmit} className="card space-y-4 p-6">
       <input type="hidden" name="source" value={source} />
+      <input type="hidden" name="business_type_wish" value="pro" />
       {/* ハニーポット（ボット対策・人には非表示） */}
       <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
       <div aria-hidden="true" className="absolute left-[-9999px] h-0 w-0 overflow-hidden">
@@ -51,14 +51,6 @@ export function JoinLeadForm({ source = 'join' }: { source?: string }) {
           <label className="label">電話番号</label>
           <input name="phone" type="tel" className="input" placeholder="09000000000" />
         </div>
-      </div>
-      <div>
-        <label className="label">ご希望</label>
-        <select name="business_type_wish" className="input" defaultValue="pro">
-          {Object.entries(LEAD_WISH_LABEL).map(([v, label]) => (
-            <option key={v} value={v}>{label}</option>
-          ))}
-        </select>
       </div>
       <div>
         <label className="label">ご質問・ご要望</label>
