@@ -18,16 +18,24 @@ export function BidForm({
   loggedIn: boolean;
 }) {
   const router = useRouter();
-  const [amount, setAmount] = useState<number>(minBid);
+  const [amount, setAmount] = useState<string>(String(minBid));
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<null | 'bid' | 'buy'>(null);
 
+  // 数字以外と先頭の0を取り除く（先頭0が残らないように）
+  function onAmountChange(v: string) {
+    const digits = v.replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, '');
+    setAmount(digits);
+  }
+
   async function doBid() {
     setError(null);
+    const value = Math.round(Number(amount) || 0);
+    if (value < minBid) { setError(`最低入札額は ${formatYen(minBid)} です。`); return; }
     setLoading('bid');
     const fd = new FormData();
     fd.set('auction_id', auctionId);
-    fd.set('amount', String(Math.round(amount)));
+    fd.set('amount', String(value));
     const res = await placeBid(fd);
     setLoading(null);
     if (res && !res.ok) setError(res.error ?? '入札できませんでした。');
@@ -51,12 +59,12 @@ export function BidForm({
         <label className="label">入札額（最低 {formatYen(minBid)}）</label>
         <div className="flex gap-2">
           <input
-            type="number"
-            min={minBid}
-            step={1}
+            type="text"
             inputMode="numeric"
+            pattern="[0-9]*"
             value={amount}
-            onChange={(e) => setAmount(Number(e.target.value))}
+            onChange={(e) => onAmountChange(e.target.value)}
+            placeholder={String(minBid)}
             className="input flex-1"
           />
           <button onClick={doBid} disabled={!!loading} className="btn-accent shrink-0 disabled:opacity-50">
