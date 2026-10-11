@@ -5,7 +5,7 @@ import { ImagePlus, Loader2, X, Gavel } from 'lucide-react';
 import { createPartAuction } from '@/app/parts/actions';
 import { createClient } from '@/lib/supabase/client';
 import { AiDescriptionButton } from '@/components/AiDescriptionButton';
-import { PART_CATEGORY_LABEL, DURATION_OPTIONS, type PartCategory } from '@/lib/part-auction';
+import { PART_CATEGORY_LABEL, DURATION_OPTIONS, CAR_MAKERS, type PartCategory } from '@/lib/part-auction';
 
 const supabase = createClient();
 
@@ -127,14 +127,48 @@ export function PartAuctionForm() {
           <input name="start_price" type="number" min={0} step={100} required className="input" placeholder="1000" />
         </div>
         <div>
+          <label className="label">最低落札価格（任意）</label>
+          <input name="reserve_price" type="number" min={0} step={100} className="input" placeholder="未設定可" />
+        </div>
+        <div>
           <label className="label">即決価格（任意）</label>
           <input name="buy_now_price" type="number" min={0} step={100} className="input" placeholder="未設定可" />
         </div>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-3">
         <div>
           <label className="label">出品期間</label>
           <select name="duration" className="input" defaultValue={3}>
             {DURATION_OPTIONS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
           </select>
+        </div>
+      </div>
+      <p className="-mt-2 text-xs text-slate-400">最低落札価格を設定すると、その額に達しない場合は落札されません（非公開）。終了間際の入札で自動延長されます。</p>
+
+      {/* 適合車種（任意） */}
+      <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4">
+        <p className="mb-2 text-sm font-bold text-navy-700">適合車種（任意）</p>
+        <p className="mb-3 text-xs text-slate-400">入力すると「車種で絞り込み」に表示され、購入者が自分の車に合う物を見つけやすくなります。</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label className="label">メーカー</label>
+            <select name="fit_maker" className="input" defaultValue="">
+              <option value="">指定なし</option>
+              {CAR_MAKERS.map((m) => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="label">車種・型式</label>
+            <input name="fit_model" className="input" placeholder="例）プリウス 30系 / ZVW30" />
+          </div>
+          <div>
+            <label className="label">年式（から）</label>
+            <input name="fit_year_from" type="number" min={1980} max={2100} className="input" placeholder="2009" />
+          </div>
+          <div>
+            <label className="label">年式（まで）</label>
+            <input name="fit_year_to" type="number" min={1980} max={2100} className="input" placeholder="2015" />
+          </div>
         </div>
       </div>
 

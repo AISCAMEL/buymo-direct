@@ -75,7 +75,30 @@ export interface PartAuction {
   closed_at: string | null;
   created_at: string;
   updated_at: string;
+  // v2
+  reserve_price: number | null;
+  extend_count: number;
+  fit_maker: string | null;
+  fit_model: string | null;
+  fit_year_from: number | null;
+  fit_year_to: number | null;
 }
+
+export interface PartQuestion {
+  id: string;
+  auction_id: string;
+  asker_id: string;
+  body: string;
+  answer: string | null;
+  answered_at: string | null;
+  created_at: string;
+}
+
+/** 代表的なメーカー（適合車種の絞り込み用）。 */
+export const CAR_MAKERS = [
+  'トヨタ', 'ホンダ', '日産', 'マツダ', 'スバル', '三菱', 'スズキ', 'ダイハツ',
+  'レクサス', 'BMW', 'メルセデス・ベンツ', 'アウディ', 'フォルクスワーゲン', 'ボルボ', 'その他',
+] as const;
 
 export interface PartBid {
   id: string;

@@ -1,10 +1,11 @@
 import Link from 'next/link';
-import { Gavel, Plus, Clock, Tag } from 'lucide-react';
+import { Gavel, Plus, Clock, Tag, Car, Search, Heart } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { formatYen } from '@/lib/format';
 import {
   PART_CATEGORY_LABEL,
   CONDITION_LABEL,
+  CAR_MAKERS,
   timeLeftLabel,
   type PartAuction,
   type PartCategory,
@@ -13,14 +14,16 @@ import {
 export const dynamic = 'force-dynamic';
 export const metadata = {
   title: 'パーツオークション（ヤフオク形式）| BUYMO ダイレクト',
-  description: 'アルミホイール・タイヤ・カーナビ・エアロなどのカーパーツをオークション形式で出品・入札。即決にも対応。',
+  description: 'アルミホイール・タイヤ・カーナビ・エアロなどのカーパーツをオークション形式で出品・入札。適合車種で絞り込み、代理入札・即決にも対応。',
 };
 
 const CATS: (PartCategory | 'all')[] = ['all', 'wheel', 'tire', 'nav', 'aero', 'audio', 'exterior', 'interior', 'other'];
 
-export default async function PartsPage({ searchParams }: { searchParams: Promise<{ cat?: string }> }) {
+export default async function PartsPage({ searchParams }: { searchParams: Promise<{ cat?: string; maker?: string; q?: string }> }) {
   const sp = await searchParams;
   const cat = sp.cat && CATS.includes(sp.cat as PartCategory) ? (sp.cat as PartCategory) : 'all';
+  const maker = sp.maker && (CAR_MAKERS as readonly string[]).includes(sp.maker) ? sp.maker : '';
+  const keyword = (sp.q ?? '').replace(/[%,]/g, '').trim().slice(0, 40);
 
   const supabase = await createClient();
   let rows: PartAuction[] = [];
@@ -33,12 +36,33 @@ export default async function PartsPage({ searchParams }: { searchParams: Promis
       .order('ends_at', { ascending: true })
       .limit(60);
     if (cat !== 'all') q = q.eq('category', cat);
+    if (maker) q = q.eq('fit_maker', maker);
+    if (keyword) q = q.or(`title.ilike.%${keyword}%,fit_model.ilike.%${keyword}%,description.ilike.%${keyword}%`);
     const { data, error } = await q;
     if (error) tableMissing = true;
     rows = (data ?? []) as PartAuction[];
   } catch {
     tableMissing = true;
   }
+
+  const fitLabel = (a: PartAuction) => {
+    const parts: string[] = [];
+    if (a.fit_maker) parts.push(a.fit_maker);
+    if (a.fit_model) parts.push(a.fit_model);
+    return parts.join(' ');
+  };
+
+  const makeHref = (over: Partial<{ cat: string; maker: string; q: string }>) => {
+    const p = new URLSearchParams();
+    const c = over.cat ?? (cat === 'all' ? '' : cat);
+    const m = over.maker ?? maker;
+    const k = over.q ?? keyword;
+    if (c) p.set('cat', c);
+    if (m) p.set('maker', m);
+    if (k) p.set('q', k);
+    const s = p.toString();
+    return s ? `/parts?${s}` : '/parts';
+  };
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 py-2">
@@ -47,18 +71,41 @@ export default async function PartsPage({ searchParams }: { searchParams: Promis
           <Gavel className="h-7 w-7 text-navy-500" />
           <div>
             <h1 className="text-2xl font-black">パーツオークション</h1>
-            <p className="text-sm text-slate-500">ヤフオク形式で出品・入札。即決にも対応（買取保証はありません）。</p>
+            <p className="text-sm text-slate-500">代理入札・自動延長・適合車種検索つき。即決にも対応（買取保証はありません）。</p>
           </div>
         </div>
-        <Link href="/parts/new" className="btn-accent"><Plus className="h-4 w-4" /> パーツを出品する</Link>
+        <div className="flex items-center gap-2">
+          <Link href="/parts/watching" className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50"><Heart className="h-4 w-4" /> ウォッチ中</Link>
+          <Link href="/parts/new" className="btn-accent"><Plus className="h-4 w-4" /> パーツを出品する</Link>
+        </div>
       </div>
+
+      {/* 適合車種で絞り込み */}
+      <form action="/parts" method="get" className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-end">
+        {cat !== 'all' && <input type="hidden" name="cat" value={cat} />}
+        <div className="flex-1">
+          <label className="label flex items-center gap-1"><Car className="h-3.5 w-3.5" /> メーカー</label>
+          <select name="maker" defaultValue={maker} className="input">
+            <option value="">すべて</option>
+            {CAR_MAKERS.map((m) => <option key={m} value={m}>{m}</option>)}
+          </select>
+        </div>
+        <div className="flex-[2]">
+          <label className="label flex items-center gap-1"><Search className="h-3.5 w-3.5" /> キーワード・車種</label>
+          <input name="q" defaultValue={keyword} className="input" placeholder="例）プリウス 30系 / 17インチ / ETC" />
+        </div>
+        <button className="btn-accent sm:w-auto"><Search className="h-4 w-4" /> 検索</button>
+        {(maker || keyword) && (
+          <Link href={cat === 'all' ? '/parts' : `/parts?cat=${cat}`} className="rounded-lg border border-slate-200 px-3 py-2 text-center text-sm font-bold text-slate-500 hover:bg-slate-50">クリア</Link>
+        )}
+      </form>
 
       {/* カテゴリ */}
       <div className="flex flex-wrap gap-2">
         {CATS.map((c) => (
           <Link
             key={c}
-            href={c === 'all' ? '/parts' : `/parts?cat=${c}`}
+            href={makeHref({ cat: c === 'all' ? '' : c })}
             className={`rounded-full px-3 py-1 text-xs font-bold transition ${cat === c ? 'bg-navy-700 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
           >
             {c === 'all' ? 'すべて' : PART_CATEGORY_LABEL[c]}
@@ -69,13 +116,13 @@ export default async function PartsPage({ searchParams }: { searchParams: Promis
       {tableMissing && (
         <div className="card border-amber-200 bg-amber-50 p-4 text-sm text-amber-700">
           <p className="font-bold">part_auctions テーブルが未適用です。</p>
-          <p className="mt-1">Supabase で <code>supabase/migrations/20240769_part_auctions.sql</code> を実行してください。</p>
+          <p className="mt-1">Supabase で <code>supabase/migrations/20240769_part_auctions.sql</code> と <code>20240771_part_auction_pro.sql</code> を実行してください。</p>
         </div>
       )}
 
       {rows.length === 0 && !tableMissing ? (
         <p className="card p-12 text-center text-sm text-slate-500">
-          現在開催中の出品はありません。「パーツを出品する」から始めましょう。
+          {maker || keyword ? '条件に合う出品が見つかりませんでした。条件を変えてお試しください。' : '現在開催中の出品はありません。「パーツを出品する」から始めましょう。'}
         </p>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -94,6 +141,9 @@ export default async function PartsPage({ searchParams }: { searchParams: Promis
               </div>
               <div className="p-3">
                 <p className="line-clamp-2 min-h-[2.5rem] text-sm font-bold text-navy-800">{a.title}</p>
+                {fitLabel(a) && (
+                  <p className="mt-1 flex items-center gap-1 truncate text-[10px] font-bold text-navy-500"><Car className="h-3 w-3 shrink-0" />{fitLabel(a)}</p>
+                )}
                 <div className="mt-1.5 flex items-end justify-between">
                   <div>
                     <p className="text-[10px] text-slate-400">現在価格</p>
