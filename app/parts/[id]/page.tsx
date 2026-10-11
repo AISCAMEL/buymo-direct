@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, Gavel, Clock, Tag, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, Clock, Tag, ShieldAlert } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { formatYen, formatDateTime } from '@/lib/format';
-import { placeBid, buyNow, cancelPartAuction, closePartAuctionIfEnded } from '../actions';
+import { cancelPartAuction, closePartAuctionIfEnded } from '../actions';
+import { BidForm } from '@/components/BidForm';
 import {
   PART_CATEGORY_LABEL,
   CONDITION_LABEL,
@@ -134,26 +135,8 @@ export default async function PartAuctionPage({ params }: { params: Params }) {
 
       {/* 入札・即決 */}
       {isActive && !isOwner && (
-        <div className="card space-y-3 p-5">
-          <form action={placeBid} className="space-y-2">
-            <input type="hidden" name="auction_id" value={a.id} />
-            <label className="label">入札額（最低 {formatYen(minBid)}）</label>
-            <div className="flex gap-2">
-              <input
-                type="number" name="amount" min={minBid} step={1} defaultValue={minBid} inputMode="numeric"
-                className="input flex-1" required
-              />
-              <button className="btn-accent shrink-0"><Gavel className="h-4 w-4" /> 入札する</button>
-            </div>
-            <p className="text-xs text-slate-400">入札単位に応じて、現在価格を上回る額で入札してください。</p>
-          </form>
-          {a.buy_now_price != null && (
-            <form action={buyNow}>
-              <input type="hidden" name="auction_id" value={a.id} />
-              <button className="btn-gold w-full">即決で購入する（{formatYen(a.buy_now_price)}）</button>
-            </form>
-          )}
-          {!user && <p className="text-xs text-slate-400">入札にはログインが必要です。</p>}
+        <div className="card p-5">
+          <BidForm auctionId={a.id} minBid={minBid} buyNowPrice={a.buy_now_price} loggedIn={!!user} />
         </div>
       )}
 

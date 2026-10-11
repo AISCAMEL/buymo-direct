@@ -62,34 +62,36 @@ export async function createPartAuction(formData: FormData): Promise<{ ok: boole
 }
 
 /** 入札する。 */
-export async function placeBid(formData: FormData): Promise<void> {
+export async function placeBid(formData: FormData): Promise<{ ok: boolean; error?: string } | void> {
   const auctionId = String(formData.get('auction_id') || '');
   const amount = Math.round(Number(formData.get('amount')) || 0);
-  if (!auctionId || amount <= 0) return;
+  if (!auctionId || amount <= 0) return { ok: false, error: '入札額を入力してください。' };
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect(`/login?redirect=/parts/${auctionId}`);
 
-  const svc = createServiceClient();
+  let svc: ReturnType<typeof createServiceClient>;
+  try { svc = createServiceClient(); } catch { return { ok: false, error: 'サーバー設定エラーのため入札できません。運営にお問い合わせください。' }; }
   const { data: a } = await svc.from('part_auctions').select('*').eq('id', auctionId).maybeSingle();
   const au = a as PartAuction | null;
-  if (!au || au.status !== 'active') return;
-  if (new Date(au.ends_at).getTime() <= Date.now()) return;
-  if (au.seller_id === user.id) return; // 自分の商品には入札不可
+  if (!au) return { ok: false, error: 'この出品が見つかりません。' };
+  if (au.status !== 'active') return { ok: false, error: 'この出品はすでに終了しています。' };
+  if (new Date(au.ends_at).getTime() <= Date.now()) return { ok: false, error: '出品期間が終了しました。' };
+  if (au.seller_id === user.id) return { ok: false, error: '自分の出品には入札できません。' };
 
   const minBid = minNextBid(au.current_price, au.bid_count, au.start_price);
-  if (amount < minBid) return;
+  if (amount < minBid) return { ok: false, error: `最低入札額は ${minBid.toLocaleString()} 円です。` };
 
   const prevHighest = au.highest_bidder_id;
 
   // 入札を記録（本人のみ・RLS）
   const { error: bidErr } = await supabase.from('part_bids').insert({ auction_id: auctionId, bidder_id: user.id, amount });
-  if (bidErr) return;
+  if (bidErr) return { ok: false, error: '入札の記録に失敗しました。時間をおいて再度お試しください。' };
 
   // 即決価格に到達したら落札確定
   const reachedBuyNow = au.buy_now_price != null && amount >= au.buy_now_price;
-  await svc
+  const { error: upErr } = await svc
     .from('part_auctions')
     .update({
       current_price: amount,
@@ -99,6 +101,7 @@ export async function placeBid(formData: FormData): Promise<void> {
       updated_at: new Date().toISOString(),
     })
     .eq('id', auctionId);
+  if (upErr) return { ok: false, error: '入札の反映に失敗しました。' };
 
   // 以前の最高入札者へ「上回られました」通知
   if (prevHighest && prevHighest !== user.id) {
@@ -110,29 +113,33 @@ export async function placeBid(formData: FormData): Promise<void> {
   }
 
   revalidatePath(`/parts/${auctionId}`);
+  return { ok: true };
 }
 
 /** 即決購入する。 */
-export async function buyNow(formData: FormData): Promise<void> {
+export async function buyNow(formData: FormData): Promise<{ ok: boolean; error?: string } | void> {
   const auctionId = String(formData.get('auction_id') || '');
-  if (!auctionId) return;
+  if (!auctionId) return { ok: false, error: '対象が不明です。' };
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect(`/login?redirect=/parts/${auctionId}`);
 
-  const svc = createServiceClient();
+  let svc: ReturnType<typeof createServiceClient>;
+  try { svc = createServiceClient(); } catch { return { ok: false, error: 'サーバー設定エラーのため処理できません。運営にお問い合わせください。' }; }
+
   const { data: a } = await svc.from('part_auctions').select('*').eq('id', auctionId).maybeSingle();
   const au = a as PartAuction | null;
-  if (!au || au.status !== 'active' || au.buy_now_price == null) return;
-  if (new Date(au.ends_at).getTime() <= Date.now()) return;
-  if (au.seller_id === user.id) return;
+  if (!au || au.buy_now_price == null) return { ok: false, error: '即決価格が設定されていません。' };
+  if (au.status !== 'active') return { ok: false, error: 'この出品はすでに終了しています。' };
+  if (new Date(au.ends_at).getTime() <= Date.now()) return { ok: false, error: '出品期間が終了しました。' };
+  if (au.seller_id === user.id) return { ok: false, error: '自分の出品は購入できません。' };
 
   const price = au.buy_now_price;
   const { error: bidErr } = await supabase.from('part_bids').insert({ auction_id: auctionId, bidder_id: user.id, amount: price });
-  if (bidErr) return;
+  if (bidErr) return { ok: false, error: '購入の記録に失敗しました。' };
 
-  await svc
+  const { error: upErr } = await svc
     .from('part_auctions')
     .update({
       current_price: price,
@@ -144,11 +151,13 @@ export async function buyNow(formData: FormData): Promise<void> {
       updated_at: new Date().toISOString(),
     })
     .eq('id', auctionId);
+  if (upErr) return { ok: false, error: '購入の反映に失敗しました。' };
 
   await createNotification(au.seller_id, 'system', '即決で落札されました', `「${au.title}」が即決 ¥${price.toLocaleString()} で落札されました。`, `/parts/${auctionId}`);
   await createNotification(user.id, 'system', '即決で落札しました', `「${au.title}」を ¥${price.toLocaleString()} で落札しました。出品者と取引を進めてください。`, `/parts/${auctionId}`);
 
   revalidatePath(`/parts/${auctionId}`);
+  return { ok: true };
 }
 
 /** 出品を取り消す（入札が無い場合のみ・出品者本人）。 */
