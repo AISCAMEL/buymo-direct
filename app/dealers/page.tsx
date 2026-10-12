@@ -1,7 +1,9 @@
 import Link from 'next/link';
-import { Building2, MapPin, Package } from 'lucide-react';
+import { Building2, MapPin, Package, Wrench } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { skillCategory } from '@/lib/matching-fee';
+import { skillLabel } from '@/lib/cases';
+import { StarRating } from '@/components/StarRating';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: '加盟店一覧 | BUYMO' };
@@ -48,7 +50,7 @@ export default async function DealersPage({
 
   let query = s
     .from('dealers')
-    .select('id, name, company_name, prefecture, description, logo_url')
+    .select('id, owner_id, name, company_name, prefecture, description, logo_url, rep_name, rep_photo_url, rep_message, service_area')
     .eq('status', 'approved')
     .order('name', { ascending: true });
 
@@ -76,10 +78,26 @@ export default async function DealersPage({
     .eq('active', true)
     .in('dealer_id', (dealers ?? []).map((d: any) => d.id));
   const catMap: Record<string, string[]> = {};
+  const skillNameMap: Record<string, string[]> = {};
   for (const row of (dealerSkillRows ?? []) as { dealer_id: string; skill_key: string }[]) {
     const c = skillCategory(row.skill_key);
     const arr = (catMap[row.dealer_id] ??= []);
     if (!arr.includes(c)) arr.push(c);
+    const names = (skillNameMap[row.dealer_id] ??= []);
+    const label = skillLabel(row.skill_key);
+    if (!names.includes(label)) names.push(label);
+  }
+
+  // 口コミ（レビュー）集計：reviewee_id = 加盟店オーナーのプロフィールID
+  const ownerIds = Array.from(new Set((dealers ?? []).map((d: any) => d.owner_id).filter(Boolean)));
+  const { data: reviewRows } = ownerIds.length
+    ? await s.from('reviews').select('reviewee_id, rating').in('reviewee_id', ownerIds)
+    : { data: [] };
+  const ratingAgg: Record<string, { sum: number; count: number }> = {};
+  for (const r of (reviewRows ?? []) as { reviewee_id: string; rating: number }[]) {
+    const a = (ratingAgg[r.reviewee_id] ??= { sum: 0, count: 0 });
+    a.sum += r.rating;
+    a.count += 1;
   }
 
   // prefecture options
@@ -91,7 +109,7 @@ export default async function DealersPage({
         <Building2 className="h-6 w-6 text-navy-500" />
         <div>
           <h1 className="text-2xl font-black">車のプロを探す</h1>
-          <p className="text-sm text-slate-500">BUYMO 認定の販売店・整備・査定などのプロに、購入も依頼もできます</p>
+          <p className="text-sm text-slate-500">顔・自己紹介・できること・口コミで選べます。BUYMO 認定のプロに購入も依頼も。</p>
           <Link href="/skills" className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-accent-600 hover:underline">サービス（スキル）一覧から探す →</Link>
         </div>
       </div>
@@ -145,47 +163,67 @@ export default async function DealersPage({
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {(dealers ?? []).map((d: any) => (
+        {(dealers ?? []).map((d: any) => {
+          const face = d.rep_photo_url || d.logo_url || null;
+          const intro = d.rep_message || d.description || null;
+          const skills = (skillNameMap[d.id] ?? []) as string[];
+          const agg = ratingAgg[d.owner_id];
+          return (
           <Link
             key={d.id}
             href={`/dealers/${d.id}`}
             className="card flex flex-col gap-3 p-5 transition hover:shadow-md"
           >
-            {d.logo_url ? (
-              <img src={d.logo_url} alt={d.name} className="h-14 w-auto object-contain" />
-            ) : (
-              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-navy-100">
-                <Building2 className="h-7 w-7 text-navy-400" />
+            {/* 顔写真＋名前 */}
+            <div className="flex items-center gap-3">
+              {face ? (
+                <img src={face} alt={d.rep_name || d.name} className="h-14 w-14 shrink-0 rounded-full border border-slate-100 object-cover" />
+              ) : (
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-navy-100 text-2xl">🧑‍🔧</div>
+              )}
+              <div className="min-w-0">
+                <h2 className="truncate font-black text-navy-800">{d.name}</h2>
+                {d.rep_name && <p className="truncate text-xs text-slate-500">担当：{d.rep_name}</p>}
+                {!d.rep_name && d.company_name && <p className="truncate text-xs text-slate-500">{d.company_name}</p>}
+                {agg ? (
+                  <div className="mt-0.5"><StarRating value={agg.sum / agg.count} count={agg.count} /></div>
+                ) : (
+                  <p className="mt-0.5 text-[11px] text-slate-300">口コミはこれから</p>
+                )}
+              </div>
+            </div>
+
+            {/* 自己紹介 */}
+            {intro && <p className="line-clamp-2 text-sm leading-relaxed text-slate-600">{intro}</p>}
+
+            {/* できること（対応サービス） */}
+            {skills.length > 0 && (
+              <div>
+                <p className="mb-1 flex items-center gap-1 text-[11px] font-bold text-slate-400"><Wrench className="h-3 w-3" />できること</p>
+                <div className="flex flex-wrap gap-1">
+                  {skills.slice(0, 5).map((name) => (
+                    <span key={name} className="rounded-full bg-accent-50 px-2 py-0.5 text-[11px] font-bold text-accent-600">{name}</span>
+                  ))}
+                  {skills.length > 5 && <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-500">+{skills.length - 5}</span>}
+                </div>
               </div>
             )}
-            <div className="flex-1">
-              <h2 className="font-black text-navy-800">{d.name}</h2>
-              {d.company_name && <p className="text-sm text-slate-500">{d.company_name}</p>}
-              {d.description && (
-                <p className="mt-1 line-clamp-2 text-sm text-slate-600">{d.description}</p>
-              )}
-              {(catMap[d.id] ?? []).length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {(catMap[d.id] ?? []).slice(0, 4).map((c) => (
-                    <span key={c} className="rounded-full bg-accent-50 px-2 py-0.5 text-[11px] font-bold text-accent-600">{c}</span>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="flex items-center justify-between border-t border-slate-100 pt-3 text-sm">
-              {d.prefecture && (
-                <span className="flex items-center gap-1 text-slate-500">
-                  <MapPin className="h-3.5 w-3.5" />
-                  {d.prefecture}
+
+            <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-3 text-sm">
+              {(d.service_area || d.prefecture) && (
+                <span className="flex items-center gap-1 truncate text-slate-500">
+                  <MapPin className="h-3.5 w-3.5 shrink-0" />
+                  {d.service_area || d.prefecture}
                 </span>
               )}
-              <span className="flex items-center gap-1 font-bold text-navy-600">
+              <span className="flex shrink-0 items-center gap-1 font-bold text-navy-600">
                 <Package className="h-3.5 w-3.5" />
                 {countMap[d.id] ?? 0}台
               </span>
             </div>
           </Link>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

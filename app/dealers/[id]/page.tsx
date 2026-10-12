@@ -1,9 +1,10 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { Building2, MapPin, Globe, Phone, Package, Wrench } from 'lucide-react';
+import { Building2, MapPin, Globe, Phone, Package, Wrench, MessageSquare } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ListingCard } from '@/components/ListingCard';
 import { RequestPartnerForm } from '@/components/RequestPartnerForm';
+import { StarRating } from '@/components/StarRating';
 import { skillLabel } from '@/lib/cases';
 import { skillCategory } from '@/lib/matching-fee';
 import { formatYen } from '@/lib/format';
@@ -53,7 +54,7 @@ export default async function DealerShopPage({ params }: { params: Promise<{ id:
 
   const { data: dealer } = await s
     .from('dealers')
-    .select('id, name, company_name, prefecture, address, phone, website_url, logo_url, description, status, approved_at, tagline, cover_url, rep_name, rep_photo_url, rep_message, business_hours, holidays, established, service_area, instagram_url, line_url, gallery')
+    .select('id, owner_id, name, company_name, prefecture, address, phone, website_url, logo_url, description, status, approved_at, tagline, cover_url, rep_name, rep_photo_url, rep_message, business_hours, holidays, established, service_area, instagram_url, line_url, gallery')
     .eq('id', id)
     .eq('status', 'approved')
     .maybeSingle();
@@ -83,6 +84,26 @@ export default async function DealerShopPage({ params }: { params: Promise<{ id:
     .eq('active', true);
   const skills = (skillRows ?? []) as PartnerSkill[];
   const skillKeys = skills.map((sk) => sk.skill_key);
+
+  // 口コミ（レビュー）：この加盟店オーナー宛ての相互評価
+  const { data: reviewRows } = await s
+    .from('reviews')
+    .select('id, rating, comment, created_at, reviewer_id')
+    .eq('reviewee_id', dealer.owner_id)
+    .order('created_at', { ascending: false })
+    .limit(20);
+  const reviews = (reviewRows ?? []) as { id: string; rating: number; comment: string | null; created_at: string; reviewer_id: string }[];
+  const reviewCount = reviews.length;
+  const reviewAvg = reviewCount ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount : 0;
+  // レビュアー名
+  const reviewerIds = Array.from(new Set(reviews.map((r) => r.reviewer_id)));
+  const { data: reviewerProfiles } = reviewerIds.length
+    ? await s.from('profiles').select('id, display_name, avatar_url').in('id', reviewerIds)
+    : { data: [] };
+  const reviewerMap: Record<string, { display_name: string; avatar_url: string | null }> = {};
+  for (const p of (reviewerProfiles ?? []) as { id: string; display_name: string; avatar_url: string | null }[]) {
+    reviewerMap[p.id] = { display_name: p.display_name, avatar_url: p.avatar_url };
+  }
 
   const gallery: string[] = Array.isArray(dealer.gallery) ? dealer.gallery : [];
 
@@ -217,6 +238,43 @@ export default async function DealerShopPage({ params }: { params: Promise<{ id:
         <div className="lg:pt-10">
           <RequestPartnerForm dealerId={dealer.id} skillKeys={skillKeys} />
         </div>
+      </div>
+
+      {/* 口コミ（レビュー） */}
+      <div>
+        <div className="mb-3 flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-navy-400" />
+            <h2 className="font-black text-navy-800">口コミ・評価</h2>
+          </div>
+          {reviewCount > 0 && <StarRating value={reviewAvg} count={reviewCount} size="md" />}
+        </div>
+        {reviewCount === 0 ? (
+          <p className="card p-8 text-center text-sm text-slate-400">取引完了後の口コミがここに表示されます。</p>
+        ) : (
+          <div className="space-y-2">
+            {reviews.map((r) => {
+              const who = reviewerMap[r.reviewer_id];
+              return (
+                <div key={r.id} className="card p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      {who?.avatar_url ? (
+                        <img src={who.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
+                      ) : (
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-sm">🙂</div>
+                      )}
+                      <span className="text-sm font-bold text-slate-700">{who?.display_name ?? '利用者'}</span>
+                    </div>
+                    <StarRating value={r.rating} />
+                  </div>
+                  {r.comment && <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-600">{r.comment}</p>}
+                  <p className="mt-1 text-[11px] text-slate-400">{new Date(r.created_at).toLocaleDateString('ja-JP')}</p>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Listings */}
