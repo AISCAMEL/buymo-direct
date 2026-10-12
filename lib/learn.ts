@@ -7,6 +7,9 @@ export const LEARN_CATEGORY_LABEL: Record<string, string> = {
   sourcing: '仕入れ',
   legal: '法令',
   sales: '販売',
+  auction: '出品・オークション',
+  support: '接客・クレーム',
+  management: '経営・資金',
 };
 
 export const LEARN_CATEGORY_CLS: Record<string, string> = {
@@ -16,6 +19,9 @@ export const LEARN_CATEGORY_CLS: Record<string, string> = {
   sourcing: 'bg-amber-100 text-amber-700',
   legal: 'bg-purple-100 text-purple-700',
   sales: 'bg-navy-100 text-navy-700',
+  auction: 'bg-rose-100 text-rose-700',
+  support: 'bg-orange-100 text-orange-700',
+  management: 'bg-cyan-100 text-cyan-700',
 };
 
 export type LearningContent = {
