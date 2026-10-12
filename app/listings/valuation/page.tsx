@@ -2,13 +2,26 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Calculator, TrendingDown, Loader2, ClipboardCheck, ArrowRight } from 'lucide-react';
+import { Calculator, TrendingDown, Loader2, ClipboardCheck, ArrowRight, ShieldCheck, Tag, BarChart3, Sparkles } from 'lucide-react';
 import { VEHICLE_CATALOG, CATALOG_MAKERS } from '@/lib/vehicle-catalog';
 import { MILEAGE_OPTIONS } from '@/lib/mileage';
 import { formatYen } from '@/lib/format';
 import { PriceGuide } from '@/components/PriceGuide';
 
-type ValuationResult = { lower: number; upper: number; est: number; source: 'ai' | 'formula'; reasoning?: string };
+type ValuationFactor = { label: string; impact: number; note?: string };
+type ValuationResult = {
+  lower: number; upper: number; est: number;
+  retailLower: number; retailUpper: number; retailEst: number;
+  source: 'ai' | 'formula'; reasoning?: string; marketComment?: string;
+  confidence: 'high' | 'medium' | 'low'; sampleCount: number;
+  recommend: 'direct' | 'buyback' | 'either'; factors: ValuationFactor[];
+};
+
+const CONFIDENCE_LABEL: Record<'high' | 'medium' | 'low', { t: string; cls: string }> = {
+  high: { t: '信頼度 高', cls: 'bg-emerald-50 text-emerald-700' },
+  medium: { t: '信頼度 中', cls: 'bg-amber-50 text-amber-700' },
+  low: { t: '信頼度 参考', cls: 'bg-slate-100 text-slate-500' },
+};
 
 // 西暦→和暦（車の年式選択用の簡易変換）
 function wareki(y: number): string {
@@ -212,25 +225,62 @@ export default function ValuationPage() {
 
       {result && (
         <div className="card space-y-4 p-6">
-          <h2 className="flex items-center gap-2 text-lg font-black">
-            <TrendingDown className="h-5 w-5 text-navy-500" /> 査定結果
+          <h2 className="flex flex-wrap items-center gap-2 text-lg font-black">
+            <TrendingDown className="h-5 w-5 text-navy-500" /> AI査定結果
             <span className={`ml-auto rounded-full px-2.5 py-0.5 text-xs font-bold ${result.source === 'ai' ? 'bg-accent-50 text-accent-600' : 'bg-slate-100 text-slate-500'}`}>
               {result.source === 'ai' ? 'AI査定' : '相場計算'}
             </span>
+            <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${CONFIDENCE_LABEL[result.confidence].cls}`}>
+              {CONFIDENCE_LABEL[result.confidence].t}
+            </span>
           </h2>
 
-          <div className="rounded-xl bg-navy-50 p-5 text-center">
-            <p className="text-sm text-slate-500">推定相場レンジ</p>
-            <p className="mt-1 text-3xl font-black text-navy-700">
-              {formatYen(result.lower)} 〜 {formatYen(result.upper)}
-            </p>
-            <p className="mt-1 text-sm text-slate-400">中央値：{formatYen(result.est)}</p>
-            {result.reasoning && (
-              <p className="mt-3 border-t border-navy-100 pt-3 text-left text-xs leading-relaxed text-slate-600">
-                {result.reasoning}
-              </p>
-            )}
+          {/* 2つのレンジ：買取 と ダイレクト販売 */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className={`rounded-xl border p-4 text-center ${result.recommend === 'buyback' ? 'border-navy-400 bg-navy-50' : 'border-slate-200 bg-slate-50'}`}>
+              <p className="flex items-center justify-center gap-1 text-xs font-bold text-slate-500"><ShieldCheck className="h-3.5 w-3.5" /> 買取目安（すぐ現金化）</p>
+              <p className="mt-1 text-2xl font-black text-navy-700">{formatYen(result.lower)}<span className="text-sm">〜</span>{formatYen(result.upper)}</p>
+              <p className="mt-0.5 text-xs text-slate-400">中央値 {formatYen(result.est)}・手数料0円</p>
+              {result.recommend === 'buyback' && <span className="mt-1 inline-block rounded-full bg-navy-600 px-2 py-0.5 text-[10px] font-black text-white">おすすめ</span>}
+            </div>
+            <div className={`rounded-xl border p-4 text-center ${result.recommend === 'direct' ? 'border-gold-400 bg-gold-50' : 'border-slate-200 bg-slate-50'}`}>
+              <p className="flex items-center justify-center gap-1 text-xs font-bold text-slate-500"><Tag className="h-3.5 w-3.5" /> ダイレクト販売目安（高く売る）</p>
+              <p className="mt-1 text-2xl font-black text-gold-700">{formatYen(result.retailLower)}<span className="text-sm">〜</span>{formatYen(result.retailUpper)}</p>
+              <p className="mt-0.5 text-xs text-slate-400">中央値 {formatYen(result.retailEst)}・買取保証つき</p>
+              {result.recommend === 'direct' && <span className="mt-1 inline-block rounded-full bg-gold-500 px-2 py-0.5 text-[10px] font-black text-navy-900">おすすめ</span>}
+            </div>
           </div>
+
+          {/* 参照データ・コメント */}
+          <div className="rounded-xl bg-slate-50 p-4">
+            <p className="flex items-center gap-1.5 text-xs font-bold text-slate-500">
+              <BarChart3 className="h-3.5 w-3.5" />
+              {result.sampleCount > 0 ? `同条件の現役出品 ${result.sampleCount}台の実勢を反映` : '出品データが少ないため計算式ベースの参考値'}
+            </p>
+            {result.reasoning && <p className="mt-2 flex gap-1.5 text-xs leading-relaxed text-slate-600"><Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent-500" />{result.reasoning}</p>}
+            {result.marketComment && <p className="mt-1.5 text-xs leading-relaxed text-slate-500">{result.marketComment}</p>}
+          </div>
+
+          {/* 価格の内訳（説明可能な査定） */}
+          {result.factors.length > 0 && (
+            <div className="rounded-xl border border-slate-200 p-4">
+              <p className="mb-2 text-sm font-black text-slate-700">価格に影響した要因</p>
+              <ul className="divide-y divide-slate-100 text-sm">
+                {result.factors.map((f) => (
+                  <li key={f.label} className="flex items-center justify-between gap-2 py-1.5">
+                    <div>
+                      <p className="font-bold text-slate-700">{f.label}</p>
+                      {f.note && <p className="text-[11px] text-slate-400">{f.note}</p>}
+                    </div>
+                    <span className={`shrink-0 font-black tabular-nums ${f.impact < 0 ? 'text-red-500' : f.impact > 0 ? 'text-emerald-600' : 'text-slate-400'}`}>
+                      {f.impact > 0 ? '+' : ''}{formatYen(f.impact)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2 text-[11px] text-slate-400">※ 新車相当価格からの増減（ダイレクト販売相場ベースの概算）。</p>
+            </div>
+          )}
 
           {/* 実際の掲載相場（BUYMOの現役出品から・AI査定の裏付け） */}
           <PriceGuide maker={maker} model={otherModel ? undefined : model} year={year} />
