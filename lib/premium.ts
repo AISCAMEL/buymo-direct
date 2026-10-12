@@ -28,6 +28,7 @@ export type PremiumResource = {
   summary: string | null;
   body: string | null;
   url: string | null;
+  video_url: string | null;
   published: boolean;
   sort: number;
 };

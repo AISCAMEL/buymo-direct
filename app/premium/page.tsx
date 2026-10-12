@@ -4,6 +4,8 @@ import { Crown, GraduationCap, Users, PlayCircle, ExternalLink, Lock } from 'luc
 import { createClient } from '@/lib/supabase/server';
 import { getViewerAccess } from '@/lib/viewer';
 import { BusinessOnlyGate } from '@/components/BusinessOnlyGate';
+import { VideoEmbed } from '@/components/VideoEmbed';
+import { isPlayableVideo } from '@/lib/video';
 import { PREMIUM_CATEGORY_LABEL, PREMIUM_CATEGORY_CLS, type PremiumResource } from '@/lib/premium';
 
 export const dynamic = 'force-dynamic';
@@ -34,7 +36,7 @@ export default async function PremiumPage() {
   const supabase = await createClient();
   const { data } = await supabase
     .from('premium_resources')
-    .select('id, category, title, summary, body, url, published, sort')
+    .select('id, category, title, summary, body, url, video_url, published, sort')
     .eq('published', true)
     .order('sort');
   const items = (data ?? []) as PremiumResource[];
@@ -60,7 +62,8 @@ export default async function PremiumPage() {
           <p className="card p-10 text-center text-sm text-slate-500">コンテンツは準備中です。</p>
         ) : (
           items.map((r) => {
-            const inner = (
+            const hasVideo = isPlayableVideo(r.video_url);
+            const head = (
               <>
                 <div className="min-w-0">
                   <p className="flex flex-wrap items-center gap-2 font-bold">
@@ -73,10 +76,26 @@ export default async function PremiumPage() {
                 {r.url && <ExternalLink className="mt-1 h-4 w-4 shrink-0 text-slate-300" />}
               </>
             );
+
+            // 動画つきは埋め込みプレーヤーを含むカード（リンクで包まない）
+            if (hasVideo) {
+              return (
+                <div key={r.id} className="card space-y-3 p-4">
+                  <div className="flex items-start justify-between gap-3">{head}</div>
+                  <VideoEmbed url={r.video_url} title={r.title} />
+                  {r.url && (
+                    <a href={r.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm font-bold text-navy-600 hover:text-navy-800">
+                      <ExternalLink className="h-3.5 w-3.5" /> 関連資料を開く
+                    </a>
+                  )}
+                </div>
+              );
+            }
+
             return r.url ? (
-              <a key={r.id} href={r.url} target="_blank" rel="noopener noreferrer" className="card flex items-start justify-between gap-3 p-4 transition hover:shadow-md">{inner}</a>
+              <a key={r.id} href={r.url} target="_blank" rel="noopener noreferrer" className="card flex items-start justify-between gap-3 p-4 transition hover:shadow-md">{head}</a>
             ) : (
-              <div key={r.id} className="card flex items-start justify-between gap-3 p-4">{inner}</div>
+              <div key={r.id} className="card flex items-start justify-between gap-3 p-4">{head}</div>
             );
           })
         )}

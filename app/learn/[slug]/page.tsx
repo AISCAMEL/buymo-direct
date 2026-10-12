@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getViewerAccess } from '@/lib/viewer';
 import { PremiumGate } from '@/components/PremiumGate';
+import { VideoEmbed } from '@/components/VideoEmbed';
 import { LEARN_CATEGORY_LABEL, LEARN_CATEGORY_CLS, type LearningContent } from '@/lib/learn';
 
 export const dynamic = 'force-dynamic';
@@ -43,8 +44,11 @@ export default async function LearnDetailPage({ params }: { params: Promise<{ sl
         title="この講座は有料会員・加盟店限定です"
         note="実践編の全文は、有料会員・加盟店・本部のみ閲覧できます。まずは無料のプロ登録から。"
       >
-        <div className="card whitespace-pre-wrap p-6 leading-relaxed text-slate-700">
-          {c.body ?? '本文は準備中です。'}
+        <div className="space-y-4">
+          {c.video_url && <VideoEmbed url={c.video_url} title={c.title} />}
+          <div className="card whitespace-pre-wrap p-6 leading-relaxed text-slate-700">
+            {c.body ?? '本文は準備中です。'}
+          </div>
         </div>
       </PremiumGate>
     </div>

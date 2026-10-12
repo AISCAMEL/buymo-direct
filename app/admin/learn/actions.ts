@@ -10,6 +10,7 @@ function parse(formData: FormData) {
     slug: String(formData.get('slug') || '').trim().replace(/[^a-z0-9-]/gi, '-').toLowerCase(),
     summary: String(formData.get('summary') || '').trim() || null,
     body: String(formData.get('body') || '').trim() || null,
+    video_url: String(formData.get('video_url') || '').trim() || null,
     category: String(formData.get('category') || 'basics'),
     is_premium: ['on', 'true'].includes(String(formData.get('is_premium') || '')),
     published: ['on', 'true'].includes(String(formData.get('published') || '')),

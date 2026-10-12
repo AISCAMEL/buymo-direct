@@ -24,6 +24,7 @@ export type LearningContent = {
   title: string;
   summary: string | null;
   body: string | null;
+  video_url: string | null;
   category: string | null;
   is_premium: boolean;
   published: boolean;

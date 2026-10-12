@@ -28,6 +28,11 @@ export function LearningForm({ action, initial }: { action: (fd: FormData) => vo
         <input name="summary" className="input" defaultValue={v('summary') as string} />
       </div>
       <div>
+        <label className="label">動画URL（任意）</label>
+        <input name="video_url" className="input" defaultValue={v('video_url') as string} placeholder="YouTube / Vimeo の共有URL、または mp4 等の直リンク" />
+        <p className="mt-1 text-xs text-slate-400">本文の上に埋め込みプレーヤーで表示されます（YouTube・Vimeo・mp4対応）。</p>
+      </div>
+      <div>
         <label className="label">本文</label>
         <textarea name="body" rows={10} className="input" defaultValue={v('body') as string} placeholder="講座本文（改行はそのまま表示されます）" />
       </div>
