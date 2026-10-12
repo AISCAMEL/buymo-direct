@@ -2,11 +2,30 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Calculator, TrendingDown, Loader2, ClipboardCheck, ArrowRight, ShieldCheck, Tag, BarChart3, Sparkles } from 'lucide-react';
+import { Calculator, TrendingDown, Loader2, ClipboardCheck, ArrowRight, ShieldCheck, Tag, BarChart3, Sparkles, Camera, X, ScanLine } from 'lucide-react';
 import { VEHICLE_CATALOG, CATALOG_MAKERS } from '@/lib/vehicle-catalog';
 import { MILEAGE_OPTIONS } from '@/lib/mileage';
+import { COLORS, PREFECTURES } from '@/lib/constants';
+import { OPTION_KEYS } from '@/lib/valuation';
 import { formatYen } from '@/lib/format';
 import { PriceGuide } from '@/components/PriceGuide';
+import { PriceHistogram, PriceTrend } from '@/components/ValuationCharts';
+
+type PhotoDiagnosis = { condition: 'excellent' | 'good' | 'fair'; accidentHint: 'none' | 'possible' | 'unknown'; summary: string; points: string[] };
+
+// 画像を縮小してbase64（data部分のみ）に変換する。
+async function fileToDownscaledBase64(file: File, maxSide = 1024): Promise<{ mediaType: string; dataBase64: string }> {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+  const w = Math.round(bitmap.width * scale), h = Math.round(bitmap.height * scale);
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('canvas unavailable');
+  ctx.drawImage(bitmap, 0, 0, w, h);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+  return { mediaType: 'image/jpeg', dataBase64: dataUrl.split(',')[1] ?? '' };
+}
 
 type ValuationFactor = { label: string; impact: number; note?: string };
 type ValuationResult = {
@@ -15,6 +34,8 @@ type ValuationResult = {
   source: 'ai' | 'formula'; reasoning?: string; marketComment?: string;
   confidence: 'high' | 'medium' | 'low'; sampleCount: number;
   recommend: 'direct' | 'buyback' | 'either'; factors: ValuationFactor[];
+  histogram: { label: string; count: number }[];
+  trend: { label: string; value: number }[];
 };
 
 const CONFIDENCE_LABEL: Record<'high' | 'medium' | 'low', { t: string; cls: string }> = {
@@ -43,9 +64,63 @@ export default function ValuationPage() {
   const [condition, setCondition] = useState('good');
   const [shaken, setShaken] = useState<'valid' | 'none'>('valid');
   const [accident, setAccident] = useState<'none' | 'repaired'>('none');
+  // 追加情報（任意・精度向上）
+  const [grade, setGrade] = useState('');
+  const [color, setColor] = useState('');
+  const [options, setOptions] = useState<string[]>([]);
+  const [region, setRegion] = useState('');
+  // 写真AI診断
+  const [photos, setPhotos] = useState<{ mediaType: string; dataBase64: string }[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const [diagnosing, setDiagnosing] = useState(false);
+  const [diagnosis, setDiagnosis] = useState<PhotoDiagnosis | null>(null);
+  const [diagError, setDiagError] = useState<string | null>(null);
   const [result, setResult] = useState<ValuationResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function toggleOption(o: string) {
+    setOptions((prev) => (prev.includes(o) ? prev.filter((x) => x !== o) : [...prev, o]));
+  }
+
+  async function onPickPhotos(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []).slice(0, 3 - photos.length);
+    e.target.value = '';
+    if (files.length === 0) return;
+    setDiagError(null);
+    try {
+      const added = await Promise.all(files.map((f) => fileToDownscaledBase64(f)));
+      setPhotos((p) => [...p, ...added].slice(0, 3));
+      setPreviews((p) => [...p, ...files.map((f) => URL.createObjectURL(f))].slice(0, 3));
+    } catch {
+      setDiagError('画像の読み込みに失敗しました。');
+    }
+  }
+
+  async function diagnosePhotos() {
+    if (photos.length === 0) return;
+    setDiagnosing(true); setDiagError(null); setDiagnosis(null);
+    try {
+      const res = await fetch('/api/valuation/photo-diagnose', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ images: photos }),
+      });
+      const data = await res.json();
+      if (!data.available) { setDiagError(data.error ?? 'AI画像診断はご利用いただけません。'); return; }
+      if (data.error) { setDiagError(data.error); return; }
+      setDiagnosis({ condition: data.condition, accidentHint: data.accidentHint, summary: data.summary, points: data.points ?? [] });
+    } catch {
+      setDiagError('AI画像診断に失敗しました。');
+    } finally {
+      setDiagnosing(false);
+    }
+  }
+
+  function applyDiagnosis() {
+    if (!diagnosis) return;
+    setCondition(diagnosis.condition);
+    if (diagnosis.accidentHint === 'possible') setAccident('repaired');
+  }
 
   // メーカー選択に応じて車名候補を取得（DB＋実出品＋AIで自動更新されるマスタ）
   useEffect(() => {
@@ -72,7 +147,11 @@ export default function ValuationPage() {
       const res = await fetch('/api/valuation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ maker, model: model.trim() || undefined, year, mileageKm: Number(mileage), condition, shaken, accident }),
+        body: JSON.stringify({
+          maker, model: model.trim() || undefined, year, mileageKm: Number(mileage), condition, shaken, accident,
+          grade: grade.trim() || undefined, color: color || undefined,
+          options: options.length ? options : undefined, region: region || undefined,
+        }),
       });
       if (!res.ok) throw new Error('failed');
       setResult((await res.json()) as ValuationResult);
@@ -212,6 +291,91 @@ export default function ValuationPage() {
             </div>
           </div>
 
+          {/* 追加情報（任意・精度アップ） */}
+          <details className="rounded-xl border border-slate-200 p-4">
+            <summary className="cursor-pointer text-sm font-bold text-navy-700">追加情報を入力して精度を上げる（任意）</summary>
+            <div className="mt-3 space-y-4">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div>
+                  <label className="label">グレード</label>
+                  <input className="input" value={grade} onChange={(e) => setGrade(e.target.value)} placeholder="例）Sツーリング" />
+                </div>
+                <div>
+                  <label className="label">色</label>
+                  <select className="input" value={color} onChange={(e) => setColor(e.target.value)}>
+                    <option value="">指定なし</option>
+                    {COLORS.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="label">地域</label>
+                  <select className="input" value={region} onChange={(e) => setRegion(e.target.value)}>
+                    <option value="">指定なし</option>
+                    {PREFECTURES.map((p) => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="label">装備・オプション</label>
+                <div className="flex flex-wrap gap-2">
+                  {OPTION_KEYS.map((o) => (
+                    <button type="button" key={o} onClick={() => toggleOption(o)}
+                      className={`rounded-full border px-3 py-1 text-xs font-bold transition ${options.includes(o) ? 'border-accent-500 bg-accent-50 text-accent-600' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+                      {o}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </details>
+
+          {/* 写真からAI状態診断 */}
+          <div className="rounded-xl border border-accent-100 bg-accent-50/40 p-4">
+            <p className="flex items-center gap-1.5 text-sm font-black text-accent-700"><ScanLine className="h-4 w-4" /> 写真からAIが状態を診断</p>
+            <p className="mt-1 text-xs text-slate-500">外装・内装の写真（最大3枚）をアップすると、AIがコンディションを推定します。査定に反映できます。</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {previews.map((src, i) => (
+                <div key={i} className="relative h-16 w-16 overflow-hidden rounded-lg border border-slate-200">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={src} alt="" className="h-full w-full object-cover" />
+                  <button type="button" onClick={() => { setPhotos((p) => p.filter((_, j) => j !== i)); setPreviews((p) => p.filter((_, j) => j !== i)); setDiagnosis(null); }}
+                    className="absolute right-0.5 top-0.5 rounded-full bg-black/50 p-0.5 text-white"><X className="h-3 w-3" /></button>
+                </div>
+              ))}
+              {photos.length < 3 && (
+                <label className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-white text-slate-400 hover:bg-slate-50">
+                  <Camera className="h-5 w-5" />
+                  <input type="file" accept="image/*" multiple className="hidden" onChange={onPickPhotos} />
+                </label>
+              )}
+            </div>
+            {photos.length > 0 && (
+              <button type="button" onClick={diagnosePhotos} disabled={diagnosing}
+                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-accent-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-accent-600 disabled:opacity-50">
+                {diagnosing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} AIで状態を診断する
+              </button>
+            )}
+            {diagError && <p className="mt-2 text-xs text-slate-500">{diagError}</p>}
+            {diagnosis && (
+              <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3 text-sm">
+                <p className="font-bold text-slate-700">
+                  AI判定：{diagnosis.condition === 'excellent' ? '優良' : diagnosis.condition === 'fair' ? '普通' : '良好'}
+                  {diagnosis.accidentHint === 'possible' && <span className="ml-2 text-xs font-bold text-amber-600">事故・修復の可能性</span>}
+                </p>
+                {diagnosis.summary && <p className="mt-1 text-xs text-slate-600">{diagnosis.summary}</p>}
+                {diagnosis.points.length > 0 && (
+                  <ul className="mt-1.5 space-y-0.5 text-xs text-slate-500">
+                    {diagnosis.points.map((p, i) => <li key={i}>・{p}</li>)}
+                  </ul>
+                )}
+                <button type="button" onClick={applyDiagnosis} className="mt-2 rounded-lg border border-accent-300 px-3 py-1.5 text-xs font-bold text-accent-700 hover:bg-accent-50">
+                  この診断を査定に反映する
+                </button>
+                <p className="mt-1.5 text-[11px] text-slate-400">※ 写真は保存されません。推定のため実査定と異なる場合があります。</p>
+              </div>
+            )}
+          </div>
+
           <button type="submit" disabled={loading} className="btn-accent w-full disabled:opacity-60">
             {loading ? (
               <><Loader2 className="h-4 w-4 animate-spin" /> 査定中...</>
@@ -282,6 +446,10 @@ export default function ValuationPage() {
             </div>
           )}
 
+          {/* 相場分布・トレンドのグラフ */}
+          {result.histogram.length > 0 && <PriceHistogram buckets={result.histogram} />}
+          {result.trend.length >= 2 && <PriceTrend points={result.trend} />}
+
           {/* 実際の掲載相場（BUYMOの現役出品から・AI査定の裏付け） */}
           <PriceGuide maker={maker} model={otherModel ? undefined : model} year={year} />
 
@@ -318,6 +486,11 @@ export default function ValuationPage() {
                 condition,
                 aiLow: String(result.lower),
                 aiHigh: String(result.upper),
+                retailLow: String(result.retailLower),
+                retailHigh: String(result.retailUpper),
+                ...(grade ? { grade } : {}),
+                ...(color ? { color } : {}),
+                ...(region ? { region } : {}),
               }).toString()}`}
               className="btn-accent mt-3 flex w-full items-center justify-center gap-1.5 py-2.5 text-sm"
             >

@@ -14,9 +14,32 @@ export type ValuationInput = {
   shaken?: 'valid' | 'none';
   /** 事故歴: 'none'=なし / 'repaired'=修復歴あり */
   accident?: 'none' | 'repaired';
+  /** 追加情報（精度向上・任意） */
+  grade?: string;
+  color?: string;
+  options?: string[];
+  region?: string;
 };
 
 export type ValuationFactor = { label: string; impact: number; note?: string };
+export type HistogramBucket = { label: string; count: number };
+export type TrendPoint = { label: string; value: number };
+
+/** 装備オプションの加点（ダイレクト販売相場への寄与・円）。 */
+export const OPTION_VALUES: Record<string, number> = {
+  'カーナビ': 80_000,
+  'サンルーフ': 120_000,
+  '本革シート': 150_000,
+  'ETC': 20_000,
+  'ドライブレコーダー': 30_000,
+  'アルミホイール': 50_000,
+  'バックカメラ': 40_000,
+  '4WD': 100_000,
+  '両側パワースライド': 80_000,
+  '衝突被害軽減ブレーキ': 60_000,
+};
+export const OPTION_KEYS = Object.keys(OPTION_VALUES);
+const POPULAR_COLORS = ['ホワイト', 'ブラック'];
 
 export type ValuationResult = {
   // 買取目安
@@ -34,6 +57,8 @@ export type ValuationResult = {
   sampleCount: number;
   recommend: 'direct' | 'buyback' | 'either';
   factors: ValuationFactor[];
+  histogram: HistogramBucket[];
+  trend: TrendPoint[];
 };
 
 const MAKER_BASE_PRICE: Record<string, number> = {
@@ -68,10 +93,16 @@ export function estimateByFormula(input: ValuationInput): { retailEst: number; f
   const shakenFactor = input.shaken === 'valid' ? 1.03 : input.shaken === 'none' ? 0.96 : 1.0;
   const accidentFactor = input.accident === 'repaired' ? 0.7 : 1.0;
 
+  const colorFactor = input.color && POPULAR_COLORS.includes(input.color) ? 1.03 : 1.0;
+  const opts = (input.options ?? []).filter((o) => OPTION_VALUES[o]);
+  const optionsBonus = opts.reduce((s, o) => s + (OPTION_VALUES[o] ?? 0), 0);
+
   const s1 = core * mileageFactor;
   const s2 = s1 * condFactor;
   const s3 = s2 * shakenFactor;
   const s4 = s3 * accidentFactor;
+  const s5 = s4 * colorFactor;
+  const retailEst = Math.max(50_000, Math.round(s5 + optionsBonus));
 
   const factors: ValuationFactor[] = [
     { label: `年式（${age}年落ち）`, impact: roundMan(core - base), note: `新車相当 ${roundMan(base) / 10000}万円 から減価` },
@@ -79,13 +110,37 @@ export function estimateByFormula(input: ValuationInput): { retailEst: number; f
     { label: 'コンディション', impact: roundMan(s2 - s1), note: condition === 'excellent' ? '優良' : condition === 'fair' ? '普通' : '良好' },
     { label: '車検', impact: roundMan(s3 - s2), note: input.shaken === 'valid' ? 'あり（有効）' : input.shaken === 'none' ? 'なし・切れ' : '不明' },
     { label: '事故・修復歴', impact: roundMan(s4 - s3), note: input.accident === 'repaired' ? '修復歴あり' : 'なし' },
+    { label: '人気カラー', impact: roundMan(s5 - s4), note: input.color ?? '—' },
+    { label: '装備オプション', impact: roundMan(optionsBonus), note: opts.length ? opts.join('・') : 'なし' },
   ].filter((f) => f.impact !== 0 || f.label.startsWith('年式') || f.label === '走行距離');
 
-  return { retailEst: Math.max(50_000, Math.round(s4)), factors };
+  return { retailEst, factors };
 }
 
-/** 同条件の現役出品から相場を集計（ダイレクト販売＝掲載価格ベース）。 */
-async function gatherComparables(input: ValuationInput): Promise<{ count: number; median: number; low: number; high: number }> {
+/** 価格配列から相場分布ヒストグラム（5区間）を作る。 */
+function buildHistogram(prices: number[]): HistogramBucket[] {
+  if (prices.length < 4) return [];
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  if (max <= min) return [];
+  const bins = 5;
+  const width = (max - min) / bins;
+  const buckets: HistogramBucket[] = Array.from({ length: bins }, (_, i) => {
+    const lo = min + width * i;
+    const hi = i === bins - 1 ? max : min + width * (i + 1);
+    return { label: `${Math.round(lo / 10000)}〜${Math.round(hi / 10000)}万`, count: 0 };
+  });
+  for (const p of prices) {
+    let idx = Math.floor((p - min) / width);
+    if (idx >= bins) idx = bins - 1;
+    if (idx < 0) idx = 0;
+    buckets[idx].count++;
+  }
+  return buckets;
+}
+
+/** 同条件の現役出品から相場を集計（ダイレクト販売＝掲載価格ベース）＋分布。 */
+async function gatherComparables(input: ValuationInput): Promise<{ count: number; median: number; low: number; high: number; histogram: HistogramBucket[] }> {
   try {
     const svc = createServiceClient();
     const pick = async (useModel: boolean, span: number) => {
@@ -97,12 +152,38 @@ async function gatherComparables(input: ValuationInput): Promise<{ count: number
     };
     let prices = input.model ? await pick(true, 2) : [];
     if (prices.length < 3) prices = await pick(false, 3); // モデル一致が少なければメーカー＋年式幅で補完
-    if (prices.length === 0) return { count: 0, median: 0, low: 0, high: 0 };
+    if (prices.length === 0) return { count: 0, median: 0, low: 0, high: 0, histogram: [] };
     const sorted = [...prices].sort((a, b) => a - b);
     const median = sorted[Math.floor(sorted.length / 2)];
-    return { count: prices.length, median, low: sorted[0], high: sorted[sorted.length - 1] };
+    return { count: prices.length, median, low: sorted[0], high: sorted[sorted.length - 1], histogram: buildHistogram(prices) };
   } catch {
-    return { count: 0, median: 0, low: 0, high: 0 };
+    return { count: 0, median: 0, low: 0, high: 0, histogram: [] };
+  }
+}
+
+/** 過去の査定履歴から相場トレンド（月次平均・直近6点）を作る。 */
+async function getValuationTrend(input: ValuationInput): Promise<TrendPoint[]> {
+  try {
+    const svc = createServiceClient();
+    const since = new Date(Date.now() - 300 * 86_400_000).toISOString();
+    let q = svc.from('valuations').select('price_est, created_at').eq('maker', input.maker)
+      .gte('created_at', since).order('created_at', { ascending: true }).limit(2000);
+    if (input.model) q = q.eq('model', input.model);
+    const { data } = await q;
+    const rows = (data ?? []) as { price_est: number; created_at: string }[];
+    if (rows.length < 6) return [];
+    const byMonth = new Map<string, { sum: number; n: number }>();
+    for (const r of rows) {
+      if (!Number.isFinite(r.price_est) || r.price_est <= 0) continue;
+      const d = new Date(r.created_at);
+      const key = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const cur = byMonth.get(key) ?? { sum: 0, n: 0 };
+      cur.sum += r.price_est; cur.n++; byMonth.set(key, cur);
+    }
+    const points = [...byMonth.entries()].map(([label, v]) => ({ label, value: Math.round(v.sum / v.n) }));
+    return points.slice(-6);
+  } catch {
+    return [];
   }
 }
 
@@ -117,7 +198,8 @@ function recommendOf(input: ValuationInput): 'direct' | 'buyback' | 'either' {
 }
 
 function buildResult(
-  retailEst: number, factors: ValuationFactor[], comps: { count: number; median: number },
+  retailEst: number, factors: ValuationFactor[],
+  comps: { count: number; median: number; histogram: HistogramBucket[] }, trend: TrendPoint[],
   source: 'ai' | 'formula', input: ValuationInput, reasoning?: string, marketComment?: string,
   recommend?: 'direct' | 'buyback' | 'either',
 ): ValuationResult {
@@ -138,13 +220,15 @@ function buildResult(
     sampleCount: comps.count,
     recommend: recommend ?? recommendOf(input),
     factors,
+    histogram: comps.histogram,
+    trend,
   };
 }
 
 /** 査定（実データ＋計算式＋AI）。サーバー専用。 */
 export async function valuate(input: ValuationInput): Promise<ValuationResult> {
   const { retailEst: formulaRetail, factors } = estimateByFormula(input);
-  const comps = await gatherComparables(input);
+  const [comps, trend] = await Promise.all([gatherComparables(input), getValuationTrend(input)]);
 
   // 実出品の中央値があれば、計算式とブレンドして実勢に寄せる
   let retailEst = formulaRetail;
@@ -162,7 +246,7 @@ export async function valuate(input: ValuationInput): Promise<ValuationResult> {
 - コンディション: ${input.condition}
 - 車検: ${input.shaken === 'valid' ? 'あり（有効）' : input.shaken === 'none' ? 'なし・切れ' : '不明'}
 - 事故歴: ${input.accident === 'repaired' ? '修復歴あり' : input.accident === 'none' ? 'なし' : '不明'}
-
+${input.grade ? `- グレード: ${input.grade}\n` : ''}${input.color ? `- 色: ${input.color}\n` : ''}${input.options?.length ? `- 装備: ${input.options.join('・')}\n` : ''}${input.region ? `- 地域: ${input.region}\n` : ''}
 参考データ:
 - 計算式による販売相場: ${formulaRetail.toLocaleString('ja-JP')}円
 - 同条件の現役出品 ${comps.count}件（中央値 ${comps.median ? comps.median.toLocaleString('ja-JP') + '円' : 'データ少'}）
@@ -182,7 +266,7 @@ retail_low/high は円単位の整数。実データがある場合はそれを�
           const rec = (['direct', 'buyback', 'either'] as const).includes(p.recommend as 'direct')
             ? (p.recommend as 'direct' | 'buyback' | 'either') : undefined;
           return buildResult(
-            aiRetail, factors, comps, 'ai', input,
+            aiRetail, factors, comps, trend, 'ai', input,
             typeof p.reasoning === 'string' ? p.reasoning : undefined,
             typeof p.market_comment === 'string' ? p.market_comment : undefined,
             rec,
@@ -197,7 +281,7 @@ retail_low/high は円単位の整数。実データがある場合はそれを�
   const comment = comps.count >= 3
     ? `同条件の出品${comps.count}件の実勢を反映した相場です。`
     : '出品データが少ないため、計算式ベースの参考値です。';
-  return buildResult(retailEst, factors, comps, 'formula', input, undefined, comment);
+  return buildResult(retailEst, factors, comps, trend, 'formula', input, undefined, comment);
 }
 
 /** 査定履歴を保存（service role・ベストエフォート）。既存カラムのみ使用。 */

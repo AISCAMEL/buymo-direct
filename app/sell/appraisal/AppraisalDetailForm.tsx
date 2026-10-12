@@ -40,6 +40,8 @@ export function AppraisalDetailForm() {
   const [prefecture, setPrefecture] = useState(sp.get('prefecture') ?? '');
   const aiLow = sp.get('aiLow') ? Number(sp.get('aiLow')) : null;
   const aiHigh = sp.get('aiHigh') ? Number(sp.get('aiHigh')) : null;
+  const retailLow = sp.get('retailLow') ? Number(sp.get('retailLow')) : null;
+  const retailHigh = sp.get('retailHigh') ? Number(sp.get('retailHigh')) : null;
   const condition = sp.get('condition') ?? 'good';
 
   // 車名候補
@@ -206,7 +208,8 @@ export function AppraisalDetailForm() {
         </div>
         <p className="mt-1 text-sm text-slate-500">
           いくつかの質問に答えるだけ。分かる範囲でOKです。担当が確認し確定金額をご案内します。
-          {aiLow && aiHigh && <>　<span className="font-bold text-navy-700">AI概算：{formatYen(aiLow)}〜{formatYen(aiHigh)}</span></>}
+          {aiLow && aiHigh && <>　<span className="font-bold text-navy-700">買取概算：{formatYen(aiLow)}〜{formatYen(aiHigh)}</span></>}
+          {retailLow && retailHigh && <>　<span className="font-bold text-gold-700">販売目安：{formatYen(retailLow)}〜{formatYen(retailHigh)}</span></>}
         </p>
       </div>
 
