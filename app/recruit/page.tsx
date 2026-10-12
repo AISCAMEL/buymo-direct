@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ArrowRight, Wrench, SprayCan, Cable, Truck, BadgeJapaneseYen, Stamp, Car, Recycle, LifeBuoy, PaintBucket, Sparkles } from 'lucide-react';
 import { RECRUIT_GENRES } from '@/lib/recruit-genres';
+import { RecruitSalesLetter } from '@/components/RecruitSalesLetter';
 
 export const dynamic = 'force-static';
 export const metadata = {
@@ -53,6 +54,9 @@ export default function RecruitIndexPage() {
           </div>
         ))}
       </section>
+
+      {/* セールスレター（PASONA） */}
+      <RecruitSalesLetter genreName="あなたの仕事" joinHref="/join?source=recruit_top" />
 
       {/* ジャンル一覧 */}
       <section id="genres" className="scroll-mt-20 space-y-4">

@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { ArrowLeft, Check, Users, BadgeJapaneseYen, UserPlus, ClipboardCheck, Handshake, Wallet, HelpCircle } from 'lucide-react';
 import { skillLabel } from '@/lib/cases';
 import { faqPageJsonLd } from '@/lib/seo';
+import { RecruitSalesLetter } from '@/components/RecruitSalesLetter';
 import {
   RECRUIT_GENRES, getRecruitGenre, DEFAULT_RECRUIT_FLOW, COMMON_BENEFITS,
 } from '@/lib/recruit-genres';
@@ -59,6 +60,9 @@ export default async function RecruitGenrePage({ params }: { params: Params }) {
           <a href="#flow" className="rounded-lg border border-white/30 px-6 py-3 text-sm font-bold text-white hover:bg-white/10">始め方を見る</a>
         </div>
       </section>
+
+      {/* セールスレター（PASONA） */}
+      <RecruitSalesLetter genreName={g.name} joinHref={joinHref} />
 
       {/* こんな方へ */}
       <section className="card p-6">
