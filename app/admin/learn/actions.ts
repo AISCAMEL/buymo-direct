@@ -3,6 +3,25 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { adminContext, logAdminAction } from '@/lib/admin';
+import { LEARN_SEED_V2 } from '@/lib/learn-seed';
+
+/** 追加講座（第2弾）を一括投入。既存slugはスキップし、未登録のみ挿入（冪等）。 */
+export async function seedLearningContents(): Promise<{ inserted: number; skipped: number } | null> {
+  const ctx = await adminContext();
+  if (!ctx) return null;
+  const { data: existing } = await ctx.supabase.from('learning_contents').select('slug');
+  const have = new Set((existing ?? []).map((r) => (r as { slug: string }).slug));
+  const toInsert = LEARN_SEED_V2.filter((c) => !have.has(c.slug));
+  let inserted = 0;
+  if (toInsert.length > 0) {
+    const { error } = await ctx.supabase.from('learning_contents').insert(toInsert);
+    if (!error) inserted = toInsert.length;
+  }
+  await logAdminAction(ctx, 'learning.seed', 'learning', String(inserted));
+  revalidatePath('/admin/learn');
+  revalidatePath('/learn');
+  return { inserted, skipped: LEARN_SEED_V2.length - inserted };
+}
 
 function parse(formData: FormData) {
   return {

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { GraduationCap } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { LearningForm } from '@/components/LearningForm';
+import { SeedLearnPanel } from '@/components/SeedLearnPanel';
 import { createLearning, toggleLearningPublished } from '@/app/admin/learn/actions';
 import { LEARN_CATEGORY_LABEL, LEARN_CATEGORY_CLS, type LearningContent } from '@/lib/learn';
 
@@ -15,6 +16,8 @@ export default async function AdminLearnPage() {
   return (
     <div className="space-y-5">
       <h1 className="flex items-center gap-2 text-2xl font-black"><GraduationCap className="h-6 w-6 text-navy-500" />学習コンテンツ（買取を学ぶ）</h1>
+
+      <SeedLearnPanel />
 
       <section className="space-y-2">
         <h2 className="text-lg font-black">講座一覧（{items.length}）</h2>
