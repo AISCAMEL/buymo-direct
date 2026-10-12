@@ -1,7 +1,10 @@
 import Link from 'next/link';
 import { Car } from 'lucide-react';
+import { getViewerAccess } from '@/lib/viewer';
 
-const FOOTER_LINKS = [
+type FooterLink = { label: string; href: string; biz?: boolean };
+
+const FOOTER_LINKS: { heading: string; links: FooterLink[] }[] = [
   {
     heading: '売る（買取・ダイレクト）',
     links: [
@@ -20,7 +23,7 @@ const FOOTER_LINKS = [
       { label: '地図から探す', href: '/listings/map' },
       { label: 'パーツオークション', href: '/parts' },
       { label: 'ローン審査', href: '/loan/apply' },
-      { label: '加盟店一覧', href: '/dealers' },
+      { label: '加盟店一覧', href: '/dealers', biz: true },
     ],
   },
   {
@@ -34,8 +37,8 @@ const FOOTER_LINKS = [
       { label: '廃車買取（その場提示）', href: '/haisha' },
       { label: '車のプロを探す', href: '/dealers' },
       { label: 'サービス一覧（スキル）', href: '/skills' },
-      { label: '車のプロ募集（加盟）', href: '/recruit' },
-      { label: '加盟店・プロ登録（無料）', href: '/join' },
+      { label: '車のプロ募集（加盟）', href: '/recruit', biz: true },
+      { label: '加盟店・プロ登録（無料）', href: '/join', biz: true },
     ],
   },
   {
@@ -54,7 +57,11 @@ const FOOTER_LINKS = [
   },
 ];
 
-export function Footer() {
+export async function Footer() {
+  // ログイン済みの一般会員には、業販・加盟・募集系の導線を出さない。
+  const access = await getViewerAccess();
+  const hideBiz = access.loggedIn && !access.businessTrack;
+
   return (
     <footer className="bg-navy-700 px-4 py-14 text-navy-200">
       <div className="mx-auto max-w-5xl">
@@ -75,7 +82,7 @@ export function Footer() {
             <div key={heading}>
               <h4 className="mb-4 text-xs font-black uppercase tracking-widest text-white">{heading}</h4>
               <ul className="space-y-2.5">
-                {links.map(({ label, href }) => (
+                {links.filter((l) => !(hideBiz && l.biz)).map(({ label, href }) => (
                   <li key={label}>
                     <Link href={href} className="text-sm transition hover:text-white">
                       {label}

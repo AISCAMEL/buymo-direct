@@ -15,6 +15,7 @@ import {
   Recycle,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import { getViewerAccess } from '@/lib/viewer';
 import { ListingGrid } from '@/components/ListingGrid';
 import { favoritedSet } from '@/lib/favorites';
 import { BODY_TYPES } from '@/lib/constants';
@@ -78,6 +79,10 @@ export default async function HomePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // ログイン済みの一般会員には、業販・加盟・募集系のカテゴリを出さない。
+  const access = await getViewerAccess();
+  const hideBiz = access.loggedIn && !access.businessTrack;
+
   // 実データのみ表示（出品が無いときは「入荷待ち」を表示する）
   const listings: ListingWithImages[] = await getCachedFeaturedListings();
 
@@ -123,9 +128,11 @@ export default async function HomePage() {
               <span className="text-[11px] text-[#5a4a12]/80">在庫から探す</span>
             </Link>
           </div>
-          <div className="mt-2 flex justify-center gap-4 text-[11px] font-bold text-slate-400">
-            <Link href="/join" className="hover:text-slate-600">加盟店・プロ登録</Link>
-          </div>
+          {!hideBiz && (
+            <div className="mt-2 flex justify-center gap-4 text-[11px] font-bold text-slate-400">
+              <Link href="/join" className="hover:text-slate-600">加盟店・プロ登録</Link>
+            </div>
+          )}
         </section>
 
         {/* ── 1. Hero（人物＋車の実写真・分割レイアウト）── */}
@@ -475,7 +482,8 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ── 7. 加盟店セクション ── */}
+        {/* ── 7. 加盟店セクション（一般会員には出さない） ── */}
+        {!hideBiz && (
         <section className="bg-navy-50 px-4 py-14">
           <div className="mx-auto max-w-5xl">
             <p className="mb-2 text-center text-xs font-bold uppercase tracking-widest text-navy-400">
@@ -521,6 +529,7 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
+        )}
 
         {/* ── 8. 新着車両 ── */}
         <section className="bg-white px-4 py-12">
