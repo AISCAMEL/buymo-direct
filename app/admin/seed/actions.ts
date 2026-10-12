@@ -30,6 +30,13 @@ async function ensureUser(svc: Svc, email: string, name: string): Promise<string
     });
     if (error || !created?.user) return null;
     id = created.user.id;
+  } else {
+    // 既存ユーザーはパスワードと確認済みフラグを既知の値にリセット（ログインを確実に）
+    await svc.auth.admin.updateUserById(id, {
+      password: DEMO_PASSWORD,
+      email_confirm: true,
+      user_metadata: { display_name: name },
+    });
   }
 
   // プロフィール名を確定（トリガーで作成済みのはず）
