@@ -92,6 +92,7 @@ export default async function DealersPage({
         <div>
           <h1 className="text-2xl font-black">車のプロを探す</h1>
           <p className="text-sm text-slate-500">BUYMO 認定の販売店・整備・査定などのプロに、購入も依頼もできます</p>
+          <Link href="/skills" className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-accent-600 hover:underline">サービス（スキル）一覧から探す →</Link>
         </div>
       </div>
 
