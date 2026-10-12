@@ -539,26 +539,28 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
             <li className="rounded-lg bg-slate-50 px-1 py-1.5">名義変更<br />まで代行</li>
           </ul>
 
-          {/* プロ向け情報（会員限定） */}
-          <div className="mt-4">
-            <p className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-slate-500">
-              <span className="rounded bg-navy-100 px-1.5 py-0.5 text-[10px] text-navy-700">PRO</span>
-              プロ向け情報（相場・仕入れ）
-            </p>
-            <PremiumGate unlocked={premiumUnlocked} loggedIn={!!user} source={`listing:${listing.id}`}
-              title="プロ向けの相場情報は会員限定です"
-              note="AI相場レンジや仕入れの目安は、加盟店・有料会員のみ閲覧できます。無料のプロ登録で解放されます。">
-              <div className="rounded-xl border border-slate-200 p-3 text-sm">
-                <dl className="space-y-1 text-slate-600">
-                  <div className="flex justify-between"><dt className="text-slate-400">AI相場レンジ</dt>
-                    <dd className="font-bold">{formatYen(listing.ai_price_min ?? listing.price)} 〜 {formatYen(listing.ai_price_max ?? listing.price)}</dd></div>
-                  <div className="flex justify-between"><dt className="text-slate-400">掲載価格との差</dt>
-                    <dd className="font-bold">{formatYen(listing.price)}</dd></div>
-                </dl>
-                <p className="mt-2 text-xs text-slate-400">※ 相場は参考値です。仕入れ・業販のご相談は本部・加盟店窓口へ。</p>
-              </div>
-            </PremiumGate>
-          </div>
+          {/* プロ向け情報（本部・加盟店のみ表示。個人会員・未ログインには出さない） */}
+          {(viewerIsAdmin || viewerIsDealer) && (
+            <div className="mt-4">
+              <p className="mb-1.5 flex items-center gap-1.5 text-xs font-bold text-slate-500">
+                <span className="rounded bg-navy-100 px-1.5 py-0.5 text-[10px] text-navy-700">PRO</span>
+                プロ向け情報（相場・仕入れ）
+              </p>
+              <PremiumGate unlocked={premiumUnlocked} loggedIn={!!user} source={`listing:${listing.id}`}
+                title="プロ向けの相場情報は会員限定です"
+                note="AI相場レンジや仕入れの目安は、加盟店・本部のみ閲覧できます。">
+                <div className="rounded-xl border border-slate-200 p-3 text-sm">
+                  <dl className="space-y-1 text-slate-600">
+                    <div className="flex justify-between"><dt className="text-slate-400">AI相場レンジ</dt>
+                      <dd className="font-bold">{formatYen(listing.ai_price_min ?? listing.price)} 〜 {formatYen(listing.ai_price_max ?? listing.price)}</dd></div>
+                    <div className="flex justify-between"><dt className="text-slate-400">掲載価格との差</dt>
+                      <dd className="font-bold">{formatYen(listing.price)}</dd></div>
+                  </dl>
+                  <p className="mt-2 text-xs text-slate-400">※ 相場は参考値です。仕入れ・業販のご相談は本部・加盟店窓口へ。</p>
+                </div>
+              </PremiumGate>
+            </div>
+          )}
 
           {/* 販売店（加盟店ダイレクト販売）の事業者・インボイス情報 */}
           {dealerBiz ? (
