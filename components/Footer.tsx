@@ -34,6 +34,7 @@ const FOOTER_LINKS = [
       { label: '廃車買取（その場提示）', href: '/haisha' },
       { label: '車のプロを探す', href: '/dealers' },
       { label: 'サービス一覧（スキル）', href: '/skills' },
+      { label: '車のプロ募集（加盟）', href: '/recruit' },
       { label: '加盟店・プロ登録（無料）', href: '/join' },
     ],
   },

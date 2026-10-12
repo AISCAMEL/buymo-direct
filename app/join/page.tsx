@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Check, Sparkles, Wrench, SprayCan, Cable, Truck, UserPlus, ClipboardCheck, Megaphone, Handshake } from 'lucide-react';
 import { JoinLeadForm } from '@/components/JoinLeadForm';
 import { getPricingConfig } from '@/lib/settings';
@@ -69,6 +70,9 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
         </p>
         <p className="mt-3 text-4xl font-black text-emerald-600">¥0</p>
         <p className="text-xs text-slate-400">掲載料・初期費用なし／かかるのは成約手数料だけ</p>
+        <Link href="/recruit" className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-accent-600 hover:underline">
+          ジャンル別の募集ページ（整備・板金・行政書士・レンタカー 等）を見る →
+        </Link>
       </div>
 
       {/* 無料でできること */}
