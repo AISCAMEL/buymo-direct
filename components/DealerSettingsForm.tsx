@@ -28,6 +28,15 @@ export function DealerSettingsForm({ d, isOwner }: { d: (Dealer & Record<string,
         <div><label className="label">法人名</label><input name="company_name" className="input" defaultValue={val('company_name')} /></div>
         <div><label className="label">キャッチコピー</label>
           <input name="tagline" className="input" defaultValue={val('tagline')} placeholder="例）地域No.1の安心整備。車のことなら何でもお任せ！" /></div>
+        <div>
+          <label className="label">営業形態</label>
+          <select name="service_style" className="input" defaultValue={val('service_style') || 'shop'}>
+            <option value="shop">店舗型（ご来店いただいて対応）</option>
+            <option value="mobile">出張型（自宅・職場などへ出張。セイビー型）</option>
+            <option value="both">店舗＋出張（両対応）</option>
+          </select>
+          <p className="mt-1 text-xs text-slate-400">出張型・両対応を選ぶと「出張OK」バッジと対応エリアが一覧で強調されます。</p>
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div><label className="label">都道府県</label>
             <select name="prefecture" className="input" defaultValue={val('prefecture')}>

@@ -102,6 +102,14 @@ export async function updateDealerProfile(formData: FormData): Promise<void> {
     })
     .eq('id', dealer.dealerId);
 
+  // 営業形態（店舗型/出張型/両対応）は分離して更新（service_style 未導入環境でも本体保存を壊さない）
+  const styleRaw = String(formData.get('service_style') || '');
+  const service_style = styleRaw === 'mobile' || styleRaw === 'both' ? styleRaw : 'shop';
+  await (supabase as any).from('dealers').update({ service_style }).eq('id', dealer.dealerId).then(
+    () => {},
+    () => {},
+  );
+
   revalidatePath('/dealer/settings');
   revalidatePath(`/dealers/${dealer.dealerId}`);
 }

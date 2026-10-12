@@ -1,10 +1,11 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { Building2, MapPin, Globe, Phone, Package, Wrench, MessageSquare } from 'lucide-react';
+import { Building2, MapPin, Globe, Phone, Package, Wrench, MessageSquare, Car, Home } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ListingCard } from '@/components/ListingCard';
 import { RequestPartnerForm } from '@/components/RequestPartnerForm';
 import { StarRating } from '@/components/StarRating';
+import { normalizeStyle, deriveStyle, isMobile, SERVICE_STYLE_LABEL } from '@/lib/service-style';
 import { skillLabel } from '@/lib/cases';
 import { skillCategory } from '@/lib/matching-fee';
 import { formatYen } from '@/lib/format';
@@ -105,6 +106,13 @@ export default async function DealerShopPage({ params }: { params: Promise<{ id:
     reviewerMap[p.id] = { display_name: p.display_name, avatar_url: p.avatar_url };
   }
 
+  // 営業形態（カラムがあれば採用、無ければテキストから推定）
+  const { data: styleRow } = await s.from('dealers').select('service_style').eq('id', id).maybeSingle();
+  const serviceStyle = styleRow?.service_style
+    ? normalizeStyle(styleRow.service_style)
+    : deriveStyle(dealer.service_area, dealer.description, dealer.tagline);
+  const mobile = isMobile(serviceStyle);
+
   const gallery: string[] = Array.isArray(dealer.gallery) ? dealer.gallery : [];
 
   return (
@@ -128,8 +136,18 @@ export default async function DealerShopPage({ params }: { params: Promise<{ id:
             </div>
           )}
           <div className="flex-1">
-            <h1 className="text-2xl font-black text-navy-800">{dealer.name}</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-black text-navy-800">{dealer.name}</h1>
+              <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-black ${mobile ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
+                {mobile ? <Car className="h-3.5 w-3.5" /> : <Home className="h-3.5 w-3.5" />}{SERVICE_STYLE_LABEL[serviceStyle]}
+              </span>
+            </div>
             {dealer.company_name && <p className="text-slate-500">{dealer.company_name}</p>}
+            {mobile && (
+              <p className="mt-1 inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
+                <Car className="h-3.5 w-3.5" />自宅・職場まで出張対応{dealer.service_area ? `（${dealer.service_area}）` : ''}
+              </p>
+            )}
             {dealer.description && <p className="mt-2 text-sm text-slate-600">{dealer.description}</p>}
 
             <div className="mt-3 flex flex-wrap gap-3 text-sm text-slate-500">

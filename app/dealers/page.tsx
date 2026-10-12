@@ -1,9 +1,10 @@
 import Link from 'next/link';
-import { MapPin, Package } from 'lucide-react';
+import { MapPin, Package, Home, Car } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { skillCategory } from '@/lib/matching-fee';
 import { skillLabel } from '@/lib/cases';
 import { StarRating } from '@/components/StarRating';
+import { normalizeStyle, deriveStyle, isMobile, isShop, type ServiceStyle } from '@/lib/service-style';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: '加盟店一覧 | BUYMO' };
@@ -11,9 +12,10 @@ export const metadata = { title: '加盟店一覧 | BUYMO' };
 export default async function DealersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ prefecture?: string; skill?: string; category?: string }>;
+  searchParams: Promise<{ prefecture?: string; skill?: string; category?: string; style?: string }>;
 }) {
-  const { prefecture, skill, category } = await searchParams;
+  const { prefecture, skill, category, style } = await searchParams;
+  const styleFilter: ServiceStyle | null = style === 'mobile' || style === 'shop' ? style : null;
   const supabase = await createClient();
   const s = supabase as any;
 
@@ -48,16 +50,21 @@ export default async function DealersPage({
     return str ? `/dealers?${str}` : '/dealers';
   };
 
-  let query = s
-    .from('dealers')
-    .select('id, owner_id, name, company_name, prefecture, description, logo_url, rep_name, rep_photo_url, rep_message, service_area, tagline, cover_url, gallery')
-    .eq('status', 'approved')
-    .order('name', { ascending: true });
+  const baseCols = 'id, owner_id, name, company_name, prefecture, description, logo_url, rep_name, rep_photo_url, rep_message, service_area, tagline, cover_url, gallery';
+  const runDealers = (cols: string) => {
+    let q = s.from('dealers').select(cols).eq('status', 'approved').order('name', { ascending: true });
+    if (prefecture) q = q.eq('prefecture', prefecture);
+    if (skillDealerIds) q = q.in('id', skillDealerIds.length ? skillDealerIds : ['00000000-0000-0000-0000-000000000000']);
+    return q;
+  };
+  // service_style カラムが未導入でも動くよう、失敗したら列なしで再取得
+  let { data: dealers, error: dealersErr } = await runDealers(`${baseCols}, service_style`);
+  const hasStyleCol = !dealersErr;
+  if (dealersErr) ({ data: dealers } = await runDealers(baseCols));
 
-  if (prefecture) query = query.eq('prefecture', prefecture);
-  if (skillDealerIds) query = query.in('id', skillDealerIds.length ? skillDealerIds : ['00000000-0000-0000-0000-000000000000']);
-
-  const { data: dealers } = await query;
+  // 各プロの営業形態（カラムがあればその値、無ければテキストから推定）
+  const styleOf = (d: any): ServiceStyle =>
+    hasStyleCol ? normalizeStyle(d.service_style) : deriveStyle(d.service_area, d.description, d.tagline);
 
   // listing counts per dealer
   const { data: counts } = await s
@@ -109,8 +116,14 @@ export default async function DealersPage({
   // prefecture options
   const prefectureList = Array.from(new Set((dealers ?? []).map((d: any) => d.prefecture).filter(Boolean))) as string[];
 
-  // くらしのマーケット風：評価・口コミ数で人気順に並べ替え
-  const ranked = [...((dealers ?? []) as any[])].sort((a, b) => {
+  // くらしのマーケット風：評価・口コミ数で人気順に並べ替え（営業形態で絞り込み）
+  const ranked = [...((dealers ?? []) as any[])]
+    .filter((d) => {
+      if (!styleFilter) return true;
+      const st = styleOf(d);
+      return styleFilter === 'mobile' ? isMobile(st) : isShop(st);
+    })
+    .sort((a, b) => {
     const ra = ratingAgg[a.owner_id];
     const rb = ratingAgg[b.owner_id];
     const ca = ra?.count ?? 0, cb = rb?.count ?? 0;
@@ -140,6 +153,19 @@ export default async function DealersPage({
     return '🚘';
   };
   const yen = (n: number) => `¥${n.toLocaleString('ja-JP')}`;
+
+  // 営業形態タブのリンク（他の絞り込みは維持）
+  const styleHref = (st: 'shop' | 'mobile' | null) => {
+    const qp = new URLSearchParams();
+    if (category) qp.set('category', category);
+    if (skill) qp.set('skill', skill);
+    if (prefecture) qp.set('prefecture', prefecture);
+    if (st) qp.set('style', st);
+    const str = qp.toString();
+    return str ? `/dealers?${str}` : '/dealers';
+  };
+  const styleTabCls = (on: boolean) =>
+    `inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-bold transition ${on ? 'border-navy-600 bg-navy-600 text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`;
 
   return (
     <div className="space-y-6">
@@ -201,6 +227,19 @@ export default async function DealersPage({
         </div>
       )}
 
+      {/* 営業形態タブ（店舗型／出張型） */}
+      <div className="flex flex-wrap gap-2">
+        <a href={styleHref(null)} className={styleTabCls(!styleFilter)}>すべて</a>
+        <a href={styleHref('shop')} className={styleTabCls(styleFilter === 'shop')}><Home className="h-4 w-4" />店舗型</a>
+        <a href={styleHref('mobile')} className={styleTabCls(styleFilter === 'mobile')}><Car className="h-4 w-4" />出張型</a>
+      </div>
+
+      {styleFilter === 'mobile' && (
+        <p className="rounded-xl bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-700">
+          🚗 自宅・職場までプロが出張。お店に行かなくても、その場で対応してもらえます。
+        </p>
+      )}
+
       <div className="flex items-baseline justify-between">
         <p className="text-sm font-black text-slate-700">{ranked.length}人のプロ<span className="ml-1 text-xs font-normal text-slate-400">（人気順）</span></p>
         <Link href="/skills" className="text-xs font-bold text-accent-600 hover:underline">サービス一覧から探す →</Link>
@@ -222,6 +261,9 @@ export default async function DealersPage({
           const price = priceFromMap[d.id];
           const topRank = noFilter && i < 3 ? i + 1 : 0;
           const highRated = agg && agg.count >= 3 && avg >= 4.5;
+          const st = styleOf(d);
+          const mobile = isMobile(st);
+          const styleBadge = st === 'both' ? '出張＋店舗' : st === 'mobile' ? '出張OK' : '店舗';
           return (
             <Link key={d.id} href={`/dealers/${d.id}`} className="group card overflow-hidden p-0 transition hover:shadow-lg">
               {/* カバー画像 */}
@@ -233,11 +275,14 @@ export default async function DealersPage({
                 )}
                 {/* バッジ */}
                 <div className="absolute left-2 top-2 flex flex-wrap gap-1">
+                  <span className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-black shadow ${mobile ? 'bg-emerald-500 text-white' : 'bg-white text-slate-700'}`}>
+                    {mobile ? <Car className="h-3 w-3" /> : <Home className="h-3 w-3" />}{styleBadge}
+                  </span>
                   {topRank > 0 && (
                     <span className="rounded-full bg-gold-500 px-2 py-0.5 text-[11px] font-black text-navy-900 shadow">人気 No.{topRank}</span>
                   )}
                   {highRated && (
-                    <span className="rounded-full bg-emerald-500 px-2 py-0.5 text-[11px] font-black text-white shadow">高評価</span>
+                    <span className="rounded-full bg-navy-600 px-2 py-0.5 text-[11px] font-black text-white shadow">高評価</span>
                   )}
                 </div>
                 {(d.service_area || d.prefecture) && (
@@ -268,6 +313,13 @@ export default async function DealersPage({
                 {price != null && (
                   <p className="text-sm text-slate-500">
                     料金 <span className="text-lg font-black tabular-nums text-accent-600">{yen(price)}</span><span className="font-bold text-accent-600">〜</span>
+                  </p>
+                )}
+
+                {/* 出張対応（セイビー型） */}
+                {mobile && (
+                  <p className="flex items-center gap-1 text-xs font-bold text-emerald-600">
+                    <Car className="h-3.5 w-3.5 shrink-0" />自宅・職場まで出張{d.service_area ? `（${d.service_area}）` : ''}
                   </p>
                 )}
 
