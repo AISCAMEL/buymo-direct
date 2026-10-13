@@ -17,22 +17,22 @@ export const CAR_SIZES: { value: string; label: string; factor: number }[] = [
 ];
 
 // 車両の種別による倍率。
-//   通常車両 … 標準の陸送料金（基準額の2倍）
-//   特殊車両 … ローダウン・旧車・高級車など、積載・養生に特別対応が必要な車両（基準額の5倍）
+//   通常車両 … 標準の陸送料金（基準額そのまま）
+//   特殊車両 … ローダウン・旧車・高級車など、積載・養生に特別対応が必要な車両（1.5倍）
 export const VEHICLE_CONDITIONS: { value: string; label: string; note: string; factor: number }[] = [
-  { value: 'standard', label: '通常車両', note: '一般的な乗用車・商用車', factor: 2.0 },
+  { value: 'standard', label: '通常車両', note: '一般的な乗用車・商用車', factor: 1.0 },
   {
     value: 'special',
     label: '特殊車両（ローダウン・旧車・高級車）',
     note: '車高の低い車・年式の古い車・高級車など特別対応が必要な車両',
-    factor: 5.0,
+    factor: 1.5,
   },
 ];
 
 /** 通常車両の陸送料金倍率（基準額の何倍か）。 */
-export const TRANSPORT_NORMAL_MULTIPLIER = 2;
+export const TRANSPORT_NORMAL_MULTIPLIER = 1;
 /** 特殊車両（ローダウン・旧車・高級車）の陸送料金倍率。 */
-export const TRANSPORT_SPECIAL_MULTIPLIER = 5;
+export const TRANSPORT_SPECIAL_MULTIPLIER = 1.5;
 
 const round1000 = (n: number) => Math.round(n / 1000) * 1000;
 
@@ -48,7 +48,7 @@ export function estimateTransport(
   if (!fr || !tr) return null;
   const size = CAR_SIZES.find((s) => s.value === sizeValue) ?? CAR_SIZES[0];
   const condition = VEHICLE_CONDITIONS.find((c) => c.value === conditionValue) ?? VEHICLE_CONDITIONS[0];
-  let base = fr === tr ? 18000 : 20000 + Math.abs(ZONE[fr] - ZONE[tr]) * 9000;
+  let base = fr === tr ? 12000 : 16000 + Math.abs(ZONE[fr] - ZONE[tr]) * 7000;
   base += (ISLAND[fr] ?? 0) + (ISLAND[tr] ?? 0);
   base *= size.factor;
   // 通常車両は2倍、特殊車両（ローダウン・旧車・高級車）は5倍

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { SaleResultsSlider } from '@/components/SaleResultsSlider';
 import {
   Search,
   ShieldCheck,
@@ -281,6 +282,9 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
+
+        {/* ── 2.2 売却実績スライダー（横スクロール） ── */}
+        <SaleResultsSlider />
 
         {/* ── 2.5 2つの売り方（買取／ダイレクト販売） ── */}
         <section className="bg-white px-4 py-14">
