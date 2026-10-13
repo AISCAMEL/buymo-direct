@@ -7,8 +7,10 @@ import type { PricingConfig } from '@/lib/pricing-config';
 /** スキルキー → サービスカテゴリー。料率はカテゴリー単位で管理する。 */
 export const SKILL_CATEGORY: Record<string, string> = {
   appraisal: '査定・買取', buyback: '査定・買取', sales: '査定・買取',
-  maintenance: '整備・修理', inspection: '整備・修理', bodywork: '整備・修理',
+  maintenance: '整備・修理', bodywork: '整備・修理',
   painting: '整備・修理', tire: '整備・修理',
+  inspection: '車検', shaken_designated: '車検', shaken_authorized: '車検', shaken_user: '車検',
+  shaken_light: '車検', inspection_24: '車検', inspection_12: '車検', shaken_quote: '車検', shaken_maint: '車検',
   coating: '美装', cleaning: '美装', wrapping: '美装',
   nav_install: '電装・取付', drive_recorder: '電装・取付', electrical: '電装・取付',
   transport: '物流・手続き', delivery: '物流・手続き', registration: '物流・手続き',

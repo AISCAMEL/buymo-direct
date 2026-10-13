@@ -41,6 +41,9 @@ export function canCompleteCase(current: string): boolean {
 export const SKILL_LABEL: Record<string, string> = {
   appraisal: '車両査定', buyback: '中古車買取', sales: '中古車販売',
   maintenance: '整備', inspection: '車検', bodywork: '板金', painting: '塗装', tire: 'タイヤ交換',
+  shaken_designated: '指定工場車検（即日・立会い）', shaken_authorized: '認証工場車検', shaken_user: 'ユーザー車検代行',
+  shaken_light: '軽自動車の車検', inspection_24: '24ヶ月法定点検', inspection_12: '12ヶ月（法定）点検',
+  shaken_quote: '車検見積り・無料点検', shaken_maint: '車検整備（消耗品交換）',
   coating: 'コーティング', cleaning: 'ルームクリーニング',
   nav_install: 'ナビ取付', drive_recorder: 'ドラレコ取付', electrical: '電装',
   transport: '陸送', delivery: '納車', registration: '名義変更', scrap: '廃車', dismantle: '解体', other: 'その他',
