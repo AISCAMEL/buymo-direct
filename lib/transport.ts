@@ -17,22 +17,22 @@ export const CAR_SIZES: { value: string; label: string; factor: number }[] = [
 ];
 
 // 車両の種別による倍率。
-//   通常車両 … 標準の陸送料金（基準額そのまま）
-//   特殊車両 … ローダウン・旧車・高級車など、積載・養生に特別対応が必要な車両（1.5倍）
+//   通常車両 … 標準の陸送料金（基準額の2倍）
+//   特殊車両 … ローダウン・旧車・高級車など、積載・養生に特別対応が必要な車両（基準額の5倍）
 export const VEHICLE_CONDITIONS: { value: string; label: string; note: string; factor: number }[] = [
-  { value: 'standard', label: '通常車両', note: '一般的な乗用車・商用車', factor: 1.0 },
+  { value: 'standard', label: '通常車両', note: '一般的な乗用車・商用車', factor: 2.0 },
   {
     value: 'special',
     label: '特殊車両（ローダウン・旧車・高級車）',
     note: '車高の低い車・年式の古い車・高級車など特別対応が必要な車両',
-    factor: 1.5,
+    factor: 5.0,
   },
 ];
 
 /** 通常車両の陸送料金倍率（基準額の何倍か）。 */
-export const TRANSPORT_NORMAL_MULTIPLIER = 1;
+export const TRANSPORT_NORMAL_MULTIPLIER = 2;
 /** 特殊車両（ローダウン・旧車・高級車）の陸送料金倍率。 */
-export const TRANSPORT_SPECIAL_MULTIPLIER = 1.5;
+export const TRANSPORT_SPECIAL_MULTIPLIER = 5;
 
 const round1000 = (n: number) => Math.round(n / 1000) * 1000;
 
