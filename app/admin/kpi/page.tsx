@@ -1,16 +1,17 @@
 import { Target, Users, Store, Wallet, Car, Package, Wrench, Star, TrendingUp, Repeat } from 'lucide-react';
 import KpiCard from '@/components/KpiCard';
 import { createClient } from '@/lib/supabase/server';
+import { getPricingConfig } from '@/lib/settings';
 import { formatYen } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 export const metadata = { title: 'KPI（1億円目標）| 管理' };
 
-// 単価・手数料の前提（成長計画と一致。変更時はここを更新）
-const MEMBER_PRICE = 2980;      // 有料会員 月額
-const DEALER_PRICE = 9800;      // 買取加盟 月額
-const PARTS_FEE_RATE = 0.08;    // パーツAU 手数料率
+// 手数料率・目標（単価は料金設定から取得）
+const PARTS_FEE_RATE = 0.08;    // パーツAU 手数料率（暫定）
 const TARGET = 100_000_000;     // 年商1億円
+// 加盟店は手数料モデル（月額なし）。将来 月額会費を導入する場合はここを設定。
+const DEALER_MONTHLY_FEE = 0;
 
 const man = (yen: number) => `${Math.round(yen / 10000).toLocaleString('ja-JP')}万円`;
 const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -18,6 +19,8 @@ const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).pad
 export default async function AdminKpiPage() {
   const supabase = await createClient();
   const s = supabase as any;
+  const pricing = await getPricingConfig();
+  const MEMBER_PRICE = pricing.membershipMonthlyFee; // 有料会員 月額（料金設定）
 
   const [escrowRes, profilesRes, dealersRes, partsRes, casesRes, reviewsRes, listingsRes] = await Promise.all([
     s.from('escrow_transactions').select('status, amount, escrow_fee, seller_fee, loan_fee, title_fee, installment_fee, created_at'),
@@ -67,7 +70,7 @@ export default async function AdminKpiPage() {
   const pendingDealers = dealers.filter((d) => d.status === 'pending').length;
   const mobileDealers = dealers.filter((d) => d.status === 'approved' && (d.service_style === 'mobile' || d.service_style === 'both')).length;
 
-  const mrr = paidMembers * MEMBER_PRICE + approvedDealers * DEALER_PRICE;
+  const mrr = paidMembers * MEMBER_PRICE + approvedDealers * DEALER_MONTHLY_FEE;
   const arrStock = mrr * 12;
 
   // ── パーツオークション ─────────────────────────────────────
@@ -139,7 +142,7 @@ export default async function AdminKpiPage() {
           <KpiCard title="推定 MRR（月次継続課金）" value={formatYen(mrr)} icon={Repeat} color="#D4AF65" />
           <KpiCard title="推定 ARR（年次）" value={man(arrStock)} icon={TrendingUp} color="#14B8A6" />
         </div>
-        <p className="text-xs text-slate-400">前提：有料会員 {MEMBER_PRICE.toLocaleString('ja-JP')}円/月、加盟店 {DEALER_PRICE.toLocaleString('ja-JP')}円/月。申請中の加盟 {pendingDealers} 店。</p>
+        <p className="text-xs text-slate-400">前提：有料会員 {MEMBER_PRICE.toLocaleString('ja-JP')}円/月（料金設定より）。加盟店は手数料モデル（月額なし・手数料はフローに計上）。申請中の加盟 {pendingDealers} 店。</p>
       </section>
 
       {/* フロー（取引手数料） */}
