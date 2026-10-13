@@ -610,6 +610,10 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
             </div>
           ) : listing.status === 'active' ? (
             <div className="mt-5 space-y-3">
+              {isOwner && (
+                <p className="rounded-lg bg-slate-50 p-3 text-center text-xs font-bold text-slate-500">これはあなたの出品です。購入・問い合わせボタンは購入者に表示されます。</p>
+              )}
+              {!isOwner && (<>
               {dealerBiz && (
                 <form action={requestVehicleQuote.bind(null, listing.id)}>
                   <button className="btn-accent w-full py-3.5 text-base shadow-sm">
@@ -642,6 +646,7 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
                   </form>
                 ))}
               </div>
+              </>)}
               {user && !isOwner && (
                 <MakeOfferButton
                   listingId={listing.id}

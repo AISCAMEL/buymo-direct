@@ -36,9 +36,14 @@ export async function startConversation(formData: FormData) {
   // 自分の出品には問い合わせ不可
   if (listing.seller_id === user!.id) redirect(`/listings/${listingId}`);
 
-  // 売り手にブロックされている場合は問い合わせ不可（どちら向きでも）
-  const { data: blocked } = await supabase.rpc('is_blocked_between', { a: user!.id, b: listing.seller_id });
-  if (blocked === true) redirect(`/listings/${listingId}?error=blocked`);
+  // 売り手にブロックされている場合は問い合わせ不可（どちら向きでも）。
+  // テーブル/関数が未導入でも会話開始を妨げないよう握りつぶす。
+  let blocked = false;
+  try {
+    const { data } = await supabase.rpc('is_blocked_between', { a: user!.id, b: listing.seller_id });
+    blocked = data === true;
+  } catch { blocked = false; }
+  if (blocked) redirect(`/listings/${listingId}?error=blocked`);
 
   // 既存スレッドを探す。なければ作成。
   const { data: existing } = await supabase
