@@ -11,6 +11,7 @@ const GROUPS: Group[] = [
     title: '概要',
     items: [
       { href: '/admin', label: 'ダッシュボード' },
+      { href: '/admin/kpi', label: 'KPI（1億円目標）' },
       { href: '/admin/analytics', label: 'アナリティクス' },
     ],
   },
