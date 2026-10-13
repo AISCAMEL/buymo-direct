@@ -21,6 +21,20 @@ export async function sendMessage(
   } = await supabase.auth.getUser();
   if (!user) return { error: '未ログインです' };
 
+  // ブロック関係があれば送信不可（どちら向きでも）
+  {
+    const { data: convRow } = await supabase
+      .from('conversations')
+      .select('buyer_id, seller_id')
+      .eq('id', conversationId)
+      .maybeSingle();
+    if (convRow) {
+      const other = convRow.buyer_id === user.id ? convRow.seller_id : convRow.buyer_id;
+      const { data: blocked } = await supabase.rpc('is_blocked_between', { a: user.id, b: other });
+      if (blocked === true) return { error: 'ブロック中のため、この相手とはメッセージを送受信できません。' };
+    }
+  }
+
   // 外部連絡先・直接取引誘導の検知＆マスキング（AIキー不要のルールベース）
   const mod = text ? analyzeMessage(text) : { level: 0 as const, reasons: [], masked: '', flagged: false };
   const storedBody = mod.flagged ? mod.masked : text;
@@ -78,4 +92,38 @@ export async function sendMessage(
     ? '安全のため、外部の連絡先や直接取引のご案内は自動で保護されました。お取引はBUYMO内で行ってください。'
     : null;
   return { error: null, warning };
+}
+
+/** 会話の相手をブロックする（売り手→買い手など）。以後、双方で送受信・会話開始が不可に。 */
+export async function blockCounterparty(conversationId: string, reason?: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: '未ログインです' };
+  const { data: conv } = await supabase
+    .from('conversations').select('buyer_id, seller_id').eq('id', conversationId).maybeSingle();
+  if (!conv) return { error: '会話が見つかりません' };
+  if (conv.buyer_id !== user.id && conv.seller_id !== user.id) return { error: '権限がありません' };
+  const other = conv.buyer_id === user.id ? conv.seller_id : conv.buyer_id;
+  const { error } = await supabase
+    .from('user_blocks')
+    .upsert({ blocker_id: user.id, blocked_id: other, reason: reason?.trim() || null }, { onConflict: 'blocker_id,blocked_id' });
+  if (error) return { error: error.message };
+  revalidatePath(`/messages/${conversationId}`);
+  return { error: null };
+}
+
+/** ブロックを解除する。 */
+export async function unblockCounterparty(conversationId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: '未ログインです' };
+  const { data: conv } = await supabase
+    .from('conversations').select('buyer_id, seller_id').eq('id', conversationId).maybeSingle();
+  if (!conv) return { error: '会話が見つかりません' };
+  const other = conv.buyer_id === user.id ? conv.seller_id : conv.buyer_id;
+  const { error } = await supabase
+    .from('user_blocks').delete().eq('blocker_id', user.id).eq('blocked_id', other);
+  if (error) return { error: error.message };
+  revalidatePath(`/messages/${conversationId}`);
+  return { error: null };
 }

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { ArrowLeft, ShieldCheck, Flag } from 'lucide-react';
 import { ReportButton } from '@/components/ReportButton';
+import { BlockButton } from '@/components/BlockButton';
 import { createClient } from '@/lib/supabase/server';
 import { MessageThread } from '@/components/MessageThread';
 import { SchedulePanel } from '@/components/SchedulePanel';
@@ -70,6 +71,17 @@ export default async function ThreadPage({ params }: { params: Params }) {
     appointment = null;
   }
 
+  // ブロック状態（自分→相手 / どちらか向き）。テーブル未導入でも壊れないよう握りつぶし。
+  const other = isBuyer ? conv.seller_id : conv.buyer_id;
+  let iBlocked = false;
+  let blockedBetween = false;
+  try {
+    const { data: mine } = await supabase.from('user_blocks').select('id').eq('blocker_id', user.id).eq('blocked_id', other).maybeSingle();
+    iBlocked = !!mine;
+    const { data: bt } = await supabase.rpc('is_blocked_between', { a: user.id, b: other });
+    blockedBetween = bt === true;
+  } catch { /* noop */ }
+
   const createEscrowBound = createEscrow.bind(null, id);
 
   return (
@@ -127,10 +139,20 @@ export default async function ThreadPage({ params }: { params: Params }) {
         </div>
       )}
 
-      {/* 通報ボタン */}
-      <div className="mb-3 flex justify-end">
+      {/* 通報・ブロック */}
+      <div className="mb-3 flex items-start justify-end gap-2">
         <ReportButton conversationId={id} />
+        <BlockButton conversationId={id} blocked={iBlocked} />
       </div>
+
+      {/* ブロック中の告知 */}
+      {blockedBetween && (
+        <div className="mb-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-600">
+          {iBlocked
+            ? 'あなたはこの相手をブロックしています。メッセージの送受信はできません。'
+            : 'この相手とは現在メッセージを送受信できません。'}
+        </div>
+      )}
 
       {/* スレッド */}
       <div className="card overflow-hidden">
