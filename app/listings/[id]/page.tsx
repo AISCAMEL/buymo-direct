@@ -27,6 +27,7 @@ import { MakeOfferButton } from '@/components/MakeOfferButton';
 import { PriceBreakdown } from '@/components/PriceBreakdown';
 import { getPricingConfig } from '@/lib/settings';
 import { sellerKind, SELLER_KIND_LABEL, SELLER_KIND_CLS, SELLER_KIND_NOTE } from '@/lib/listing-kind';
+import { SellerTrustPanel } from '@/components/SellerTrustPanel';
 import { businessDisplayName, invoiceLabel, BUSINESS_TYPE_LABEL, TAX_STATUS_LABEL, type BusinessType, type TaxStatus } from '@/lib/business';
 import { totalPayment, hasBreakdown } from '@/lib/listing-pricing';
 import { getDealerForUser } from '@/lib/dealer';
@@ -103,7 +104,7 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
 
   const { data } = await supabase
     .from('listings')
-    .select('*, listing_images(*), profiles!listings_seller_id_fkey(id, display_name, prefecture, avatar_url, kyc_status)')
+    .select('*, listing_images(*), profiles!listings_seller_id_fkey(id, display_name, prefecture, avatar_url, kyc_status, created_at, phone_verified_at)')
     .eq('id', id)
     .maybeSingle();
 
@@ -149,7 +150,7 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
   }
 
   // 独立した集計はまとめて並列取得（DB往復を削減して高速化）
-  const [reviewsRes, favCountRes, favoritedIds, activity] = await Promise.all([
+  const [reviewsRes, favCountRes, favoritedIds, activity, sellerSoldRes] = await Promise.all([
     supabase.from('reviews').select('rating').eq('reviewee_id', listing.seller_id),
     supabase.from('favorites').select('*', { count: 'exact', head: true }).eq('listing_id', listing.id),
     favoritedSet(supabase, user?.id, [listing.id]),
@@ -157,12 +158,27 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
       views: (listing.view_count ?? 0) + (isOwner ? 0 : 1),
       status: listing.status,
     }),
+    supabase.from('escrow_transactions').select('*', { count: 'exact', head: true }).eq('seller_id', listing.seller_id).eq('status', 'completed'),
   ]);
   const sellerReviews = reviewsRes.data;
   const reviewCount = sellerReviews?.length ?? 0;
   const avgRating = reviewCount
     ? (sellerReviews as { rating: number }[]).reduce((s, r) => s + r.rating, 0) / reviewCount
     : 0;
+  const sellerSoldCount = sellerSoldRes.count ?? 0;
+  // 出品者の信頼シグナル（システム連携・自動表示）
+  const sellerProf = (listing.profiles ?? {}) as { kyc_status?: string | null; phone_verified_at?: string | null; created_at?: string | null; prefecture?: string | null };
+  const sellerTrust = {
+    verified: sellerProf.kyc_status === 'verified',
+    phoneVerified: !!sellerProf.phone_verified_at,
+    reviewCount,
+    avgRating,
+    soldCount: sellerSoldCount,
+    memberSince: sellerProf.created_at ?? null,
+    prefecture: sellerProf.prefecture ?? null,
+    isDealer: !!dealerBiz,
+    hasLicense: !!dealerBiz?.antique_license_no,
+  };
   const favoriteCount = favCountRes.count;
   const isFavorited = favoritedIds.has(listing.id);
 
@@ -664,6 +680,9 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
             </div>
           )}
         </div>
+
+        {/* 出品者の安心情報（システム連携・自動表示） */}
+        {!isOwner && <SellerTrustPanel t={sellerTrust} />}
 
         {/* 出品者カード */}
         <div className="card p-4 space-y-3">
