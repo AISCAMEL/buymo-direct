@@ -16,6 +16,7 @@ const NAV = [
   { href: '/dealer/auctions', label: 'オークション' },
   { href: '/premium', label: '会員コンテンツ' },
   { href: '/dealer/skills', label: 'スキル・サービス' },
+  { href: '/dealer/works', label: '作業事例' },
   { href: '/dealer/listings', label: '在庫管理' },
   { href: '/dealer/staff', label: 'スタッフ管理' },
   { href: '/dealer/analytics', label: 'アナリティクス' },

@@ -5,7 +5,9 @@ import { createClient } from '@/lib/supabase/server';
 import { ListingCard } from '@/components/ListingCard';
 import { RequestPartnerForm } from '@/components/RequestPartnerForm';
 import { StarRating } from '@/components/StarRating';
+import { WorkCaseCard } from '@/components/WorkCaseCard';
 import { normalizeStyle, deriveStyle, isMobile, SERVICE_STYLE_LABEL } from '@/lib/service-style';
+import type { WorkCase } from '@/lib/work-cases';
 import { skillLabel } from '@/lib/cases';
 import { skillCategory } from '@/lib/matching-fee';
 import { formatYen } from '@/lib/format';
@@ -112,6 +114,17 @@ export default async function DealerShopPage({ params }: { params: Promise<{ id:
     ? normalizeStyle(styleRow.service_style)
     : deriveStyle(dealer.service_area, dealer.description, dealer.tagline);
   const mobile = isMobile(serviceStyle);
+
+  // 作業事例（施工事例・公開分）。テーブル未導入でも壊れないよう error は無視。
+  const { data: workCaseRows } = await s
+    .from('dealer_work_cases')
+    .select('id, dealer_id, category, title, description, before_url, after_url, price, duration, car_name, customer_name, customer_voice, rating, work_date, published, sort')
+    .eq('dealer_id', id)
+    .eq('published', true)
+    .order('sort', { ascending: true })
+    .order('created_at', { ascending: false })
+    .limit(12);
+  const workCases = (workCaseRows ?? []) as WorkCase[];
 
   const gallery: string[] = Array.isArray(dealer.gallery) ? dealer.gallery : [];
 
@@ -222,6 +235,20 @@ export default async function DealerShopPage({ params }: { params: Promise<{ id:
                 <img src={u} alt="" className="h-full w-full object-cover" />
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* 作業事例（施工事例） */}
+      {workCases.length > 0 && (
+        <div>
+          <div className="mb-3 flex items-center gap-2">
+            <Wrench className="h-5 w-5 text-navy-400" />
+            <h2 className="font-black text-navy-800">作業事例・実績</h2>
+            <span className="ml-auto text-sm text-slate-400">{workCases.length}件</span>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {workCases.map((c) => <WorkCaseCard key={c.id} c={c} />)}
           </div>
         </div>
       )}

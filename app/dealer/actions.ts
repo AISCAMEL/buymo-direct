@@ -114,6 +114,74 @@ export async function updateDealerProfile(formData: FormData): Promise<void> {
   revalidatePath(`/dealers/${dealer.dealerId}`);
 }
 
+// ─── 作業事例（施工事例） ──────────────────────────────────────────────────────
+
+function parseWorkCase(formData: FormData) {
+  const str = (k: string) => String(formData.get(k) || '').trim() || null;
+  const num = (k: string) => {
+    const v = Number(String(formData.get(k) || '').replace(/[^0-9]/g, ''));
+    return Number.isFinite(v) && v > 0 ? Math.round(v) : null;
+  };
+  const r = Number(formData.get('rating'));
+  return {
+    category: str('category'),
+    title: String(formData.get('title') || '').trim(),
+    description: str('description'),
+    before_url: str('before_url'),
+    after_url: str('after_url'),
+    price: num('price'),
+    duration: str('duration'),
+    car_name: str('car_name'),
+    customer_name: str('customer_name'),
+    customer_voice: str('customer_voice'),
+    rating: r >= 1 && r <= 5 ? Math.round(r) : null,
+    work_date: str('work_date'),
+    published: ['on', 'true'].includes(String(formData.get('published') || '')),
+    sort: Math.round(Number(formData.get('sort')) || 0),
+  };
+}
+
+export async function createWorkCase(formData: FormData): Promise<void> {
+  const { dealer, supabase } = await requireDealer() as any;
+  if (!dealer.isOwner) return;
+  const v = parseWorkCase(formData);
+  if (!v.title) return;
+  await supabase.from('dealer_work_cases').insert({ ...v, dealer_id: dealer.dealerId });
+  revalidatePath('/dealer/works');
+  revalidatePath(`/dealers/${dealer.dealerId}`);
+  redirect('/dealer/works');
+}
+
+export async function updateWorkCase(id: string, formData: FormData): Promise<void> {
+  const { dealer, supabase } = await requireDealer() as any;
+  if (!dealer.isOwner) return;
+  const v = parseWorkCase(formData);
+  if (!v.title) return;
+  await supabase.from('dealer_work_cases').update({ ...v, updated_at: new Date().toISOString() })
+    .eq('id', id).eq('dealer_id', dealer.dealerId);
+  revalidatePath('/dealer/works');
+  revalidatePath(`/dealers/${dealer.dealerId}`);
+  redirect('/dealer/works');
+}
+
+export async function deleteWorkCase(id: string): Promise<void> {
+  const { dealer, supabase } = await requireDealer() as any;
+  if (!dealer.isOwner) return;
+  await supabase.from('dealer_work_cases').delete().eq('id', id).eq('dealer_id', dealer.dealerId);
+  revalidatePath('/dealer/works');
+  revalidatePath(`/dealers/${dealer.dealerId}`);
+  redirect('/dealer/works');
+}
+
+export async function toggleWorkCasePublished(id: string, published: boolean): Promise<void> {
+  const { dealer, supabase } = await requireDealer() as any;
+  if (!dealer.isOwner) return;
+  await supabase.from('dealer_work_cases').update({ published, updated_at: new Date().toISOString() })
+    .eq('id', id).eq('dealer_id', dealer.dealerId);
+  revalidatePath('/dealer/works');
+  revalidatePath(`/dealers/${dealer.dealerId}`);
+}
+
 // ─── スタッフ招待 ─────────────────────────────────────────────────────────────
 
 export async function inviteStaff(formData: FormData): Promise<void> {
