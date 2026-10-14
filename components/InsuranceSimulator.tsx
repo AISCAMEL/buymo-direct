@@ -131,12 +131,6 @@ export function InsuranceSimulator({ vehiclePrice, year, maker }: Props) {
                   </ul>
                 )}
 
-                <a
-                  href="#"
-                  className="block w-full rounded-lg border border-navy-200 py-1.5 text-center text-xs font-bold text-navy-600 hover:bg-navy-50 transition-colors"
-                >
-                  詳細を見る
-                </a>
               </div>
             ))}
           </div>
