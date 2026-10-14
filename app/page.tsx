@@ -39,6 +39,18 @@ const BODY_IMG: Record<string, string> = {
   'ワゴン': '/cars/subaru.jpg',
 };
 
+// 車種アイコン（透過イラスト）— 車種から探すタイル用
+const BODY_ICON: Record<string, string> = {
+  '軽自動車': '/body/kei.png',
+  'コンパクト': '/body/compact.png',
+  'セダン': '/body/sedan.png',
+  'SUV': '/body/suv.png',
+  'ミニバン': '/body/minivan.png',
+  'ワゴン': '/body/wagon.png',
+  'クーペ': '/body/coupe.png',
+  'オープン': '/body/open.png',
+};
+
 const TRUST_BADGES = [
   { icon: ShieldCheck, label: 'エスクロー決済' },
   { icon: FileCheck2, label: '名義変更代行' },
@@ -404,14 +416,24 @@ export default async function HomePage() {
                   href={`/listings?body=${encodeURIComponent(body)}`}
                   className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-accent-400 hover:shadow-md"
                 >
-                  <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
-                    <Image
-                      src={BODY_IMG[body] ?? '/cars/sedan.jpg'}
-                      alt={body}
-                      fill
-                      sizes="(max-width:640px) 50vw, 16vw"
-                      className="object-cover transition duration-300 group-hover:scale-105"
-                    />
+                  <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100">
+                    {BODY_ICON[body] ? (
+                      <Image
+                        src={BODY_ICON[body]}
+                        alt={body}
+                        fill
+                        sizes="(max-width:640px) 50vw, 16vw"
+                        className="object-contain p-3 transition duration-300 group-hover:scale-105"
+                      />
+                    ) : (
+                      <Image
+                        src={BODY_IMG[body] ?? '/cars/sedan.jpg'}
+                        alt={body}
+                        fill
+                        sizes="(max-width:640px) 50vw, 16vw"
+                        className="object-cover transition duration-300 group-hover:scale-105"
+                      />
+                    )}
                   </div>
                   <div className="py-2.5 text-center text-sm font-bold text-slate-700 group-hover:text-accent-600">
                     {body}

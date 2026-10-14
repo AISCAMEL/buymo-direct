@@ -96,11 +96,18 @@ export function SaleResultsSlider({ items }: { items?: SaleItem[] }) {
         <div ref={ref} className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {data.map((r, i) => {
             const t = TYPE_META[r.type];
+            // サンプル表示時は人物イラスト（透過アバター a01〜a10）を巡回表示
+            const avatar = real ? null : `/avatar/a${String((i % 10) + 1).padStart(2, '0')}.png`;
             return (
               <article key={i} className="w-[260px] shrink-0 snap-start overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <div className={`relative flex aspect-[16/10] items-center justify-center bg-gradient-to-br ${t.grad} text-5xl`}>
                   <span>{r.car_e}</span>
-                  <span className="absolute -bottom-5 left-4 flex h-12 w-12 items-center justify-center rounded-full border-4 border-white bg-navy-50 text-2xl shadow">{r.face_e}</span>
+                  {avatar ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img src={avatar} alt="" aria-hidden className="absolute -bottom-5 left-4 h-12 w-12 rounded-full border-4 border-white bg-white object-cover shadow" />
+                  ) : (
+                    <span className="absolute -bottom-5 left-4 flex h-12 w-12 items-center justify-center rounded-full border-4 border-white bg-navy-50 text-2xl shadow">{r.face_e}</span>
+                  )}
                   <span className={`absolute left-3 top-3 rounded-full px-2 py-0.5 text-[11px] font-black shadow ${t.cls}`}>{t.label}</span>
                   <span className="absolute right-3 top-3 rounded-full bg-white/85 px-2 py-0.5 text-[11px] font-bold text-slate-600">{r.pref}</span>
                 </div>

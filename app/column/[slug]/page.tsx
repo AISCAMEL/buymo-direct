@@ -1,8 +1,9 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import { ChevronRight } from 'lucide-react';
-import { COLUMNS, COLUMN_BY_SLUG } from '@/lib/columns';
+import { COLUMNS, COLUMN_BY_SLUG, columnThumb } from '@/lib/columns';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { SITE_BASE } from '@/lib/seo';
 
@@ -68,6 +69,10 @@ export default async function ColumnArticlePage({ params }: { params: Params }) 
         </div>
         <Link href={`/column/category/${enc}`} className="mb-2 inline-flex items-center rounded-full bg-accent-50 px-2.5 py-0.5 text-xs font-bold text-accent-600 hover:bg-accent-100">{c.cat}</Link>
         <h1 className="text-2xl font-black leading-snug text-navy-900 sm:text-3xl">{c.title}</h1>
+
+        <div className="relative mt-5 aspect-[16/9] overflow-hidden rounded-2xl bg-slate-100">
+          <Image src={columnThumb(c.cat)} alt="" fill sizes="(max-width:768px) 100vw, 768px" className="object-cover" priority />
+        </div>
 
         <div className="column-body mt-6" dangerouslySetInnerHTML={{ __html: c.html }} />
 

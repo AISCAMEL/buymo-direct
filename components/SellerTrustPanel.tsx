@@ -1,4 +1,12 @@
+import Image from 'next/image';
 import { ShieldCheck, Phone, Star, Handshake, CalendarClock, MapPin, BadgeCheck, Store, Lock } from 'lucide-react';
+
+// 取引の安心を伝える保証バッジ（イラスト）
+const GUARANTEE_BADGES = [
+  { img: '/badge/escrow.png', label: 'エスクロー保護' },
+  { img: '/badge/identity.png', label: '本人確認制度' },
+  { img: '/badge/reviews.png', label: '口コミ評価' },
+];
 
 type Trust = {
   verified: boolean;
@@ -78,6 +86,16 @@ export function SellerTrustPanel({ t }: { t: Trust }) {
       <div className="mt-3 space-y-1.5 border-t border-slate-100 pt-3 text-xs text-slate-600">
         <p className="flex items-start gap-1.5"><Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-navy-400" />代金は<strong className="mx-0.5">エスクロー</strong>で保護。車両確認後に支払われます。</p>
         <p className="flex items-start gap-1.5"><ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-navy-400" />やりとりはサイト内チャットで、運営が不審な取引を監視します。</p>
+      </div>
+
+      {/* 保証バッジ */}
+      <div className="mt-3 grid grid-cols-3 gap-2 border-t border-slate-100 pt-3">
+        {GUARANTEE_BADGES.map((b) => (
+          <div key={b.label} className="flex flex-col items-center gap-1 text-center">
+            <Image src={b.img} alt="" width={44} height={44} className="h-11 w-11 object-contain" />
+            <span className="text-[10px] font-bold leading-tight text-slate-500">{b.label}</span>
+          </div>
+        ))}
       </div>
     </div>
   );

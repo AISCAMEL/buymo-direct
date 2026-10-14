@@ -1,7 +1,8 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Metadata } from 'next';
 import { BookOpen, ChevronRight } from 'lucide-react';
-import { COLUMNS, COLUMN_CATEGORIES } from '@/lib/columns';
+import { COLUMNS, COLUMN_CATEGORIES, columnThumb } from '@/lib/columns';
 import { SITE_BASE, itemListJsonLd, breadcrumbJsonLd } from '@/lib/seo';
 
 export const revalidate = 3600;
@@ -54,11 +55,22 @@ export default function ColumnHubPage() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         {COLUMNS.map((c) => (
-          <Link key={c.slug} href={`/column/${c.slug}`} className="card group flex flex-col p-5 transition hover:shadow-md">
-            <span className="mb-2 inline-flex w-fit items-center rounded-full bg-accent-50 px-2.5 py-0.5 text-xs font-bold text-accent-600">{c.cat}</span>
-            <h2 className="font-bold text-navy-800 group-hover:text-accent-600">{c.title}</h2>
-            <p className="mt-2 line-clamp-2 text-sm text-slate-500">{c.meta}</p>
-            <span className="mt-3 inline-flex items-center gap-0.5 text-sm font-bold text-accent-600">続きを読む <ChevronRight className="h-4 w-4" /></span>
+          <Link key={c.slug} href={`/column/${c.slug}`} className="card group flex flex-col overflow-hidden transition hover:shadow-md">
+            <div className="relative aspect-[16/9] overflow-hidden bg-slate-100">
+              <Image
+                src={columnThumb(c.cat)}
+                alt=""
+                fill
+                sizes="(max-width:640px) 100vw, 50vw"
+                className="object-cover transition duration-300 group-hover:scale-105"
+              />
+              <span className="absolute left-3 top-3 inline-flex items-center rounded-full bg-white/90 px-2.5 py-0.5 text-xs font-bold text-accent-600 shadow-sm">{c.cat}</span>
+            </div>
+            <div className="flex flex-1 flex-col p-5">
+              <h2 className="font-bold text-navy-800 group-hover:text-accent-600">{c.title}</h2>
+              <p className="mt-2 line-clamp-2 text-sm text-slate-500">{c.meta}</p>
+              <span className="mt-3 inline-flex items-center gap-0.5 text-sm font-bold text-accent-600">続きを読む <ChevronRight className="h-4 w-4" /></span>
+            </div>
           </Link>
         ))}
       </div>

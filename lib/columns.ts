@@ -557,3 +557,12 @@ export const COLUMNS: Column[] = [
 export const COLUMN_CATEGORIES: string[] = Array.from(new Set(COLUMNS.map((c) => c.cat)));
 
 export const COLUMN_BY_SLUG: Record<string, Column> = Object.fromEntries(COLUMNS.map((c) => [c.slug, c]));
+
+/** カテゴリに応じたコラムのサムネイル画像パスを返す（全カテゴリを4枚の画像に割当）。 */
+export function columnThumb(cat: string): string {
+  if (cat === 'パーツ') return '/column/parts.jpg';
+  if (cat === '事故車' || cat === 'トラブル') return '/column/accident.jpg';
+  if (['手続き', '基本', 'ネット完結', '法人', 'サービス', 'コツ'].includes(cat)) return '/column/procedure.jpg';
+  // 相場・比較・車種別・タイミング・軽自動車 など価格/相場系
+  return '/column/price.jpg';
+}
