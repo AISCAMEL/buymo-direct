@@ -90,6 +90,27 @@ export default async function HomePage() {
   // Favorites are user-specific — fetched per request using the auth client
   const favoritedIds = await favoritedSet(supabase, user?.id, listings.map((l) => l.id));
 
+  // 売却実績スライダー：実際の成約（エスクロー完了）から構築。3件未満ならサンプル表示。
+  let saleItems: { pref: string; type: 'sold' | 'direct'; car: string; price: string; car_e: string; face_e: string }[] = [];
+  try {
+    const { data: soldRows } = await (supabase as any)
+      .from('escrow_transactions')
+      .select('amount, created_at, listings(title, prefecture, dealer_id)')
+      .eq('status', 'completed')
+      .order('created_at', { ascending: false })
+      .limit(12);
+    saleItems = ((soldRows ?? []) as any[])
+      .filter((r) => r.listings?.title)
+      .map((r) => ({
+        pref: r.listings?.prefecture || '全国',
+        type: r.listings?.dealer_id ? 'direct' : 'sold',
+        car: r.listings.title as string,
+        price: `¥${Number(r.amount ?? 0).toLocaleString('ja-JP')}`,
+        car_e: '🚗',
+        face_e: '✅',
+      }));
+  } catch { saleItems = []; }
+
   return (
     <>
       <script
@@ -283,8 +304,8 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ── 2.2 売却実績スライダー（横スクロール） ── */}
-        <SaleResultsSlider />
+        {/* ── 2.2 売却実績スライダー（横スクロール・実成約があれば実データ） ── */}
+        <SaleResultsSlider items={saleItems} />
 
         {/* ── 2.5 2つの売り方（買取／ダイレクト販売） ── */}
         <section className="bg-white px-4 py-14">

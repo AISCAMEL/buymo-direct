@@ -3,8 +3,8 @@
 import { useRef } from 'react';
 import { ChevronLeft, ChevronRight, Quote } from 'lucide-react';
 
-type ResultType = 'kaitori' | 'direct' | 'loan' | 'hikaku';
-type Item = { pref: string; type: ResultType; person: string; car: string; price: string; voice: string; car_e: string; face_e: string };
+export type ResultType = 'kaitori' | 'direct' | 'loan' | 'hikaku' | 'sold';
+export type SaleItem = { pref: string; type: ResultType; person?: string; car: string; price: string; voice?: string; car_e: string; face_e: string };
 
 // 種別の表示（バッジ色・ラベル・金額の接尾辞）
 const TYPE_META: Record<ResultType, { label: string; cls: string; suffix: string; grad: string }> = {
@@ -12,10 +12,11 @@ const TYPE_META: Record<ResultType, { label: string; cls: string; suffix: string
   direct: { label: 'ダイレクト販売', cls: 'bg-navy-600 text-white', suffix: 'で販売', grad: 'from-navy-100 to-slate-200' },
   loan: { label: 'ローン購入', cls: 'bg-emerald-600 text-white', suffix: 'で購入', grad: 'from-emerald-100 to-teal-100' },
   hikaku: { label: '他社比較', cls: 'bg-gold-500 text-navy-900', suffix: 'で売却', grad: 'from-gold-100 to-amber-100' },
+  sold: { label: '成約', cls: 'bg-emerald-600 text-white', suffix: 'で成約', grad: 'from-emerald-100 to-teal-100' },
 };
 
-// 表示イメージ（サンプル・全47都道府県）。実データ連携は後日。
-const ITEMS: Item[] = [
+// 表示イメージ（サンプル・全47都道府県）。実成約が貯まると実データに自動切替。
+const SAMPLE: SaleItem[] = [
   { pref: '北海道', type: 'kaitori', person: '50代 男性', car: 'スバル フォレスター', price: '¥1,540,000', voice: '遠方でも出張査定＋陸送まで手配してくれました。', car_e: '🚙', face_e: '👴' },
   { pref: '青森県', type: 'direct', person: '30代 男性', car: 'トヨタ ハリアー', price: '¥2,980,000', voice: '販売店を通さず直接売れて手取りが増えました。', car_e: '🚙', face_e: '🧑' },
   { pref: '岩手県', type: 'loan', person: '20代 男性', car: 'ホンダ フィット', price: '¥1,180,000', voice: '低金利ローンで無理なく購入できました。', car_e: '🚗', face_e: '👨' },
@@ -65,8 +66,10 @@ const ITEMS: Item[] = [
   { pref: '沖縄県', type: 'loan', person: '20代 女性', car: 'トヨタ パッソ', price: '¥760,000', voice: '離島でもローンでスムーズに購入。', car_e: '🚗', face_e: '👩' },
 ];
 
-export function SaleResultsSlider() {
+export function SaleResultsSlider({ items }: { items?: SaleItem[] }) {
   const ref = useRef<HTMLDivElement>(null);
+  const real = !!(items && items.length >= 3);
+  const data = real ? (items as SaleItem[]) : SAMPLE;
   const scrollBy = (dir: 1 | -1) => {
     const el = ref.current;
     if (el) el.scrollBy({ left: dir * Math.min(360, el.clientWidth * 0.9), behavior: 'smooth' });
@@ -77,8 +80,12 @@ export function SaleResultsSlider() {
       <div className="mx-auto max-w-6xl">
         <div className="mb-4 flex items-end justify-between gap-3">
           <div>
-            <h2 className="text-xl font-black text-navy-800 sm:text-2xl">ご利用実績</h2>
-            <p className="mt-1 text-sm text-slate-500">直接買取・ダイレクト販売・ローン購入・他社比較まで、<strong>全国47都道府県</strong>でご利用いただいています。<span className="ml-1 text-xs text-slate-400">※表示はイメージです</span></p>
+            <h2 className="text-xl font-black text-navy-800 sm:text-2xl">{real ? '最近の成約実績' : 'ご利用実績'}</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              {real
+                ? <>BUYMOで成約した車両の実績です。全国からご利用いただいています。</>
+                : <>直接買取・ダイレクト販売・ローン購入・他社比較まで、<strong>全国47都道府県</strong>でご利用いただいています。<span className="ml-1 text-xs text-slate-400">※表示はイメージです</span></>}
+            </p>
           </div>
           <div className="hidden shrink-0 gap-2 sm:flex">
             <button type="button" onClick={() => scrollBy(-1)} aria-label="前へ" className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-600 hover:bg-slate-50"><ChevronLeft className="h-5 w-5" /></button>
@@ -87,7 +94,7 @@ export function SaleResultsSlider() {
         </div>
 
         <div ref={ref} className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {ITEMS.map((r, i) => {
+          {data.map((r, i) => {
             const t = TYPE_META[r.type];
             return (
               <article key={i} className="w-[260px] shrink-0 snap-start overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -98,10 +105,10 @@ export function SaleResultsSlider() {
                   <span className="absolute right-3 top-3 rounded-full bg-white/85 px-2 py-0.5 text-[11px] font-bold text-slate-600">{r.pref}</span>
                 </div>
                 <div className="space-y-1.5 p-4 pt-7">
-                  <p className="text-xs font-bold text-slate-400">{r.person}・{r.pref}</p>
+                  <p className="text-xs font-bold text-slate-400">{r.person ? `${r.person}・${r.pref}` : r.pref}</p>
                   <p className="font-black text-navy-800">{r.car}</p>
                   <p className="text-lg font-black tabular-nums text-accent-600">{r.price}<span className="ml-1 text-xs font-bold text-slate-400">{t.suffix}</span></p>
-                  <p className="flex gap-1 text-xs leading-relaxed text-slate-600"><Quote className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-300" />{r.voice}</p>
+                  {r.voice && <p className="flex gap-1 text-xs leading-relaxed text-slate-600"><Quote className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-300" />{r.voice}</p>}
                 </div>
               </article>
             );
