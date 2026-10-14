@@ -7,7 +7,8 @@ import { getPricingConfig } from '@/lib/settings';
 import { computeMatchingFee } from '@/lib/matching-fee';
 
 // デモ用アカウント（本番の実ユーザーとは別のダミードメイン）
-const DEMO_PASSWORD = 'BuymoDemo!2025';
+// パスワードは環境変数 DEMO_SEED_PASSWORD から取得。未設定ならデモ投入を無効化（既知のパスワードをコードに残さない）。
+const DEMO_PASSWORD = process.env.DEMO_SEED_PASSWORD ?? '';
 const DEMO_BUYER = { email: 'demo.buyer@buymo-demo.jp', name: '山田 太郎（デモ）' };
 const DEMO_PRO = { email: 'demo.pro@buymo-demo.jp', name: '佐藤オート（デモ担当）' };
 const DEMO_SKILL = { email: 'demo.skill@buymo-demo.jp', name: '田中 一郎（スキル登録デモ）' };
@@ -48,6 +49,9 @@ async function ensureUser(svc: Svc, email: string, name: string): Promise<string
 export async function seedDemoData(): Promise<{ ok: boolean; message: string }> {
   const ctx = await adminContext();
   if (!ctx) return { ok: false, message: '管理者のみ実行できます。' };
+  if (!DEMO_PASSWORD) {
+    return { ok: false, message: 'デモ投入は無効です。環境変数 DEMO_SEED_PASSWORD を設定してください（本番公開時は未設定のままにし、デモアカウントを作成しないことを推奨）。' };
+  }
 
   const svc = createServiceClient();
   const log: string[] = [];
