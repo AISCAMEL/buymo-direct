@@ -47,6 +47,12 @@ export default async function GenrePage({ params }: { params: Params }) {
 
   const content = getGenreContent(g);
   const isParts = g.cat === 'parts'; // パーツ系はヤフオク形式・買取保証なし
+  // パーツ系ジャンルの入札ブラウズ遷移先（カテゴリ or キーワード or slug）
+  const partsBrowseHref = g.partCat
+    ? `/parts?cat=${g.partCat}`
+    : g.partQ
+    ? `/parts?q=${encodeURIComponent(g.partQ)}`
+    : `/parts?cat=${g.slug === 'parts' ? 'other' : g.slug}`;
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -131,7 +137,7 @@ export default async function GenrePage({ params }: { params: Params }) {
               {isParts ? (
                 <>
                   <Link href="/parts/new" className="btn-gold">このパーツを出品する</Link>
-                  <Link href={`/parts?cat=${g.slug === 'parts' ? 'other' : g.slug}`} className="btn-accent">パーツを探す（入札）</Link>
+                  <Link href={partsBrowseHref} className="btn-accent">パーツを探す（入札）</Link>
                 </>
               ) : HAISHA_SLUGS.includes(g.slug) ? (
                 <Link href="/haisha" className="btn-gold">その場提示で買取額を見る</Link>
@@ -227,7 +233,7 @@ export default async function GenrePage({ params }: { params: Params }) {
               {isParts ? (
                 <>
                   <Link href="/parts/new" className="btn-gold">オークションに出品する</Link>
-                  <Link href={`/parts?cat=${g.slug === 'parts' ? 'other' : g.slug}`} className="btn-outline">入札で探す</Link>
+                  <Link href={partsBrowseHref} className="btn-outline">入札で探す</Link>
                 </>
               ) : HAISHA_SLUGS.includes(g.slug) ? (
                 <>

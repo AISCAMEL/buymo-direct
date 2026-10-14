@@ -16,6 +16,8 @@ export type Genre = {
   desc: string;
   filter?: GenreFilter; // ダイレクト在庫の絞り込み（無ければ買取査定中心のLP）
   buybackOnly?: boolean; // 販売在庫の概念が薄い（廃車・パーツ等）→ 査定訴求中心
+  partCat?: string; // パーツ系：オークション browse のカテゴリ（/parts?cat=）
+  partQ?: string; // パーツ系：オークション browse のキーワード（/parts?q=）
 };
 
 export const GENRE_CATEGORIES: { slug: string; label: string }[] = [
@@ -61,6 +63,27 @@ export const GENRES: Genre[] = [
   { slug: 'wheel', label: 'アルミホイール', buyback: 'アルミホイール買取', cat: 'parts', desc: '純正・社外アルミホイールを買取。写真査定で手軽に。', buybackOnly: true },
   { slug: 'tire', label: 'タイヤ', buyback: 'タイヤ買取', cat: 'parts', desc: '中古・新品タイヤを買取。まとめ売りも歓迎。', buybackOnly: true },
   { slug: 'parts', label: 'カー用品・パーツ', buyback: 'カー用品・パーツ買取', cat: 'parts', desc: 'カーナビ・エアロ等のカー用品・パーツを買取。写真査定で。', buybackOnly: true },
+  // パーツ・用品（追加20ジャンル）— 入札オークションへ誘導
+  { slug: 'navmoni', label: 'カーナビ・モニター', buyback: 'カーナビ・モニター買取', cat: 'parts', desc: '純正・社外カーナビ、ディスプレイオーディオ、モニターを入札で売買。', buybackOnly: true, partCat: 'nav' },
+  { slug: 'drive-recorder', label: 'ドライブレコーダー', buyback: 'ドライブレコーダー買取', cat: 'parts', desc: '前後2カメラ・360度ドラレコを入札で。人気モデルは高値落札も。', buybackOnly: true, partQ: 'ドライブレコーダー' },
+  { slug: 'etc', label: 'ETC車載器', buyback: 'ETC車載器買取', cat: 'parts', desc: 'ETC・ETC2.0車載器を入札で売買。セットアップ状況も明記できます。', buybackOnly: true, partQ: 'ETC' },
+  { slug: 'backcam', label: 'バックカメラ', buyback: 'バックカメラ買取', cat: 'parts', desc: 'リアカメラ・全方位カメラを入札で。取付キットもまとめて出品可。', buybackOnly: true, partQ: 'バックカメラ' },
+  { slug: 'headlight', label: 'ヘッドライト・ランプ', buyback: 'ヘッドライト・ランプ買取', cat: 'parts', desc: '純正・社外ヘッドライト、LED/HIDをパーツ入札で売買。', buybackOnly: true, partQ: 'ヘッドライト' },
+  { slug: 'aero', label: 'エアロパーツ', buyback: 'エアロパーツ買取', cat: 'parts', desc: 'フロント/サイド/リアのエアロを入札で。車種別の適合も記載できます。', buybackOnly: true, partCat: 'aero' },
+  { slug: 'spoiler', label: 'スポイラー・ウイング', buyback: 'スポイラー・ウイング買取', cat: 'parts', desc: 'リアスポイラー・GTウイングを入札で売買。', buybackOnly: true, partQ: 'スポイラー' },
+  { slug: 'muffler', label: 'マフラー・排気系', buyback: 'マフラー・排気系買取', cat: 'parts', desc: '社外マフラー・触媒・排気系パーツを入札で。車検対応品も歓迎。', buybackOnly: true, partQ: 'マフラー' },
+  { slug: 'suspension', label: 'サスペンション・車高調', buyback: 'サスペンション・車高調買取', cat: 'parts', desc: '車高調・ダウンサス・ショックを入札で売買。', buybackOnly: true, partQ: 'サスペンション' },
+  { slug: 'brake', label: 'ブレーキ・ローター', buyback: 'ブレーキ・ローター買取', cat: 'parts', desc: 'ブレーキキャリパー・ローター・パッドを入札で。', buybackOnly: true, partQ: 'ブレーキ' },
+  { slug: 'engine', label: 'エンジン・タービン', buyback: 'エンジン・タービン買取', cat: 'parts', desc: 'エンジン本体・タービン・ECUを入札で売買。', buybackOnly: true, partQ: 'エンジン' },
+  { slug: 'bumper', label: 'バンパー', buyback: 'バンパー買取', cat: 'parts', desc: 'フロント/リアバンパーを入札で。純正色・加工品も出品可。', buybackOnly: true, partQ: 'バンパー' },
+  { slug: 'bodypanel', label: 'ボンネット・ドア', buyback: 'ボンネット・ドア買取', cat: 'parts', desc: 'ボンネット・ドア・フェンダー等の外装パネルを入札で売買。', buybackOnly: true, partCat: 'exterior' },
+  { slug: 'seat', label: 'シート・チャイルドシート', buyback: 'シート・チャイルドシート買取', cat: 'parts', desc: '純正・社外シート、レカロ、チャイルドシートを入札で。', buybackOnly: true, partQ: 'シート' },
+  { slug: 'floormat', label: 'フロアマット', buyback: 'フロアマット買取', cat: 'parts', desc: '車種専用フロアマット・ラゲッジマットを入札で売買。', buybackOnly: true, partQ: 'フロアマット' },
+  { slug: 'steering', label: 'ハンドル・ステアリング', buyback: 'ハンドル・ステアリング買取', cat: 'parts', desc: '社外ステアリング・ボス・シフトノブを入札で。', buybackOnly: true, partQ: 'ステアリング' },
+  { slug: 'interior', label: '内装パーツ', buyback: '内装パーツ買取', cat: 'parts', desc: 'パネル・イルミ・内装トリム等の内装パーツを入札で売買。', buybackOnly: true, partCat: 'interior' },
+  { slug: 'speaker', label: 'スピーカー・アンプ', buyback: 'スピーカー・アンプ買取', cat: 'parts', desc: 'カースピーカー・アンプ・デッドニング用品を入札で。', buybackOnly: true, partCat: 'audio' },
+  { slug: 'subwoofer', label: 'サブウーファー', buyback: 'サブウーファー買取', cat: 'parts', desc: 'サブウーファー・ウーファーボックスを入札で売買。', buybackOnly: true, partQ: 'サブウーファー' },
+  { slug: 'carrier', label: 'ルーフキャリア・ラック', buyback: 'ルーフキャリア・ラック買取', cat: 'parts', desc: 'ルーフボックス・キャリア・サイクルラックを入札で。', buybackOnly: true, partQ: 'キャリア' },
 ];
 
 export const GENRE_BY_SLUG: Record<string, Genre> = Object.fromEntries(GENRES.map((g) => [g.slug, g]));
