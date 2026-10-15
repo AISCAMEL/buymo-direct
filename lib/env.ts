@@ -17,7 +17,9 @@ const spec: EnvSpec = {
   ],
   optional: [
     'RESEND_API_KEY',
+    'OPENROUTER_API_KEY',
     'ANTHROPIC_API_KEY',
+    'TWILIO_ACCOUNT_SID',
     'SQUARE_ACCESS_TOKEN',
     'VAPID_PUBLIC_KEY',
     'VAPID_PRIVATE_KEY',

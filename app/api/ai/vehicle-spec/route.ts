@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { generateWithClaude } from '@/lib/ai';
+import { generateWithClaude, isAiEnabled } from '@/lib/ai';
 import { BODY_TYPES, TRANSMISSIONS, FUELS, DRIVETRAINS, EQUIPMENT_ALL } from '@/lib/constants';
 
 /**
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'メーカー・車種、または型式を入力してください' }, { status: 400 });
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!isAiEnabled()) {
     return NextResponse.json({ ai: false, note: 'AI未設定のため自動入力は利用できません', spec: null });
   }
 

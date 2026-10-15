@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
-import { generateWithClaude } from '@/lib/ai';
+import { generateWithClaude, isAiEnabled } from '@/lib/ai';
 import { PART_CATEGORY_LABEL, type PartCategory } from '@/lib/part-auction';
 
 function median(nums: number[]): number {
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
   } catch { samples = []; }
 
   const med = median(samples);
-  const hasAi = !!process.env.ANTHROPIC_API_KEY;
+  const hasAi = isAiEnabled();
 
   // データが少ない/AIなし → ヒューリスティック
   if (!hasAi || samples.length < 3) {

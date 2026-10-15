@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { generateWithClaudeVision, type VisionImage } from '@/lib/ai';
+import { generateWithClaudeVision, isAiEnabled, type VisionImage } from '@/lib/ai';
 
 export const runtime = 'nodejs';
 export const maxDuration = 30;
 
 // 写真からの車両状態AI診断（公開・画像はbase64で受け取り保存しない）。
 export async function POST(req: Request) {
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!isAiEnabled()) {
     return NextResponse.json({ available: false, error: 'AI画像診断は現在ご利用いただけません。' }, { status: 200 });
   }
 

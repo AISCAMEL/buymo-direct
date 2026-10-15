@@ -2,7 +2,7 @@
 // フォームには「curated（固定候補）＋ vehicle_models（DB）＋ 実際の出品」を統合して返す。
 // refreshVehicleModels() を Cron で回すと、実出品とAI（現行ラインナップ）から自動更新される。
 import { VEHICLE_CATALOG } from '@/lib/vehicle-catalog';
-import { generateWithClaude } from '@/lib/ai';
+import { generateWithClaude, isAiEnabled } from '@/lib/ai';
 import { createServiceClient } from '@/lib/supabase/service';
 
 function dedupeSorted(list: string[]): string[] {
@@ -41,7 +41,7 @@ export async function getModelSuggestions(maker: string): Promise<string[]> {
 
 /** AIに現行ラインナップを尋ねて車名配列を得る（キー無し・失敗時は空配列）。 */
 async function fetchAiModels(maker: string): Promise<string[]> {
-  if (!process.env.ANTHROPIC_API_KEY) return [];
+  if (!isAiEnabled()) return [];
   try {
     const year = new Date().getFullYear();
     const prompt = `${year}年時点で日本国内で販売中または近年販売された「${maker}」の代表的な乗用車の車種名を最大30個、JSON配列のみで返してください（説明・前置き・コードブロック記号は不要、車種名のみの日本語配列）。例: ["プリウス","アクア"]`;

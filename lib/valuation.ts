@@ -1,7 +1,7 @@
 // 車両査定ロジック（サーバー側・高機能版）。
 // 1) 実出品データ（同条件の現役出品）で相場を裏付け、2) 計算式で価格要因を分解、
 // 3) ANTHROPIC_API_KEY があればAIでレンジ・コメント・売り方を精緻化。
-import { generateWithClaude } from '@/lib/ai';
+import { generateWithClaude, isAiEnabled } from '@/lib/ai';
 import { createServiceClient } from '@/lib/supabase/service';
 
 export type ValuationInput = {
@@ -235,7 +235,7 @@ export async function valuate(input: ValuationInput): Promise<ValuationResult> {
   if (comps.count >= 3) retailEst = Math.round(comps.median * 0.6 + formulaRetail * 0.4);
   else if (comps.count >= 1) retailEst = Math.round(comps.median * 0.35 + formulaRetail * 0.65);
 
-  if (process.env.ANTHROPIC_API_KEY) {
+  if (isAiEnabled()) {
     try {
       const prompt = `あなたは日本の中古車相場に精通した査定士です。次の車両の「ダイレクト販売（個人がより高く売る想定）」の適正価格レンジを提案してください。
 

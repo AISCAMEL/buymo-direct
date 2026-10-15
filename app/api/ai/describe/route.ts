@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { generateWithClaude } from '@/lib/ai';
+import { generateWithClaude, isAiEnabled } from '@/lib/ai';
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     options?: string;
   };
   const mode = body.mode ?? 'generate';
-  const hasAi = !!process.env.ANTHROPIC_API_KEY;
+  const hasAi = isAiEnabled();
 
   // ── 添削モード：既存の文章を自然な日本語に整える（事実は変えない） ──
   if (mode === 'polish') {

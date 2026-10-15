@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { generateWithClaude } from '@/lib/ai';
+import { generateWithClaude, isAiEnabled } from '@/lib/ai';
 import { faqMatch, type Audience } from '@/lib/faq';
 
 const FALLBACK_MEMBER =
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
   }
 
   // AIキーが無い場合は FAQ で回答（的確な定型回答・会員/加盟店で振り分け）
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!isAiEnabled()) {
     return NextResponse.json({ reply: faqMatch(message, audience) ?? fallback, source: 'faq', audience });
   }
 
