@@ -354,6 +354,24 @@ export async function sendHaishaRequestEmails(opts: {
   }
 }
 
+/** 加盟店スタッフ招待メール。 */
+export async function sendDealerInviteEmail(
+  to: string,
+  opts: { dealerName: string; roleLabel: string; token: string },
+): Promise<void> {
+  if (!to) return;
+  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const url = `${_siteUrl()}/dealer/invite/${opts.token}`;
+  const html = _wrap(`
+    ${_h('加盟店スタッフへの招待')}
+    ${_p(`${_strong(esc(opts.dealerName))} からスタッフ（${esc(opts.roleLabel)}）として招待されました。`)}
+    ${_p('下のボタンから招待を承認すると、加盟店の管理画面にアクセスできます。')}
+    ${_btn('招待を承認する', url)}
+    ${_p('※ この招待リンクは7日間有効です。心当たりがない場合は破棄してください。')}
+  `);
+  await sendEmail({ to, subject: `【BUYMO】${opts.dealerName} からスタッフ招待が届きました`, html });
+}
+
 /** 廃車買取 進捗更新メール（申込者向け）。 */
 export async function sendHaishaStatusEmail(
   to: string,

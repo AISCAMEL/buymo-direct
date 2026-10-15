@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { requireDealer, generateApiKey } from '@/lib/dealer';
+import { createServiceClient } from '@/lib/supabase/service';
+import { sendDealerInviteEmail } from '@/lib/email';
 import { PREFECTURES } from '@/lib/constants';
 
 // ─── 加盟店申込 ─────────────────────────────────────────────────────────────
@@ -190,15 +192,73 @@ export async function inviteStaff(formData: FormData): Promise<void> {
 
   const email = String(formData.get('email')).trim().toLowerCase();
   const role = String(formData.get('role')) as 'manager' | 'staff';
+  if (!email) return;
 
-  await (supabase as any).from('dealer_invitations').insert({
-    dealer_id: dealer.dealerId,
-    email,
-    role,
-  });
+  const { data: inv } = await (supabase as any)
+    .from('dealer_invitations')
+    .insert({ dealer_id: dealer.dealerId, email, role })
+    .select('token')
+    .single();
 
-  // TODO: send invitation email with token
+  // 招待メール送信（Resend 未設定時はスキップ＝招待待ちに残る）
+  if (inv?.token) {
+    const { data: d } = await (supabase as any)
+      .from('dealers')
+      .select('name')
+      .eq('id', dealer.dealerId)
+      .maybeSingle();
+    await sendDealerInviteEmail(email, {
+      dealerName: d?.name ?? '加盟店',
+      roleLabel: role === 'manager' ? 'マネージャー' : 'スタッフ',
+      token: inv.token,
+    });
+  }
+
   revalidatePath('/dealer/staff');
+}
+
+// ─── 招待の承認 ───────────────────────────────────────────────────────────────
+
+export async function acceptInvite(formData: FormData): Promise<{ error: string | null }> {
+  const token = String(formData.get('token') ?? '').trim();
+  if (!token) return { error: '招待トークンがありません。' };
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'ログインが必要です。' };
+
+  // RLS をバイパスして招待を検証（招待されたユーザーは dealer_invitations を読めないため）
+  const svc = createServiceClient();
+  const { data: inv } = await svc
+    .from('dealer_invitations')
+    .select('id, dealer_id, email, role, expires_at, accepted_at')
+    .eq('token', token)
+    .maybeSingle();
+
+  if (!inv) return { error: '招待が見つかりません。リンクが無効です。' };
+  if (inv.accepted_at) return { error: 'この招待はすでに承認済みです。' };
+  if (new Date(inv.expires_at) < new Date()) return { error: '招待の有効期限が切れています。加盟店に再送を依頼してください。' };
+
+  // セキュリティ：ログイン中のメールと招待先メールの一致を確認
+  const userEmail = (user.email ?? '').trim().toLowerCase();
+  if (userEmail !== String(inv.email).trim().toLowerCase()) {
+    return { error: `この招待は ${inv.email} 宛です。該当アカウントでログインしてください。` };
+  }
+
+  const { error: insErr } = await svc.from('dealer_staff').insert({
+    dealer_id: inv.dealer_id,
+    user_id: user.id,
+    role: inv.role,
+    invited_by: null,
+  });
+  // 既にスタッフ（unique 違反）は許容
+  if (insErr && !/duplicate|unique/i.test(insErr.message)) {
+    return { error: insErr.message };
+  }
+
+  await svc.from('dealer_invitations').update({ accepted_at: new Date().toISOString() }).eq('id', inv.id);
+  revalidatePath('/dealer/dashboard');
+  return { error: null };
 }
 
 // ─── スタッフ削除 ─────────────────────────────────────────────────────────────

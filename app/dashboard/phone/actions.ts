@@ -3,6 +3,7 @@
 import crypto from 'crypto';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { isSmsConfigured, sendSms } from '@/lib/sms';
 
 function hashOtp(otp: string): string {
   return crypto.createHash('sha256').update(otp).digest('hex');
@@ -32,8 +33,20 @@ export async function sendPhoneOtp(
   });
   if (error) return { error: error.message };
 
-  // TODO: send SMS via Twilio/Vonage/etc — send `otp` to `normalised`
-  // For demo: return otp in response
+  // SMS送信（Twilio）。未設定時はデモ動作としてOTPを画面に返す。
+  if (isSmsConfigured()) {
+    const sent = await sendSms(
+      normalised,
+      `【BUYMO】認証コード: ${otp}\n10分以内に入力してください。`,
+    );
+    if (!sent.ok) {
+      return { error: '認証コードの送信に失敗しました。時間をおいて再度お試しください。' };
+    }
+    // 本番では絶対にコードを返さない（漏えい防止）
+    return { error: null };
+  }
+
+  // SMS未設定（開発・デモ）：画面にコードを表示して動作確認可能にする
   return { error: null, demoOtp: otp };
 }
 
