@@ -4,9 +4,23 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { MessageCircle, X, Send, Loader2, Sparkles } from 'lucide-react';
-import { QUICK_REPLIES } from '@/lib/faq';
+import { QUICK_REPLIES, DEALER_QUICK_REPLIES, type Audience } from '@/lib/faq';
 
 type Message = { role: 'user' | 'assistant'; content: string };
+
+/** パスからデフォルトの対象（会員/加盟店）を判定。 */
+function pathAudience(path: string): Audience {
+  const p = path || '/';
+  if (p.startsWith('/dealer') || p.startsWith('/hq') || p.startsWith('/admin')) return 'dealer';
+  return 'member';
+}
+
+const DEALER_CTX = {
+  label: '加盟店サポート',
+  greeting:
+    '加盟店（車のプロ）向けサポートです🔧\n申込・案件の受け方・費用/報酬・出品・スタッフ招待・必要書類など、お気軽にご相談ください。',
+  quick: DEALER_QUICK_REPLIES,
+};
 
 /** 現在のページからAIの文脈（ラベル・あいさつ・質問例）を決める。 */
 function pageContext(path: string): { label: string; greeting: string; quick: string[] } {
@@ -32,7 +46,10 @@ function pageContext(path: string): { label: string; greeting: string; quick: st
 
 export function AiChatWidget() {
   const pathname = usePathname() || '/';
-  const ctx = useMemo(() => pageContext(pathname), [pathname]);
+  const pageCtx = useMemo(() => pageContext(pathname), [pathname]);
+  const [audience, setAudience] = useState<Audience>(() => pathAudience(pathname));
+  // 会員＝ページ文脈、加盟店＝加盟店サポート文脈
+  const ctx = audience === 'dealer' ? DEALER_CTX : pageCtx;
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([{ role: 'assistant', content: ctx.greeting }]);
   const [input, setInput] = useState('');
@@ -43,10 +60,26 @@ export function AiChatWidget() {
     if (open) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, open]);
 
-  // まだ会話していなければ、ページ移動であいさつ・質問例を文脈に合わせて更新
+  // パスが変わったら既定の対象も追従（まだ会話していないときのみ）
+  useEffect(() => {
+    setMessages((prev) => {
+      if (prev.length === 1 && prev[0].role === 'assistant') {
+        setAudience(pathAudience(pathname));
+      }
+      return prev;
+    });
+  }, [pathname]);
+
+  // まだ会話していなければ、文脈に合わせてあいさつ・質問例を更新
   useEffect(() => {
     setMessages((prev) => (prev.length === 1 && prev[0].role === 'assistant' ? [{ role: 'assistant', content: ctx.greeting }] : prev));
   }, [ctx.greeting]);
+
+  // 対象（会員/加盟店）を切り替え。会話前なら挨拶も切り替える。
+  function switchAudience(next: Audience) {
+    if (next === audience) return;
+    setAudience(next);
+  }
 
   async function send(text?: string) {
     const msg = (text ?? input).trim();
@@ -61,7 +94,7 @@ export function AiChatWidget() {
       const res = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: msg, history, context: ctx.label }),
+        body: JSON.stringify({ message: msg, history, context: ctx.label, audience }),
       });
       const data = (await res.json()) as { reply?: string };
       setMessages((prev) => [
@@ -92,17 +125,34 @@ export function AiChatWidget() {
       {open && (
         <div className="mb-3 flex h-[520px] w-[22rem] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200">
           {/* Header */}
-          <div className="flex items-center justify-between bg-gradient-to-r from-navy-600 to-navy-500 px-4 py-3">
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15"><Sparkles className="h-4 w-4 text-white" /></span>
-              <div>
-                <p className="text-sm font-bold leading-none text-white">BUYMO サポート</p>
-                <p className="mt-1 flex items-center gap-1 text-[11px] text-white/80"><span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />オンライン・すぐに回答</p>
+          <div className="bg-gradient-to-r from-navy-600 to-navy-500 px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15"><Sparkles className="h-4 w-4 text-white" /></span>
+                <div>
+                  <p className="text-sm font-bold leading-none text-white">BUYMO サポート</p>
+                  <p className="mt-1 flex items-center gap-1 text-[11px] text-white/80"><span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />{audience === 'dealer' ? '加盟店モード' : '会員モード'}・すぐに回答</p>
+                </div>
               </div>
+              <button onClick={() => setOpen(false)} className="text-white/80 hover:text-white" aria-label="チャットを閉じる">
+                <X className="h-4 w-4" />
+              </button>
             </div>
-            <button onClick={() => setOpen(false)} className="text-white/80 hover:text-white" aria-label="チャットを閉じる">
-              <X className="h-4 w-4" />
-            </button>
+            {/* 対象の切り替え（会員 / 加盟店） */}
+            <div className="mt-2.5 flex gap-1 rounded-lg bg-white/10 p-0.5">
+              <button
+                onClick={() => switchAudience('member')}
+                className={`flex-1 rounded-md py-1 text-[11px] font-bold transition ${audience === 'member' ? 'bg-white text-navy-700' : 'text-white/80 hover:text-white'}`}
+              >
+                会員の方
+              </button>
+              <button
+                onClick={() => switchAudience('dealer')}
+                className={`flex-1 rounded-md py-1 text-[11px] font-bold transition ${audience === 'dealer' ? 'bg-white text-navy-700' : 'text-white/80 hover:text-white'}`}
+              >
+                加盟店の方
+              </button>
+            </div>
           </div>
 
           {/* Messages */}
@@ -123,7 +173,7 @@ export function AiChatWidget() {
             {/* クイック返信 */}
             {showQuickReplies && !loading && (
               <div className="space-y-1.5 pt-1">
-                <p className="text-[11px] font-bold text-slate-400">このページのよくある質問</p>
+                <p className="text-[11px] font-bold text-slate-400">{audience === 'dealer' ? 'よくある相談（加盟店）' : 'このページのよくある質問'}</p>
                 {ctx.quick.map((q) => (
                   <button key={q} onClick={() => void send(q)} className="block w-full rounded-xl border border-navy-200 bg-white px-3 py-2 text-left text-xs font-bold text-navy-700 transition hover:border-navy-400 hover:bg-navy-50">
                     {q}
@@ -136,11 +186,23 @@ export function AiChatWidget() {
 
           {/* お問い合わせ導線 */}
           <div className="flex items-center justify-center gap-3 border-t border-slate-100 bg-white px-3 py-1.5 text-[11px] font-bold">
-            <Link href="/listings/valuation" onClick={() => setOpen(false)} className="text-gold-600 hover:underline">無料査定</Link>
-            <span className="text-slate-300">|</span>
-            <Link href="/contact" onClick={() => setOpen(false)} className="text-accent-600 hover:underline">お問い合わせ</Link>
-            <span className="text-slate-300">|</span>
-            <Link href="/sell" onClick={() => setOpen(false)} className="text-accent-600 hover:underline">出品する</Link>
+            {audience === 'dealer' ? (
+              <>
+                <Link href="/dealer/dashboard" onClick={() => setOpen(false)} className="text-gold-600 hover:underline">ダッシュボード</Link>
+                <span className="text-slate-300">|</span>
+                <Link href="/dealer" onClick={() => setOpen(false)} className="text-accent-600 hover:underline">加盟店申込</Link>
+                <span className="text-slate-300">|</span>
+                <Link href="/contact" onClick={() => setOpen(false)} className="text-accent-600 hover:underline">お問い合わせ</Link>
+              </>
+            ) : (
+              <>
+                <Link href="/listings/valuation" onClick={() => setOpen(false)} className="text-gold-600 hover:underline">無料査定</Link>
+                <span className="text-slate-300">|</span>
+                <Link href="/contact" onClick={() => setOpen(false)} className="text-accent-600 hover:underline">お問い合わせ</Link>
+                <span className="text-slate-300">|</span>
+                <Link href="/sell" onClick={() => setOpen(false)} className="text-accent-600 hover:underline">出品する</Link>
+              </>
+            )}
           </div>
 
           {/* Input */}
