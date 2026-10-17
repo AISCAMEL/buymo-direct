@@ -11,7 +11,7 @@ import { createSquarePayment, refundByStoredIds, isSquareConfigured } from '@/li
 import type { EscrowStatus, TitleTransferOption, PaymentMethod } from '@/lib/types';
 import { dispatchWebhook } from '@/lib/dealer';
 import { recordDealerSaleCommission } from '@/lib/sale-commission';
-import { sendPaymentConfirmedEmail, sendDealCompletedEmail } from '@/lib/email';
+import { sendPaymentConfirmedEmail, sendDealCompletedEmail, sendEmail, opsEmail, emailLayout } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
 
 /** 会話からエスクロー取引を作成（買主のみ）。出品は「商談中」に更新。 */
@@ -285,10 +285,13 @@ export async function confirmEscrowPayment(
   }
 
   const discount = couponDiscount ?? 0;
+  // 銀行振込は即時 funds_held にせず、振込申告を記録して運営の入金確認を待つ
+  const isBankTransfer = method === 'cash';
   const { error } = await supabase
     .from('escrow_transactions')
     .update({
-      status: 'funds_held',
+      status: isBankTransfer ? 'initiated' : 'funds_held',
+      ...(isBankTransfer ? { transfer_reported_at: new Date().toISOString() } : {}),
       installment_fee: installment,
       square_payment_id: squarePaymentId,
       coupon_discount: discount,
@@ -297,8 +300,27 @@ export async function confirmEscrowPayment(
     .eq('status', 'initiated');
   if (error) return { error: error.message };
 
-  // 入金確認メール + 通知（fire-and-forget。失敗はメインフローに影響しない）
-  ;(async () => {
+  // 銀行振込：運営へ入金確認依頼を通知（fire-and-forget）
+  if (isBankTransfer) {
+    ;(async () => {
+      try {
+        const ops = opsEmail();
+        if (!ops) return;
+        const listingRes = await supabase.from('listings').select('title').eq('id', tx.listing_id).maybeSingle();
+        const listingTitle = (listingRes.data as { title?: string } | null)?.title ?? '車両';
+        await sendEmail({
+          to: ops,
+          subject: `【BUYMO】銀行振込の入金確認依頼 — ${listingTitle}`,
+          html: emailLayout('銀行振込の入金確認依頼', `
+            <p style="margin:8px 0;color:#475569;font-size:14px">買い手が銀行振込を申告しました。着金を確認のうえ、管理画面「取引監視」から<b>入金を確認</b>してください。</p>
+            <p style="margin:8px 0;color:#475569;font-size:14px">取引ID：${escrowId}<br>金額（目安）：¥${total.toLocaleString()}</p>`),
+        });
+      } catch { /* 通知失敗は無視 */ }
+    })().catch(() => {});
+  }
+
+  // 入金確認メール + 通知（カード/ローン等・即時 funds_held のみ。銀行振込は確認後に送る）
+  if (!isBankTransfer) (async () => {
     try {
       const svc = createServiceClient();
       const [listingRes, buyerRes, sellerRes] = await Promise.all([

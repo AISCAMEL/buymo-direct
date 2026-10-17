@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { formatYen, formatDate } from '@/lib/format';
-import { adminSetEscrowStatus } from '@/app/admin/actions';
+import { adminSetEscrowStatus, adminConfirmBankTransfer } from '@/app/admin/actions';
 import { ESCROW_STEPS } from '@/lib/constants';
 import type { EscrowTransaction } from '@/lib/types';
 
@@ -47,6 +47,13 @@ export default async function AdminEscrowPage() {
                     <span className={`badge ${t.status === 'disputed' ? 'bg-red-100 text-red-700' : 'bg-navy-50 text-navy-600'}`}>
                       {STATUS_LABEL[t.status] ?? t.status}
                     </span>
+                    {t.payment_method === 'cash' && t.status === 'initiated' && t.transfer_reported_at && (
+                      <form action={adminConfirmBankTransfer.bind(null, t.id)}>
+                        <button className="rounded-md bg-emerald-600 px-3 py-1 text-xs font-black text-white hover:bg-emerald-700">
+                          入金を確認して保全する
+                        </button>
+                      </form>
+                    )}
                     {!terminal && (
                       <div className="flex gap-1">
                         {t.status !== 'disputed' && (

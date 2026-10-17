@@ -4,7 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { adminContext, logAdminAction, logAdminChange } from '@/lib/admin';
 import { createServiceClient } from '@/lib/supabase/service';
 import { recordDealerSaleCommission } from '@/lib/sale-commission';
-import { sendEmail, emailLayout } from '@/lib/email';
+import { sendEmail, emailLayout, sendPaymentConfirmedEmail } from '@/lib/email';
+import { createNotification } from '@/lib/notifications';
 import type { ListingStatus, EscrowStatus, LoanAppStatus, ReportStatus, AnnouncementLevel } from '@/lib/types';
 
 const LOAN_STATUS_JA: Record<LoanAppStatus, string> = {
@@ -40,6 +41,50 @@ export async function adminSetEscrowStatus(escrowId: string, status: EscrowStatu
   }
   await logAdminAction(ctx, `escrow.status.${status}`, 'escrow', escrowId);
   revalidatePath('/admin/escrow');
+}
+
+/** 銀行振込の着金を確認し、エスクローを funds_held に遷移（＋当事者へ通知）。 */
+export async function adminConfirmBankTransfer(escrowId: string) {
+  const ctx = await adminContext();
+  if (!ctx) return;
+
+  const svc = createServiceClient();
+  const { data: tx } = await svc
+    .from('escrow_transactions')
+    .select('status, payment_method, buyer_id, seller_id, listing_id, amount')
+    .eq('id', escrowId)
+    .maybeSingle();
+  if (!tx) return;
+  if (tx.status !== 'initiated' || tx.payment_method !== 'cash') return; // 対象外
+
+  const { error } = await svc
+    .from('escrow_transactions')
+    .update({ status: 'funds_held' })
+    .eq('id', escrowId)
+    .eq('status', 'initiated');
+  if (error) return;
+
+  // 当事者へ入金確認を通知（fire-and-forget）
+  ;(async () => {
+    try {
+      const [listingRes, buyerRes, sellerRes] = await Promise.all([
+        svc.from('listings').select('title').eq('id', tx.listing_id).maybeSingle(),
+        svc.auth.admin.getUserById(tx.buyer_id),
+        svc.auth.admin.getUserById(tx.seller_id),
+      ]);
+      const listingTitle = (listingRes.data as { title?: string } | null)?.title ?? '';
+      const buyerEmail = buyerRes.data?.user?.email;
+      const sellerEmail = sellerRes.data?.user?.email;
+      if (buyerEmail) await sendPaymentConfirmedEmail(buyerEmail, { listingTitle, amount: tx.amount, escrowId, role: 'buyer' });
+      if (sellerEmail) await sendPaymentConfirmedEmail(sellerEmail, { listingTitle, amount: tx.amount, escrowId, role: 'seller' });
+      await createNotification(tx.seller_id, 'escrow', '入金を確認しました', `「${listingTitle}」の入金（銀行振込）が確認されました。取引を進めてください。`, `/escrow/${escrowId}`);
+      await createNotification(tx.buyer_id, 'escrow', '入金が確認されました', `「${listingTitle}」のご入金を確認しました。現車確認・お引渡しへ進みます。`, `/escrow/${escrowId}`);
+    } catch { /* 通知失敗は無視 */ }
+  })().catch(() => {});
+
+  await logAdminAction(ctx, 'escrow.bank_transfer.confirmed', 'escrow', escrowId);
+  revalidatePath('/admin/escrow');
+  revalidatePath(`/escrow/${escrowId}`);
 }
 
 /** ローン仮審査のステータス変更。 */

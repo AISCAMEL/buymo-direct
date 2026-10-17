@@ -1,7 +1,7 @@
 import { requireAdmin } from '@/lib/admin';
-import { getPricingConfig } from '@/lib/settings';
-import { Settings } from 'lucide-react';
-import { savePricingConfig } from './actions';
+import { getPricingConfig, getBankAccount } from '@/lib/settings';
+import { Settings, Landmark } from 'lucide-react';
+import { savePricingConfig, saveBankAccount } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,9 +17,19 @@ function Field({ name, label, defaultValue, suffix, step }: { name: string; labe
   );
 }
 
+function TextField({ name, label, defaultValue, placeholder }: { name: string; label: string; defaultValue?: string; placeholder?: string }) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-xs font-bold text-slate-600">{label}</span>
+      <input name={name} type="text" defaultValue={defaultValue ?? ''} placeholder={placeholder} className="input h-9 text-sm" />
+    </label>
+  );
+}
+
 export default async function AdminSettingsPage() {
   await requireAdmin();
   const c = await getPricingConfig();
+  const bank = await getBankAccount();
 
   return (
     <div className="space-y-6">
@@ -114,6 +124,37 @@ export default async function AdminSettingsPage() {
 
         <div className="flex justify-end">
           <button type="submit" className="btn-accent px-8">設定を保存する</button>
+        </div>
+      </form>
+
+      {/* 保全口座（銀行振込の振込先） */}
+      <div className="flex items-center gap-2 pt-2">
+        <Landmark className="h-5 w-5 text-navy-500" />
+        <h2 className="text-lg font-black">保全口座（銀行振込の振込先）</h2>
+      </div>
+      <p className="text-sm text-slate-500">
+        ここに登録した口座が、買い手の取引画面に「お振込先」として表示されます。高額取引は銀行振込でエスクロー保全します。
+      </p>
+      <form action={saveBankAccount} className="card space-y-3 p-5">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <TextField name="bank_name" label="銀行名" defaultValue={bank.bankName} placeholder="例）みずほ銀行" />
+          <TextField name="branch_name" label="支店名" defaultValue={bank.branchName} placeholder="例）いわき支店" />
+          <label className="block">
+            <span className="mb-1 block text-xs font-bold text-slate-600">口座種別</span>
+            <select name="account_type" defaultValue={bank.accountType || '普通'} className="input h-9 text-sm">
+              <option value="普通">普通</option>
+              <option value="当座">当座</option>
+            </select>
+          </label>
+          <TextField name="account_number" label="口座番号" defaultValue={bank.accountNumber} placeholder="例）1234567" />
+          <TextField name="account_holder" label="口座名義" defaultValue={bank.accountHolder} placeholder="例）ゴウドウガイシャアイズ" />
+        </div>
+        <label className="block">
+          <span className="mb-1 block text-xs font-bold text-slate-600">補足（任意）</span>
+          <input name="bank_note" type="text" defaultValue={bank.note} placeholder="例）振込手数料は買い手様ご負担でお願いします" className="input h-9 text-sm" />
+        </label>
+        <div className="flex justify-end">
+          <button type="submit" className="btn-accent px-8">保全口座を保存する</button>
         </div>
       </form>
     </div>

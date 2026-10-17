@@ -10,6 +10,7 @@ import { LoanSimulator } from '@/components/LoanSimulator';
 import { CouponInput } from '@/components/CouponInput';
 import { cn } from '@/lib/format';
 import type { PaymentMethod } from '@/lib/types';
+import type { BankAccount } from '@/lib/settings';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 declare global {
@@ -32,6 +33,8 @@ export function PaymentPanel({
   squareAppId,
   squareLocationId,
   squareSandbox,
+  bankAccount,
+  transferReported,
 }: {
   escrowId: string;
   currentMethod: PaymentMethod | null;
@@ -40,6 +43,8 @@ export function PaymentPanel({
   squareAppId?: string;
   squareLocationId?: string;
   squareSandbox: boolean;
+  bankAccount?: BankAccount;
+  transferReported?: boolean;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -171,11 +176,30 @@ export function PaymentPanel({
         })}
       </div>
 
-      {/* 銀行振込：エスクロー保全の案内 */}
+      {/* 銀行振込：保全口座の表示＋入金確認フロー */}
       {currentMethod === 'cash' && (
-        <div className="space-y-1.5 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
-          <p>指定の<strong>保全口座</strong>へお振込みください。お振込先は「入金を確定する」後、取引チャットでご案内します。</p>
-          <p>運営が入金を確認後、検品・お引渡しへ進みます。高額のお取引でも<strong>手数料を抑えて安全に保全</strong>できます。</p>
+        <div className="space-y-3 rounded-lg bg-slate-50 p-3 text-sm">
+          {bankAccount && bankAccount.bankName && bankAccount.accountNumber ? (
+            <div className="rounded-lg border border-navy-200 bg-white p-3">
+              <p className="mb-1.5 text-xs font-black text-navy-700">お振込先（保全口座）</p>
+              <dl className="space-y-0.5 text-xs text-slate-700">
+                <div className="flex justify-between"><dt className="text-slate-400">銀行</dt><dd className="font-bold">{bankAccount.bankName} {bankAccount.branchName}</dd></div>
+                <div className="flex justify-between"><dt className="text-slate-400">種別・番号</dt><dd className="font-bold">{bankAccount.accountType} {bankAccount.accountNumber}</dd></div>
+                <div className="flex justify-between"><dt className="text-slate-400">名義</dt><dd className="font-bold">{bankAccount.accountHolder}</dd></div>
+              </dl>
+              {bankAccount.note && <p className="mt-1.5 text-[11px] text-slate-400">{bankAccount.note}</p>}
+            </div>
+          ) : (
+            <p className="text-xs text-slate-500">お振込先は取引確定後、取引チャットでご案内します。</p>
+          )}
+          <p className="text-xs text-slate-600">
+            上記口座へお振込み後、下のボタンで<strong>「振込みました」</strong>とお知らせください。運営が着金を確認するとエスクロー保全が完了し、検品・お引渡しへ進みます。
+          </p>
+          {transferReported && (
+            <p className="rounded-lg bg-amber-50 p-2 text-xs font-bold text-amber-700">
+              振込申告を受け付けました。運営の入金確認をお待ちください。
+            </p>
+          )}
         </div>
       )}
 
@@ -220,11 +244,13 @@ export function PaymentPanel({
 
       {error && <p className="rounded-lg bg-red-50 p-2 text-sm text-red-600">{error}</p>}
 
-      {currentMethod && (
+      {currentMethod && !(currentMethod === 'cash' && transferReported) && (
         <button onClick={pay} disabled={busy || (useSquareCard && !cardReady)} className="btn-accent w-full py-3 text-base">
           {busy && <Loader2 className="h-4 w-4 animate-spin" />}
           {currentMethod === 'credit'
             ? useSquareCard ? 'カードで支払う' : 'デモで入金を確定'
+            : currentMethod === 'cash'
+            ? '振込みました（運営が確認します）'
             : '入金を確定する'}
         </button>
       )}

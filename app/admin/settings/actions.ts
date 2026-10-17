@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { adminContext, logAdminChange } from '@/lib/admin';
 import { createServiceClient } from '@/lib/supabase/service';
-import { getPricingConfig } from '@/lib/settings';
+import { getPricingConfig, getBankAccount, type BankAccount } from '@/lib/settings';
 import { mergePricingConfig, type PricingConfig } from '@/lib/pricing-config';
 
 const n = (fd: FormData, key: string, fallback: number): number => {
@@ -66,4 +66,28 @@ export async function savePricingConfig(formData: FormData): Promise<void> {
   revalidatePath('/membership');
   revalidatePath('/franchise');
   revalidatePath('/dealer/auctions');
+}
+
+/** エスクロー保全口座（銀行振込の振込先）を保存（管理者のみ）。 */
+export async function saveBankAccount(formData: FormData): Promise<void> {
+  const ctx = await adminContext();
+  if (!ctx) return;
+  const s = (key: string) => String(formData.get(key) ?? '').trim().slice(0, 200);
+  const before = await getBankAccount();
+  const value: BankAccount = {
+    bankName: s('bank_name'),
+    branchName: s('branch_name'),
+    accountType: s('account_type') || '普通',
+    accountNumber: s('account_number'),
+    accountHolder: s('account_holder'),
+    note: s('bank_note'),
+  };
+  try {
+    const service = createServiceClient();
+    await service.from('app_settings').upsert({ key: 'bank_account', value, updated_at: new Date().toISOString() });
+    await logAdminChange(ctx, 'bank_account.update', 'settings', null, before, value, '保全口座情報の変更');
+  } catch (err) {
+    console.error('[settings] 保全口座の保存に失敗:', err instanceof Error ? err.message : err);
+  }
+  revalidatePath('/admin/settings');
 }

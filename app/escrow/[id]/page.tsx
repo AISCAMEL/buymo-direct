@@ -8,6 +8,7 @@ import { PaymentPanel } from '@/components/PaymentPanel';
 import { advanceEscrow, cancelEscrow, setTitleOption, setInstallment } from '@/app/escrow/actions';
 import { TITLE_OPTIONS, PAYMENT_METHODS, INSTALLMENT_FEE } from '@/lib/constants';
 import { isSquareConfigured } from '@/lib/square';
+import { getBankAccount } from '@/lib/settings';
 import { formatYen } from '@/lib/format';
 import { EscrowPayButton } from '@/components/EscrowPayButton';
 import { ExportButton } from '@/components/ExportButton';
@@ -55,6 +56,8 @@ export default async function EscrowPage({ params }: { params: Params }) {
   const sellerFeeAmt = (tx as any).seller_fee ?? 0;
   const sellerPayout = Math.max(0, tx.amount - sellerFeeAmt);
   const paymentMethod = tx.payment_method as PaymentMethod | null;
+  const transferReported = !!(tx as any).transfer_reported_at;
+  const bankAccount = await getBankAccount();
 
   // 2回分割払いの状態と、次に支払う回の金額
   const installmentCount = (tx as any).installment_count ?? 1;
@@ -202,6 +205,8 @@ export default async function EscrowPage({ params }: { params: Params }) {
           squareAppId={squareAppId}
           squareLocationId={squareLocationId}
           squareSandbox={squareSandbox}
+          bankAccount={bankAccount}
+          transferReported={transferReported}
         />
       )}
 
