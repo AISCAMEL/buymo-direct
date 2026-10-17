@@ -55,6 +55,8 @@ export function AiChatWidget() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  // 日本語入力（IME）変換中かどうか。変換確定のEnterで誤送信しないために使う。
+  const composingRef = useRef(false);
 
   useEffect(() => {
     if (open) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -112,7 +114,15 @@ export function AiChatWidget() {
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    // IME変換中（日本語の変換確定）のEnterでは送信しない。
+    // 変換が未確定のうちは文章を打ち続けられ、確定後のEnterのみ送信される。
+    if (
+      e.key === 'Enter' &&
+      !e.shiftKey &&
+      !composingRef.current &&
+      !e.nativeEvent.isComposing &&
+      (e.nativeEvent as unknown as { keyCode?: number }).keyCode !== 229
+    ) {
       e.preventDefault();
       void send();
     }
@@ -211,8 +221,10 @@ export function AiChatWidget() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={onKeyDown}
+              onCompositionStart={() => { composingRef.current = true; }}
+              onCompositionEnd={() => { composingRef.current = false; }}
               rows={1}
-              placeholder="メッセージを入力..."
+              placeholder="メッセージを入力（Shift+Enterで改行）..."
               className="flex-1 resize-none rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-navy-400"
             />
             <button onClick={() => void send()} disabled={!input.trim() || loading} className="rounded-xl bg-navy-600 p-2 text-white hover:bg-navy-700 disabled:opacity-40" aria-label="送信">
