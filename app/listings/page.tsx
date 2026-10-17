@@ -124,12 +124,12 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
               {(count ?? 0) > PAGE_SIZE && `（${page}/${totalPages}ページ）`}
             </span>
           </h1>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2 [&>*]:shrink-0">
             {/* モバイル専用フィルタボタン */}
             <Suspense>
               <MobileFilterButton />
             </Suspense>
-            <Link href="/listings/map" className="btn-outline flex items-center gap-1 text-sm">
+            <Link href="/listings/map" className="btn-outline flex items-center gap-1 whitespace-nowrap text-sm">
               <MapPin className="h-4 w-4" /> 地図
             </Link>
             <Suspense>

@@ -133,7 +133,7 @@ export function AiChatWidget() {
   return (
     <div className="fixed bottom-20 right-4 z-50 flex flex-col items-end sm:bottom-6">
       {open && (
-        <div className="mb-3 flex h-[520px] w-[22rem] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200">
+        <div className="mb-3 flex h-[min(70dvh,520px)] w-[22rem] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-slate-200">
           {/* Header */}
           <div className="bg-gradient-to-r from-navy-600 to-navy-500 px-4 py-3">
             <div className="flex items-center justify-between">
