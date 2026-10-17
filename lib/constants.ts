@@ -121,10 +121,19 @@ export const INSTALLMENT_RATE = 0.042; // クレジット分割手数料 4.2%
 export const INSTALLMENT_FEE = 20000;
 export const LOAN_APR_FROM = 6.8;      // 提携ローン 年率 6.8%〜（審査で決定）
 
-export const PAYMENT_METHODS: Record<PaymentMethod, { label: string; desc: string; online: boolean }> = {
-  cash: { label: '現金', desc: '受け渡し時に現金でお支払い（オンライン決済なし）', online: false },
+// カード決済の上限額。これを超える取引はカード不可とし、銀行振込へ誘導する。
+// 高額な車両本体にカード決済の高率手数料（Square 約3.6%）がかかるのを防ぐための設計。
+export const CARD_MAX_YEN = 300_000;
+
+/** カード（Square）決済が使える金額かどうか（本体＋手数料の小計で判定）。 */
+export function isCardAllowed(subtotalYen: number): boolean {
+  return subtotalYen <= CARD_MAX_YEN;
+}
+
+export const PAYMENT_METHODS: Record<PaymentMethod, { label: string; desc: string; online: boolean; recommended?: boolean }> = {
+  cash: { label: '銀行振込（エスクロー）', desc: '指定の保全口座へお振込み。手数料が安く高額のお取引に最適です', online: false, recommended: true },
   loan: { label: 'ローン（提携クレジット）', desc: '提携ローンでの分割。年率6.8%〜（審査で決定）', online: false },
-  credit: { label: 'クレジットカード', desc: 'Squareでカード決済。分割手数料4.2%を加算', online: true },
+  credit: { label: 'クレジットカード', desc: `Squareでカード決済（${(CARD_MAX_YEN / 10000).toLocaleString()}万円まで）。決済手数料4.2%を加算`, online: true },
 };
 
 // クレジット時の分割手数料（小計に対して4.2%）

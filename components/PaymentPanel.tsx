@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Loader2, CreditCard, Banknote, Landmark } from 'lucide-react';
 import { setPaymentMethod, confirmEscrowPayment } from '@/app/escrow/actions';
-import { PAYMENT_METHODS, LOAN_APR_FROM } from '@/lib/constants';
+import { PAYMENT_METHODS, LOAN_APR_FROM, CARD_MAX_YEN, isCardAllowed } from '@/lib/constants';
 import { LoanSimulator } from '@/components/LoanSimulator';
 import { CouponInput } from '@/components/CouponInput';
 import { cn } from '@/lib/format';
@@ -51,8 +51,12 @@ export function PaymentPanel({
   const [cardReady, setCardReady] = useState(false);
   const useSquareCard = currentMethod === 'credit' && squareConfigured && !!squareAppId;
 
+  // 高額取引はカード不可（本体＋手数料の小計が上限超なら銀行振込へ誘導）
+  const cardAllowed = isCardAllowed(loanPrincipal);
+
   async function chooseMethod(method: PaymentMethod) {
     if (method === currentMethod) return;
+    if (method === 'credit' && !cardAllowed) return;
     setBusy(true);
     await setPaymentMethod(escrowId, method);
     setBusy(false);
@@ -137,26 +141,43 @@ export function PaymentPanel({
           const m = PAYMENT_METHODS[key];
           const Icon = ICONS[key];
           const selected = currentMethod === key;
+          const disabledCard = key === 'credit' && !cardAllowed;
           return (
             <button
               key={key}
               type="button"
               onClick={() => chooseMethod(key)}
-              disabled={busy}
+              disabled={busy || disabledCard}
               className={cn(
                 'flex w-full items-center gap-3 rounded-lg border p-3 text-left transition',
-                selected ? 'border-navy-400 bg-navy-50' : 'border-slate-200 hover:bg-slate-50'
+                selected ? 'border-navy-400 bg-navy-50' : 'border-slate-200 hover:bg-slate-50',
+                disabledCard && 'cursor-not-allowed opacity-50 hover:bg-transparent'
               )}
             >
               <Icon className={cn('h-5 w-5 shrink-0', selected ? 'text-navy-500' : 'text-slate-400')} />
               <span>
-                <span className="font-bold">{m.label}</span>
-                <span className="block text-xs text-slate-500">{m.desc}</span>
+                <span className="flex items-center gap-1.5 font-bold">
+                  {m.label}
+                  {m.recommended && <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-black text-emerald-700">おすすめ</span>}
+                </span>
+                <span className="block text-xs text-slate-500">
+                  {disabledCard
+                    ? `${(CARD_MAX_YEN / 10000).toLocaleString()}万円を超えるお取引はカード不可です。銀行振込をご利用ください。`
+                    : m.desc}
+                </span>
               </span>
             </button>
           );
         })}
       </div>
+
+      {/* 銀行振込：エスクロー保全の案内 */}
+      {currentMethod === 'cash' && (
+        <div className="space-y-1.5 rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
+          <p>指定の<strong>保全口座</strong>へお振込みください。お振込先は「入金を確定する」後、取引チャットでご案内します。</p>
+          <p>運営が入金を確認後、検品・お引渡しへ進みます。高額のお取引でも<strong>手数料を抑えて安全に保全</strong>できます。</p>
+        </div>
+      )}
 
       {/* ローン：年率の開示＋返済シミュレーション */}
       {currentMethod === 'loan' && (

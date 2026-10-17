@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
-import { TITLE_OPTIONS, installmentFeeFor, INSTALLMENT_FEE } from '@/lib/constants';
+import { TITLE_OPTIONS, installmentFeeFor, INSTALLMENT_FEE, isCardAllowed, CARD_MAX_YEN } from '@/lib/constants';
 import { escrowFee, loanFee } from '@/lib/fees';
 import { getPricingConfig } from '@/lib/settings';
 import { createSquarePayment, refundByStoredIds, isSquareConfigured } from '@/lib/square';
@@ -258,6 +258,11 @@ export async function confirmEscrowPayment(
   const subtotal = tx.amount + tx.escrow_fee + tx.title_fee;
   const installment = installmentFeeFor(method, subtotal);
   const total = subtotal + installment;
+
+  // 高額取引はカード不可（Square の高率手数料を避け、銀行振込へ誘導）
+  if (method === 'credit' && !isCardAllowed(subtotal)) {
+    return { error: `${(CARD_MAX_YEN / 10000).toLocaleString()}万円を超えるお取引はカード決済をご利用いただけません。銀行振込でのお支払いをお選びください。` };
+  }
 
   let squarePaymentId: string | null = null;
 

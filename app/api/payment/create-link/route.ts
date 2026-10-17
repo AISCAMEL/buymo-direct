@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createPaymentLink, isSquareConfigured } from '@/lib/square';
+import { isCardAllowed, CARD_MAX_YEN } from '@/lib/constants';
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -37,6 +38,15 @@ export async function POST(req: Request) {
   }
   if (tx.status !== 'initiated') {
     return NextResponse.json({ error: 'この取引はすでに入金済みです' }, { status: 400 });
+  }
+
+  // 高額取引はカード不可（Square の高率手数料を避け、銀行振込へ誘導）
+  const cardBasis = tx.amount + tx.escrow_fee + tx.title_fee;
+  if (!isCardAllowed(cardBasis)) {
+    return NextResponse.json(
+      { error: `${(CARD_MAX_YEN / 10000).toLocaleString()}万円を超えるお取引はカード決済をご利用いただけません。銀行振込でのお支払いをお選びください。` },
+      { status: 400 }
+    );
   }
 
   // クーポン割引・分割手数料を反映した実請求額（画面表示と一致させる）
