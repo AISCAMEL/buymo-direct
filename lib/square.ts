@@ -203,3 +203,85 @@ export async function refundSquarePayment(params: {
     return { ok: false, error: err instanceof Error ? err.message : 'Square refund failed' };
   }
 }
+
+/** Order ID から実際の Payment ID 群を取得（payment link 経由の返金に使用）。失敗時 []。 */
+async function paymentIdsFromOrder(orderId: string): Promise<string[]> {
+  try {
+    const res = await fetch(`${apiBase()}/v2/orders/${orderId}`, {
+      headers: {
+        'Square-Version': SQUARE_VERSION,
+        Authorization: `Bearer ${process.env.SQUARE_ACCESS_TOKEN}`,
+      },
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    const tenders = (json?.order?.tenders ?? []) as { id?: string; payment_id?: string }[];
+    return tenders.map((t) => t.payment_id ?? t.id).filter(Boolean) as string[];
+  } catch {
+    return [];
+  }
+}
+
+/** Payment の捕捉金額(JPY)を取得。COMPLETED のみ返金対象。失敗時 null。 */
+async function completedPaymentAmount(paymentId: string): Promise<number | null> {
+  try {
+    const res = await fetch(`${apiBase()}/v2/payments/${paymentId}`, {
+      headers: {
+        'Square-Version': SQUARE_VERSION,
+        Authorization: `Bearer ${process.env.SQUARE_ACCESS_TOKEN}`,
+      },
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    const p = json?.payment as { status?: string; amount_money?: { amount?: number } } | undefined;
+    if (!p) return null;
+    if (p.status && p.status !== 'COMPLETED') return null;
+    const amt = p.amount_money?.amount;
+    return typeof amt === 'number' ? amt : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 保存済み識別子（Payment ID か Order ID）から、実際に捕捉された Square 決済を
+ * 捕捉額どおりに全額返金する。インラインカード（Payment ID）／決済リンク（Order ID）、
+ * 1回払い／2回分割払いの両方に対応。捕捉額を Square から取得して返金するため、
+ * クーポンや分割の金額計算のズレによる過返金・不足返金を防ぐ。
+ */
+export async function refundByStoredIds(params: {
+  storedIds: string[];
+  idempotencyKeyBase: string;
+  reason?: string;
+}): Promise<SquarePaymentResult> {
+  if (!isSquareConfigured()) return { ok: false, error: 'Square is not configured' };
+
+  // 保存済み識別子 → 実 Payment ID 群（Order なら解決、そうでなければ Payment とみなす）
+  const paymentIds = new Set<string>();
+  for (const sid of params.storedIds.filter(Boolean)) {
+    const fromOrder = await paymentIdsFromOrder(sid);
+    if (fromOrder.length) fromOrder.forEach((id) => paymentIds.add(id));
+    else paymentIds.add(sid);
+  }
+  if (!paymentIds.size) return { ok: false, error: '返金対象の決済が見つかりません' };
+
+  let anyOk = false;
+  const errors: string[] = [];
+  let i = 0;
+  for (const pid of paymentIds) {
+    const amount = await completedPaymentAmount(pid);
+    if (amount == null || amount <= 0) {
+      errors.push(`${pid}: 捕捉額を取得できません`);
+      continue;
+    }
+    const r = await refundSquarePayment({
+      paymentId: pid,
+      amountYen: amount,
+      idempotencyKey: `${params.idempotencyKeyBase}-${i++}`,
+      reason: params.reason,
+    });
+    if (r.ok) anyOk = true;
+    else errors.push(`${pid}: ${r.error ?? 'refund failed'}`);
+  }
+  return anyOk ? { ok: true } : { ok: false, error: errors.join('; ') };
+}

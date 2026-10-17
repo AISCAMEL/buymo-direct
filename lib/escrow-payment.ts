@@ -61,17 +61,23 @@ export async function settleSquarePaymentCompleted(supabase: DB, matchIds: strin
 
 /**
  * payment.failed を受けて、該当する回の Square 識別子をクリアし、再入金を促す。
+ * @returns クリアしたエスクローID（revalidate 用）／なければ null
  */
-export async function clearFailedSquarePayment(supabase: DB, matchIds: string[]): Promise<void> {
-  if (!matchIds.length) return;
-  await supabase
+export async function clearFailedSquarePayment(supabase: DB, matchIds: string[]): Promise<string | null> {
+  if (!matchIds.length) return null;
+  const { data: a } = await supabase
     .from('escrow_transactions')
     .update({ square_payment_id: null })
     .in('square_payment_id', matchIds)
-    .eq('status', 'initiated');
-  await supabase
+    .eq('status', 'initiated')
+    .select('id')
+    .maybeSingle();
+  const { data: b } = await supabase
     .from('escrow_transactions')
     .update({ square_payment_id_2: null })
     .in('square_payment_id_2', matchIds)
-    .eq('status', 'initiated');
+    .eq('status', 'initiated')
+    .select('id')
+    .maybeSingle();
+  return (a?.id as string | undefined) ?? (b?.id as string | undefined) ?? null;
 }

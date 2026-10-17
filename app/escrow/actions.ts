@@ -7,7 +7,7 @@ import { createServiceClient } from '@/lib/supabase/service';
 import { TITLE_OPTIONS, installmentFeeFor, INSTALLMENT_FEE } from '@/lib/constants';
 import { escrowFee, loanFee } from '@/lib/fees';
 import { getPricingConfig } from '@/lib/settings';
-import { createSquarePayment, refundSquarePayment, isSquareConfigured } from '@/lib/square';
+import { createSquarePayment, refundByStoredIds, isSquareConfigured } from '@/lib/square';
 import type { EscrowStatus, TitleTransferOption, PaymentMethod } from '@/lib/types';
 import { dispatchWebhook } from '@/lib/dealer';
 import { recordDealerSaleCommission } from '@/lib/sale-commission';
@@ -377,21 +377,33 @@ export async function cancelEscrow(escrowId: string) {
 
   const { data: tx } = await supabase
     .from('escrow_transactions')
-    .select('status, listing_id, buyer_id, seller_id, payment_method, square_payment_id, amount, escrow_fee, title_fee, installment_fee')
+    .select('status, listing_id, buyer_id, seller_id, payment_method, square_payment_id, square_payment_id_2, installment_count, installment_1_paid, installment_2_paid')
     .eq('id', escrowId)
     .maybeSingle();
   if (!tx || (tx.buyer_id !== user.id && tx.seller_id !== user.id)) redirect('/messages');
   if (tx.status !== 'initiated' && tx.status !== 'funds_held') return;
 
-  // クレジット決済済みの場合は Square に返金リクエスト（fire-and-forget）
-  if (tx.status === 'funds_held' && tx.payment_method === 'credit' && tx.square_payment_id && isSquareConfigured()) {
-    const totalYen = tx.amount + tx.escrow_fee + tx.title_fee + tx.installment_fee;
-    refundSquarePayment({
-      paymentId: tx.square_payment_id,
-      amountYen: totalYen,
-      idempotencyKey: `refund-cancel-${escrowId}`,
-      reason: 'エスクロー取引キャンセルによる返金',
-    }).catch(() => {/* 返金失敗はログのみ（要運用対応）*/});
+  // クレジット決済済みの場合は Square に返金リクエスト（捕捉額どおりに全額返金）
+  if (tx.status === 'funds_held' && tx.payment_method === 'credit' && isSquareConfigured()) {
+    // 入金済みの各回の識別子を集める（1回払い＝1本、2回払い＝入金済みの回のみ）
+    const storedIds: string[] = [];
+    const count = (tx.installment_count ?? 1) as number;
+    if (count === 2) {
+      if (tx.installment_1_paid && tx.square_payment_id) storedIds.push(tx.square_payment_id);
+      if (tx.installment_2_paid && tx.square_payment_id_2) storedIds.push(tx.square_payment_id_2);
+    } else if (tx.square_payment_id) {
+      storedIds.push(tx.square_payment_id);
+    }
+    if (storedIds.length) {
+      // fire-and-forget（返金失敗はログのみ・要運用対応）。キャンセル自体はブロックしない。
+      refundByStoredIds({
+        storedIds,
+        idempotencyKeyBase: `refund-cancel-${escrowId}`,
+        reason: 'エスクロー取引キャンセルによる返金',
+      })
+        .then((r) => { if (!r.ok) console.error(`[escrow cancel] refund failed escrow=${escrowId}: ${r.error}`); })
+        .catch((e) => console.error(`[escrow cancel] refund error escrow=${escrowId}:`, e));
+    }
   }
 
   await supabase.from('escrow_transactions').update({ status: 'cancelled' }).eq('id', escrowId);
