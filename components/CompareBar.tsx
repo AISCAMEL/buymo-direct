@@ -1,12 +1,16 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { GitCompare, X } from 'lucide-react';
 import { getCompareIds, removeFromCompare, clearCompare } from '@/lib/compare-store';
 
+// 比較バーを表示するページ（車両カードが並ぶ一覧系のみ）。
+const COMPARE_PATHS = ['/listings', '/genre', '/area', '/dashboard/favorites'];
+
 export function CompareBar() {
   const router = useRouter();
+  const pathname = usePathname() || '';
   const [ids, setIds] = useState<string[]>([]);
 
   const refresh = useCallback(() => {
@@ -31,15 +35,12 @@ export function CompareBar() {
     window.dispatchEvent(new Event('compare-updated'));
   }
 
-  const visible = ids.length > 0;
+  // 一覧系ページ以外、または0台のときは完全に非表示（モバイルでのチラ見えも解消）
+  const onComparePage = COMPARE_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
+  if (!onComparePage || ids.length === 0) return null;
 
   return (
-    <div
-      className={[
-        'fixed bottom-16 left-0 right-0 z-40 bg-navy-500 text-white shadow-lg transition-transform duration-300 sm:bottom-0',
-        visible ? 'translate-y-0' : 'translate-y-full',
-      ].join(' ')}
-    >
+    <div className="fixed bottom-16 left-0 right-0 z-40 bg-navy-500 text-white shadow-lg sm:bottom-0">
       <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-2">
         <GitCompare className="h-5 w-5 shrink-0 text-navy-200" />
 
