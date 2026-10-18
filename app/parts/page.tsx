@@ -145,7 +145,7 @@ export default async function PartsPage({ searchParams }: { searchParams: Promis
       {tableMissing && (
         <div className="card border-amber-200 bg-amber-50 p-4 text-sm text-amber-700">
           <p className="font-bold">part_auctions テーブルが未適用です。</p>
-          <p className="mt-1">Supabase で <code>supabase/migrations/20240769_part_auctions.sql</code> と <code>20240771_part_auction_pro.sql</code> を実行してください。</p>
+          <p className="mt-1 break-words [&_code]:break-all">Supabase で <code>supabase/migrations/20240769_part_auctions.sql</code> と <code>20240771_part_auction_pro.sql</code> を実行してください。</p>
         </div>
       )}
 
