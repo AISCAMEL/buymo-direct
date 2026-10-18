@@ -6,7 +6,7 @@ import { formatYen } from '@/lib/format';
 import { DISP_CLASSES, OWNER_LABELS, requiredHaishaDocs } from '@/lib/haisha';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '廃車買取の申込状況 | BUYMO' };
+export const metadata = { title: '廃車買取の申込状況' };
 
 type Row = {
   id: string;

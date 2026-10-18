@@ -20,9 +20,9 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { genre } = await params;
   const g = getRecruitGenre(genre);
-  if (!g) return { title: '加盟募集 | BUYMO ダイレクト' };
+  if (!g) return { title: '加盟募集' };
   return {
-    title: `${g.name}の加盟募集｜BUYMOで受注する | BUYMO ダイレクト`,
+    title: `${g.name}の加盟募集｜BUYMOで受注する`,
     description: g.intro,
   };
 }

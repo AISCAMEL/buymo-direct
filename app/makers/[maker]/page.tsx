@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
     description: `${maker}の中古車を個人間で直接売買。BUYMO ダイレクトで${maker}の出品車両を探しましょう。手数料0円・エスクロー決済で安心。`,
     alternates: { canonical: `${BASE}/makers/${encodedMaker}` },
     openGraph: {
-      title: `${maker}の中古車 | BUYMO ダイレクト`,
+      title: `${maker}の中古車`,
       description: `${maker}の中古車を個人間で直接売買。`,
       url: `${BASE}/makers/${encodedMaker}`,
     },

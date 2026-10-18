@@ -5,7 +5,7 @@ import { PREFECTURES } from '@/lib/constants';
 import { bookTransport } from './actions';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '陸送手配 | BUYMO' };
+export const metadata = { title: '陸送手配' };
 
 const STATUS: Record<string, { label: string; cls: string }> = {
   pending: { label: '受付中', cls: 'bg-amber-100 text-amber-700' },

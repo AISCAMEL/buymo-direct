@@ -1,7 +1,7 @@
 import { LegalLayout, LegalSection } from '@/components/LegalLayout';
 import { OPERATOR } from '@/lib/operator';
 
-export const metadata = { title: '利用規約 | BUYMO ダイレクト' };
+export const metadata = { title: '利用規約' };
 
 export default function TermsPage() {
   return (

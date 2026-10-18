@@ -5,7 +5,7 @@ import { formatYen } from '@/lib/format';
 import { ExportButton } from '@/components/ExportButton';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'ポイント・会員ランク | BUYMO' };
+export const metadata = { title: 'ポイント・会員ランク' };
 
 const RANKS = [
   { id: 'bronze', label: 'ブロンズ', min: 0, max: 999, color: 'text-amber-700 bg-amber-100', bar: 'bg-amber-500' },

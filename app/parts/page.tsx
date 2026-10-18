@@ -13,7 +13,7 @@ import {
 
 export const dynamic = 'force-dynamic';
 export const metadata = {
-  title: 'パーツオークション（ヤフオク形式）| BUYMO ダイレクト',
+  title: 'パーツオークション（ヤフオク形式）',
   description: 'アルミホイール・タイヤ・カーナビ・エアロなどのカーパーツをオークション形式で出品・入札。適合車種で絞り込み、代理入札・即決にも対応。',
 };
 

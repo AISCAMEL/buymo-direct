@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { AppraisalDetailForm } from './AppraisalDetailForm';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '正式査定（詳細情報の入力） | BUYMO' };
+export const metadata = { title: '正式査定（詳細情報の入力）' };
 
 export default function AppraisalDetailPage() {
   return (

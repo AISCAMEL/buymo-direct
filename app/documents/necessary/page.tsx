@@ -4,7 +4,7 @@ import { NecessaryDocs } from '@/components/NecessaryDocs';
 
 export const dynamic = 'force-static';
 export const metadata = {
-  title: '必要書類案内 | BUYMO ダイレクト',
+  title: '必要書類案内',
   description: '中古車の個人間売買・ダイレクト販売で必要な書類を、売る方・買う方／普通車・軽自動車に分けてご案内します。名義変更代行もご利用いただけます。',
 };
 

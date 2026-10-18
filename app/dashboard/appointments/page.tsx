@@ -11,7 +11,7 @@ import {
 } from '@/lib/appointments';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '見学・試乗の予定 | BUYMO ダイレクト' };
+export const metadata = { title: '見学・試乗の予定' };
 
 type Row = Appointment & { listing_title?: string | null; counterparty?: string };
 

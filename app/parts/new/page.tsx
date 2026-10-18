@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { PartAuctionForm } from '@/components/PartAuctionForm';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'パーツを出品する | BUYMO ダイレクト' };
+export const metadata = { title: 'パーツを出品する' };
 
 export default async function NewPartAuctionPage() {
   const supabase = await createClient();

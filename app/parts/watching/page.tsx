@@ -9,7 +9,7 @@ import {
 } from '@/lib/part-auction';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'ウォッチ中のパーツ | BUYMO ダイレクト' };
+export const metadata = { title: 'ウォッチ中のパーツ' };
 
 export default async function WatchingPage() {
   const supabase = await createClient();

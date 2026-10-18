@@ -5,7 +5,7 @@ import { RecruitSalesLetter } from '@/components/RecruitSalesLetter';
 
 export const dynamic = 'force-static';
 export const metadata = {
-  title: '車のプロ募集｜ジャンル別の加盟案内 | BUYMO ダイレクト',
+  title: '車のプロ募集｜ジャンル別の加盟案内',
   description: '整備・板金・コーティング・電装・陸送・行政書士・レンタカー・解体など、車に関わるプロを募集。無料登録で受注・集客でき、かかるのは成約手数料だけ。',
 };
 

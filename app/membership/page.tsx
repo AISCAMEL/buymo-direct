@@ -9,7 +9,7 @@ import { formatYen } from '@/lib/format';
 import { applyMembership, cancelMembership } from '@/app/membership/actions';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '有料会員 | BUYMO ダイレクト' };
+export const metadata = { title: '有料会員' };
 
 export default async function MembershipPage({ searchParams }: { searchParams: Promise<{ applied?: string }> }) {
   const sp = await searchParams;

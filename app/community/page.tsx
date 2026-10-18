@@ -7,7 +7,7 @@ import { formatDateTime } from '@/lib/format';
 import { COMMUNITY_CATEGORY_LABEL, COMMUNITY_CATEGORY_CLS } from '@/lib/community';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '買取コミュニティ | BUYMO ダイレクト' };
+export const metadata = { title: '買取コミュニティ' };
 
 type Row = {
   id: string; category: string; title: string; pinned: boolean; resolved: boolean; created_at: string;

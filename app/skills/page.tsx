@@ -7,7 +7,7 @@ import { skillContent } from '@/lib/skill-content';
 
 export const dynamic = 'force-dynamic';
 export const metadata = {
-  title: 'サービス一覧（車のプロに依頼できること）| BUYMO ダイレクト',
+  title: 'サービス一覧（車のプロに依頼できること）',
   description: '査定・買取・整備・車検・板金・塗装・コーティング・電装・陸送・名義変更・廃車まで。BUYMO 加盟のプロに直接依頼できるサービスの一覧と相場・手数料。',
 };
 

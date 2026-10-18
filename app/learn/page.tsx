@@ -6,7 +6,7 @@ import { BusinessOnlyGate } from '@/components/BusinessOnlyGate';
 import { LEARN_CATEGORY_LABEL, LEARN_CATEGORY_CLS, type LearningContent } from '@/lib/learn';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '買取を学ぶ | BUYMO ダイレクト' };
+export const metadata = { title: '買取を学ぶ' };
 
 export default async function LearnPage() {
   const supabase = await createClient();

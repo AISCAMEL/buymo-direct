@@ -9,7 +9,7 @@ import { isPlayableVideo } from '@/lib/video';
 import { PREMIUM_CATEGORY_LABEL, PREMIUM_CATEGORY_CLS, type PremiumResource } from '@/lib/premium';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '有料会員コンテンツ | BUYMO ダイレクト' };
+export const metadata = { title: '有料会員コンテンツ' };
 
 export default async function PremiumPage() {
   const access = await getViewerAccess();

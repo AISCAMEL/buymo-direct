@@ -15,10 +15,10 @@ type Params = Promise<{ key: string }>;
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { key } = await params;
-  if (!SKILL_LABEL[key]) return { title: 'サービス | BUYMO ダイレクト' };
+  if (!SKILL_LABEL[key]) return { title: 'サービス' };
   const name = SKILL_LABEL[key];
   return {
-    title: `${name}を依頼できるプロ・相場 | BUYMO ダイレクト`,
+    title: `${name}を依頼できるプロ・相場`,
     description: `${name}（${SKILL_CATEGORY[key] ?? 'その他'}）を BUYMO 加盟のプロに直接依頼。${skillContent(key).blurb}`,
   };
 }

@@ -8,7 +8,7 @@ import { CATALOG_MAKERS } from '@/lib/vehicle-catalog';
 import { requestAppraisal } from './actions';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '無料車両査定 | BUYMO' };
+export const metadata = { title: '無料車両査定' };
 
 const MAKERS = CATALOG_MAKERS;
 const CONDITIONS = [

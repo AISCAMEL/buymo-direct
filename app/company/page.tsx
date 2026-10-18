@@ -3,7 +3,7 @@ import { Building2, Mail, MapPin, ShieldCheck } from 'lucide-react';
 import { OPERATOR } from '@/lib/operator';
 
 export const metadata = {
-  title: '会社概要 | BUYMO ダイレクト',
+  title: '会社概要',
   description: `${OPERATOR.serviceName} を運営する ${OPERATOR.companyName} の会社概要。所在地・代表者・古物商許可・事業内容をご案内します。`,
 };
 

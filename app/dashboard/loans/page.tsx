@@ -8,7 +8,7 @@ import { LoanScoreSimulator } from '@/components/LoanScoreSimulator';
 import type { LoanApplication } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'ローン仮審査 | BUYMO' };
+export const metadata = { title: 'ローン仮審査' };
 
 const STATUS: Record<string, { label: string; cls: string; icon: React.ComponentType<{ className?: string }> }> = {
   submitted: { label: '受付済み', cls: 'bg-slate-200 text-slate-600', icon: Clock },

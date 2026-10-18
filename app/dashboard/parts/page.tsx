@@ -13,7 +13,7 @@ import {
 } from '@/lib/part-auction';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: 'パーツ出品・入札 | BUYMO ダイレクト' };
+export const metadata = { title: 'パーツ出品・入札' };
 
 function Card({ a, note }: { a: PartAuction; note?: string }) {
   const status = a.status as AuctionStatus;

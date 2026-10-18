@@ -7,7 +7,7 @@ import {
 import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '会員サービス | BUYMO' };
+export const metadata = { title: '会員サービス' };
 
 const SERVICES = [
   {

@@ -3,7 +3,7 @@ import { formatDate } from '@/lib/format';
 import type { Announcement } from '@/lib/types';
 
 export const revalidate = 300;
-export const metadata = { title: 'お知らせ | BUYMO ダイレクト' };
+export const metadata = { title: 'お知らせ' };
 
 const LEVEL_LABEL: Record<string, string> = { info: 'お知らせ', warning: '注意', important: '重要' };
 const LEVEL_CLS: Record<string, string> = {

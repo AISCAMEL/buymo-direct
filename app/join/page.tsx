@@ -8,7 +8,7 @@ import { faqPageJsonLd } from '@/lib/seo';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'プロ登録（無料） | BUYMO ダイレクト',
+  title: 'プロ登録（無料）',
   description:
     'まずは無料でプロ登録。整備・板金・コーティング・電装・陸送など異業種も登録・スキル提供できます。掲載料・初期費用0円、かかるのは成約したときの手数料だけ。',
 };

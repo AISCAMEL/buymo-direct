@@ -1,7 +1,7 @@
 import { LegalLayout, LegalSection } from '@/components/LegalLayout';
 import { OPERATOR } from '@/lib/operator';
 
-export const metadata = { title: 'プライバシーポリシー | BUYMO ダイレクト' };
+export const metadata = { title: 'プライバシーポリシー' };
 
 export default function PrivacyPage() {
   return (

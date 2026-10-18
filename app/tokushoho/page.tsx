@@ -5,7 +5,7 @@ import { OPERATOR } from '@/lib/operator';
 import { getPricingConfig } from '@/lib/settings';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '特定商取引法に基づく表記 | BUYMO ダイレクト' };
+export const metadata = { title: '特定商取引法に基づく表記' };
 
 function buildRows(escrowFeeLabel: string): { label: string; value: string }[] {
   return [

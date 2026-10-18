@@ -11,7 +11,7 @@ import { FranchiseApplyForm } from '@/components/FranchiseApplyForm';
 import { FRANCHISE_STATUS_LABEL, FRANCHISE_STATUS_CLS, PAYMENT_METHOD_LABEL } from '@/lib/franchise';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '買取加盟のご案内 | BUYMO ダイレクト' };
+export const metadata = { title: '買取加盟のご案内' };
 
 export default async function FranchisePage() {
   const supabase = await createClient();

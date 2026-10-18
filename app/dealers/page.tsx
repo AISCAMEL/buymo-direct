@@ -7,7 +7,7 @@ import { StarRating } from '@/components/StarRating';
 import { normalizeStyle, deriveStyle, isMobile, isShop, type ServiceStyle } from '@/lib/service-style';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '加盟店一覧 | BUYMO' };
+export const metadata = { title: '加盟店一覧' };
 
 export default async function DealersPage({
   searchParams,

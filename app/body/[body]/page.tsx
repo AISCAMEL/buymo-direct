@@ -52,7 +52,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
     description: `${desc}BUYMO ダイレクトで${body}の出品車両を探しましょう。手数料0円・エスクロー決済で安心。`,
     alternates: { canonical: `${BASE}/body/${encodedBody}` },
     openGraph: {
-      title: `${body}の中古車 | BUYMO ダイレクト`,
+      title: `${body}の中古車`,
       description: desc,
       url: `${BASE}/body/${encodedBody}`,
     },

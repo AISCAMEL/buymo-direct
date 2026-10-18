@@ -72,7 +72,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
     keywords: [d.maker, d.model, `${d.year}年`, '中古車', '個人売買', 'C2C', d.prefecture].filter(Boolean),
     alternates: { canonical: `/listings/${id}` },
     openGraph: {
-      title: `${d.title} | BUYMO ダイレクト`,
+      title: `${d.title}`,
       description: ogDesc,
       url: `/listings/${id}`,
       type: 'website',

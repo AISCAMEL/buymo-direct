@@ -5,7 +5,7 @@ import { formatYen } from '@/lib/format';
 import { subscribeWarranty } from './actions';
 
 export const dynamic = 'force-dynamic';
-export const metadata = { title: '延長保証 | BUYMO' };
+export const metadata = { title: '延長保証' };
 
 const PLANS = [
   {
