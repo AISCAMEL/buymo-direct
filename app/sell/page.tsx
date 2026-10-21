@@ -10,6 +10,11 @@ import { Suspense } from 'react';
 
 export const dynamic = 'force-dynamic';
 
+export const metadata = {
+  title: '車を売る｜無料査定・買取保証',
+  description: 'スマホで写真を撮るだけでAIが査定。買取保証つきで、売れ残りの不安なく中古車を売却できます。',
+};
+
 export default async function SellPage({
   searchParams,
 }: {

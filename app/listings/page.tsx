@@ -20,6 +20,11 @@ import type { ListingWithImages } from '@/lib/types';
 
 const PAGE_SIZE = 24;
 
+export const metadata = {
+  title: '中古車をさがす｜在庫一覧',
+  description: '買取保証つきの中古車をメーカー・車種・エリア・価格で検索。気になる車両は比較・お気に入り登録もできます。',
+};
+
 export const revalidate = 60; // ISR: rebuild listing index at most once per minute
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;

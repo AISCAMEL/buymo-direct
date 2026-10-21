@@ -5,6 +5,11 @@ import { LoanApplyForm } from '@/components/LoanApplyForm';
 
 export const dynamic = 'force-dynamic';
 
+export const metadata = {
+  title: 'マイカーローン審査申込',
+  description: '中古車購入のマイカーローンをオンラインで申込。月々のお支払いシミュレーションにも対応しています。',
+};
+
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 export default async function LoanApplyPage({ searchParams }: { searchParams: SearchParams }) {
