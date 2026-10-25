@@ -536,7 +536,7 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
               <PriceBreakdown
                 listingId={listing.id}
                 price={listing.price}
-                vehicle={{ year: listing.year, mileageKm: listing.mileage_km, maker: listing.maker, bodyType: listing.body_type }}
+                vehicle={{ year: listing.year, mileageKm: listing.mileage_km, maker: listing.maker, bodyType: listing.body_type, prefecture: listing.prefecture }}
                 pricing={pricing}
               />
             );

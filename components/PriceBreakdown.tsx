@@ -1,17 +1,27 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Receipt, Wallet, CreditCard, ArrowRight, PiggyBank } from 'lucide-react';
 import { computeQuote } from '@/lib/fees';
 import { LOAN_TERMS } from '@/lib/loan';
 import { LOAN_APR_FROM } from '@/lib/constants';
+import { estimateTransport, TRANSPORT_PREFS, CAR_SIZES } from '@/lib/transport';
 import { WarrantyPicker } from '@/components/WarrantyPicker';
 import { PRICING_DEFAULTS, type PricingConfig } from '@/lib/pricing-config';
 import { formatYen } from '@/lib/format';
 
-type Vehicle = { year?: number | null; mileageKm?: number | null; maker?: string | null; bodyType?: string | null };
+type Vehicle = { year?: number | null; mileageKm?: number | null; maker?: string | null; bodyType?: string | null; prefecture?: string | null };
 type PayMode = 'cash' | 'loan';
+
+/** 車体タイプから陸送のサイズ区分を推定。 */
+function sizeFromBody(bodyType?: string | null): string {
+  const b = bodyType ?? '';
+  if (b.includes('軽')) return 'kei';
+  if (b.includes('SUV') || b.includes('ミニバン') || b.includes('ワゴン')) return 'minivan';
+  if (b.includes('トラック') || b.includes('1BOX') || b.includes('バン')) return 'large';
+  return 'normal';
+}
 
 /** 商品詳細に置く「お支払い目安」。流れ：支払い方法 → オプション選択 → (ローンなら試算) → 総額 → ローン審査。 */
 export function PriceBreakdown({ price, vehicle, pricing = PRICING_DEFAULTS, listingId }: { price: number; vehicle: Vehicle; pricing?: PricingConfig; listingId?: string }) {
@@ -23,8 +33,19 @@ export function PriceBreakdown({ price, vehicle, pricing = PRICING_DEFAULTS, lis
   const [warrantyLabel, setWarrantyLabel] = useState('');
   const [delivery, setDelivery] = useState(false);
   const [transportFee, setTransportFee] = useState(0);
+  const [destPref, setDestPref] = useState('');
   const [garageProof, setGarageProof] = useState(true); // 車庫証明代行（既定で付ける）
   const onWarranty = useCallback((fee: number, label: string) => { setWarrantyFee(fee); setWarrantyLabel(label); }, []);
+
+  // 陸送：出品地域→お届け先・車サイズから自動見積。
+  const originPref = vehicle.prefecture ?? '';
+  const carSize = sizeFromBody(vehicle.bodyType);
+  const carSizeLabel = CAR_SIZES.find((s) => s.value === carSize)?.label ?? '';
+  const transportEst = delivery && originPref && destPref ? estimateTransport(originPref, destPref, carSize) : null;
+  const transportMid = transportEst ? Math.round(((transportEst.low + transportEst.high) / 2) / 1000) * 1000 : 0;
+  useEffect(() => {
+    if (transportMid > 0) setTransportFee(transportMid);
+  }, [transportMid]);
 
   // ローン入力
   const [downPayment, setDownPayment] = useState(0);
@@ -105,9 +126,28 @@ export function PriceBreakdown({ price, vehicle, pricing = PRICING_DEFAULTS, lis
         </div>
       </div>
       {delivery && (
-        <div className="mt-1.5">
-          <input type="number" min={0} step={1000} className="input h-9 text-sm" value={transportFee || ''} onChange={(e) => setTransportFee(Math.max(0, Number(e.target.value)))} placeholder="陸送費（円）例）44000" />
-          <p className="mt-0.5 text-[11px] text-slate-400"><Link href="/transport" target="_blank" className="text-accent-600 underline">陸送シミュレーション</Link>で金額を確認</p>
+        <div className="mt-1.5 space-y-1.5">
+          {originPref ? (
+            <label className="block">
+              <span className="mb-0.5 block text-[11px] font-bold text-slate-500">お届け先（都道府県）</span>
+              <select className="input" value={destPref} onChange={(e) => setDestPref(e.target.value)}>
+                <option value="">選択してください（{originPref}発・{carSizeLabel}）</option>
+                {TRANSPORT_PREFS.map((p) => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </label>
+          ) : (
+            <p className="text-[11px] text-amber-600">出品地域が未設定のため自動見積できません。金額を直接入力してください。</p>
+          )}
+          {transportEst && (
+            <p className="rounded-lg bg-slate-50 px-2 py-1.5 text-[11px] font-bold text-slate-600">
+              自動見積：{originPref}→{destPref}（{carSizeLabel}）<span className="text-navy-700"> 約{formatYen(transportEst.low)}〜{formatYen(transportEst.high)}</span>
+            </p>
+          )}
+          <label className="block">
+            <span className="mb-0.5 block text-[11px] font-bold text-slate-500">陸送費（自動・手入力でも可）</span>
+            <input type="number" min={0} step={1000} className="input" value={transportFee || ''} onChange={(e) => setTransportFee(Math.max(0, Number(e.target.value)))} placeholder="お届け先を選ぶと自動入力" />
+          </label>
+          <p className="text-[10px] text-slate-400">※ 目安（片道・キャリアカー）。<Link href="/transport" target="_blank" className="text-accent-600 underline">詳細シミュレーション</Link>。離島・特殊車両（ローダウン・旧車等）は変動します。</p>
         </div>
       )}
 
