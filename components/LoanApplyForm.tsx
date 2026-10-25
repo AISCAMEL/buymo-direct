@@ -15,6 +15,11 @@ const EMPLOYMENTS = ['正社員', '契約・派遣', '自営業', 'パート・�
 
 type Vehicle = { year?: number; mileageKm?: number; maker?: string; bodyType?: string };
 
+type Prefill = {
+  down?: number; term?: number; apr?: number; garage?: boolean;
+  warrantyFee?: number; warrantyLabel?: string; transportFee?: number; fromSim?: boolean;
+};
+
 export function LoanApplyForm({
   listingId,
   listingTitle,
@@ -22,6 +27,7 @@ export function LoanApplyForm({
   defaultEmail,
   vehicle = {},
   pricing = PRICING_DEFAULTS,
+  prefill,
 }: {
   listingId?: string;
   listingTitle?: string;
@@ -29,29 +35,37 @@ export function LoanApplyForm({
   defaultEmail: string;
   vehicle?: Vehicle;
   pricing?: PricingConfig;
+  prefill?: Prefill;
 }) {
+  const simMode = !!prefill?.fromSim;
   const [price, setPrice] = useState(defaultPrice);
-  const [down, setDown] = useState(0);
-  const [term, setTerm] = useState(60);
+  const [down, setDown] = useState(prefill?.down ?? 0);
+  const [term, setTerm] = useState(prefill?.term ?? 60);
+  const [apr, setApr] = useState(Math.max(LOAN_APR_FROM, prefill?.apr ?? LOAN_APR_FROM));
 
   // 名義変更は必須（自動加算）。軽/普通車で金額が変わる。
   const isKei = !!vehicle.bodyType && vehicle.bodyType.includes('軽');
   const transferPrice = isKei ? pricing.transferKei : pricing.transferNormal;
   // 選択オプション
-  const [warrantyFee, setWarrantyFee] = useState(0);   // 税込（WarrantyPickerから）
-  const [warrantyLabel, setWarrantyLabel] = useState('');
-  const [optTransport, setOptTransport] = useState(false);
-  const [transportFee, setTransportFee] = useState(0);
+  const [garageProof, setGarageProof] = useState(prefill?.garage ?? true);
+  const [warrantyFee, setWarrantyFee] = useState(prefill?.warrantyFee ?? 0);   // 税込（WarrantyPickerから）
+  const [warrantyLabel, setWarrantyLabel] = useState(prefill?.warrantyLabel ?? '');
+  const [editWarranty, setEditWarranty] = useState(!simMode); // シミュレーションから来たら最初は選び直さない
+  const [optTransport, setOptTransport] = useState((prefill?.transportFee ?? 0) > 0);
+  const [transportFee, setTransportFee] = useState(prefill?.transportFee ?? 0);
 
   const onWarranty = useCallback((fee: number, label: string) => { setWarrantyFee(fee); setWarrantyLabel(label); }, []);
 
+  const garageFee = garageProof ? pricing.garageProofFee : 0;
   // 名義変更（必須）＋選択OPの合計
   const optionsTotal =
     transferPrice +
+    garageFee +
     warrantyFee +
     (optTransport ? Math.max(0, transportFee) : 0);
 
-  const quote = computeQuote({ price, downPayment: down, optionsTotal, useLoan: true, aprPercent: LOAN_APR_FROM, months: term }, pricing);
+  const effApr = Math.max(LOAN_APR_FROM, apr);
+  const quote = computeQuote({ price, downPayment: down, optionsTotal, useLoan: true, aprPercent: effApr, months: term }, pricing);
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,11 +78,12 @@ export function LoanApplyForm({
       `エスクロー・取引手数料: ${formatYen(quote.escrow)}`,
       `名義変更代行${isKei ? '（軽）' : '（普通車）'}: ${formatYen(transferPrice)}`,
     ];
+    if (garageProof) lines.push(`車庫証明取得代行: ${formatYen(garageFee)}`);
     if (warrantyFee > 0) lines.push(`${warrantyLabel || '保証'}: ${formatYen(warrantyFee)}`);
     lines.push(optTransport ? `陸送でお届け: ${formatYen(Math.max(0, transportFee))}` : '受け取り: 自分で引き取り（陸送なし）');
     lines.push(`ローン手数料(3.6%): ${formatYen(quote.loanFee)}`);
     lines.push(`お支払い総額: ${formatYen(quote.grandTotal)}`);
-    lines.push(`頭金: ${formatYen(down)} / 融資額: ${formatYen(quote.financed)} / ${term}回 / 月々 ${formatYen(quote.monthly)}`);
+    lines.push(`頭金: ${formatYen(down)} / 融資額: ${formatYen(quote.financed)} / ${term}回 / 年率${effApr}% / 月々 ${formatYen(quote.monthly)}`);
     return lines.join('\n');
   }
 
@@ -126,7 +141,8 @@ export function LoanApplyForm({
       <div className="card space-y-3 p-5">
         <h2 className="font-bold">借入条件・試算</h2>
         {listingTitle && <p className="text-sm text-slate-500">対象車両：{listingTitle}</p>}
-        <div className="grid gap-3 sm:grid-cols-3">
+        {simMode && <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700">商品ページのシミュレーション内容を引き継ぎました。ここで調整もできます。</p>}
+        <div className="grid gap-3 sm:grid-cols-2">
           <label className="text-xs">
             <span className="font-bold text-slate-700">車両価格(円)</span>
             <input type="number" min={1} className="input mt-1" value={price || ''} onChange={(e) => setPrice(Math.max(0, Number(e.target.value)))} />
@@ -140,6 +156,12 @@ export function LoanApplyForm({
             <select className="input mt-1" value={term} onChange={(e) => setTerm(Number(e.target.value))}>
               {LOAN_TERMS.map((m) => <option key={m} value={m}>{m}回</option>)}
             </select>
+          </label>
+          <label className="text-xs">
+            <span className="font-bold text-slate-700">年率(%)<span className="ml-1 font-normal text-slate-400">最低{LOAN_APR_FROM}</span></span>
+            <input type="number" min={LOAN_APR_FROM} step={0.1} className="input mt-1" value={apr}
+              onChange={(e) => setApr(Number(e.target.value))}
+              onBlur={(e) => setApr(Math.max(LOAN_APR_FROM, Number(e.target.value) || LOAN_APR_FROM))} />
           </label>
         </div>
       </div>
@@ -162,7 +184,7 @@ export function LoanApplyForm({
           {/* 必須：名義変更 */}
           <div className="flex items-start justify-between rounded-xl border-2 border-emerald-200 bg-emerald-50 p-3">
             <div>
-              <p className="text-sm font-bold text-navy-800">名義変更代行{isKei ? '（軽自動車）' : '（普通車・車庫証明込み）'} <span className="ml-1 rounded-full bg-emerald-500 px-1.5 py-0.5 text-[10px] font-black text-white">必須</span></p>
+              <p className="text-sm font-bold text-navy-800">名義変更代行{isKei ? '（軽自動車）' : '（普通車）'} <span className="ml-1 rounded-full bg-emerald-500 px-1.5 py-0.5 text-[10px] font-black text-white">必須</span></p>
               <p className="mt-0.5 text-xs text-slate-500">名義変更をしないと税金・責任が売主に残るため、必ず行います</p>
             </div>
             <span className="text-sm font-bold text-accent-600">{formatYen(transferPrice)}</span>
@@ -171,8 +193,29 @@ export function LoanApplyForm({
 
         <h2 className="pt-2 font-bold">オプション（必要に応じて選択）</h2>
         <div className="space-y-2">
-          {/* 保証（料金表・自動計算） */}
-          <WarrantyPicker vehicle={vehicle} onChange={onWarranty} adjustPercent={pricing.warrantyAdjustPercent} />
+          {/* 車庫証明取得代行 */}
+          <label className={`flex cursor-pointer items-start gap-3 rounded-xl border-2 p-3 transition ${garageProof ? 'border-navy-400 bg-navy-50' : 'border-slate-200'}`}>
+            <input type="checkbox" className="mt-0.5 h-4 w-4 rounded border-slate-300" checked={garageProof} onChange={(e) => setGarageProof(e.target.checked)} />
+            <div className="flex-1">
+              <span className="text-sm font-bold text-navy-800">車庫証明取得代行</span>
+              <p className="mt-0.5 text-xs text-slate-500">陸運局・警察署での手続きを代行。ご自身で取得する場合は外せます。</p>
+            </div>
+            <span className="shrink-0 text-sm font-bold text-accent-600">{formatYen(pricing.garageProofFee)}</span>
+          </label>
+
+          {/* 保証（シミュレーションの内容を反映。変更も可） */}
+          {simMode && !editWarranty ? (
+            <div className="flex items-start justify-between rounded-xl border-2 border-slate-200 p-3">
+              <div>
+                <p className="text-sm font-bold text-navy-800">故障保証</p>
+                <p className="mt-0.5 text-xs text-slate-500">{warrantyFee > 0 ? (warrantyLabel || '保証あり') : 'なし（保証をつけない）'}</p>
+                <button type="button" onClick={() => { setEditWarranty(true); setWarrantyFee(0); setWarrantyLabel(''); }} className="mt-1 text-xs font-bold text-accent-600 hover:underline">保証を選び直す</button>
+              </div>
+              <span className="shrink-0 text-sm font-bold text-accent-600">{warrantyFee > 0 ? formatYen(warrantyFee) : '—'}</span>
+            </div>
+          ) : (
+            <WarrantyPicker vehicle={vehicle} onChange={onWarranty} adjustPercent={pricing.warrantyAdjustPercent} />
+          )}
 
           {/* 受け取り方法（引き取り or 陸送でお届け） */}
           <div className="rounded-xl border-2 border-slate-200 p-3">
@@ -210,6 +253,7 @@ export function LoanApplyForm({
           <div className="flex justify-between"><dt className="text-slate-500">車両価格</dt><dd className="font-bold">{formatYen(price)}</dd></div>
           <div className="flex justify-between"><dt className="text-slate-500 inline-flex items-center gap-1">エスクロー・取引手数料<Info className="h-3 w-3 text-slate-400" /></dt><dd className="font-bold">{formatYen(quote.escrow)}</dd></div>
           <div className="flex justify-between"><dt className="text-slate-500">名義変更代行{isKei ? '（軽）' : '（普通車）'}</dt><dd className="font-bold">{formatYen(transferPrice)}</dd></div>
+          {garageProof && <div className="flex justify-between"><dt className="text-slate-500">車庫証明取得代行</dt><dd className="font-bold">{formatYen(garageFee)}</dd></div>}
           {warrantyFee > 0 && <div className="flex justify-between"><dt className="text-slate-500">{warrantyLabel || '保証'}</dt><dd>{formatYen(warrantyFee)}</dd></div>}
           {optTransport && transportFee > 0 && <div className="flex justify-between"><dt className="text-slate-500">陸送でお届け</dt><dd>{formatYen(transportFee)}</dd></div>}
           <div className="flex justify-between"><dt className="text-slate-500">ローン手数料（3.6%）</dt><dd className="font-bold">{formatYen(quote.loanFee)}</dd></div>
@@ -219,7 +263,7 @@ export function LoanApplyForm({
           </div>
         </dl>
         <div className="mt-2 rounded-lg bg-navy-50 p-3 text-center">
-          <span className="text-xs text-slate-500">月々のお支払い（年率{LOAN_APR_FROM}%目安・頭金{formatYen(down)}）</span>
+          <span className="text-xs text-slate-500">月々のお支払い（年率{effApr}%目安・頭金{formatYen(down)}）</span>
           <p className="text-2xl font-black text-navy-600">{formatYen(quote.monthly)}<span className="text-sm">/月</span></p>
           <span className="text-xs text-slate-400">融資額 {formatYen(quote.financed)} / {term}回</span>
         </div>

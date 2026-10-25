@@ -14,7 +14,7 @@ type Vehicle = { year?: number | null; mileageKm?: number | null; maker?: string
 type PayMode = 'cash' | 'loan';
 
 /** 商品詳細に置く「お支払い目安」。流れ：支払い方法 → オプション選択 → (ローンなら試算) → 総額 → ローン審査。 */
-export function PriceBreakdown({ price, vehicle, pricing = PRICING_DEFAULTS }: { price: number; vehicle: Vehicle; pricing?: PricingConfig }) {
+export function PriceBreakdown({ price, vehicle, pricing = PRICING_DEFAULTS, listingId }: { price: number; vehicle: Vehicle; pricing?: PricingConfig; listingId?: string }) {
   const isKei = !!vehicle.bodyType && vehicle.bodyType.includes('軽');
   const transferPrice = isKei ? pricing.transferKei : pricing.transferNormal;
 
@@ -45,6 +45,18 @@ export function PriceBreakdown({ price, vehicle, pricing = PRICING_DEFAULTS }: {
   const buymoProc = transferPrice + garageFee;
   const marketProc = pricing.marketNameChange + (garageProof ? pricing.marketGarageProof : 0);
   const savings = Math.max(0, marketProc - buymoProc);
+
+  // ローン申込へシミュレーション値を引き継ぐURL。
+  const loanHref = `/loan/apply?${new URLSearchParams({
+    ...(listingId ? { listing: listingId } : {}),
+    down: String(downPayment),
+    term: String(months),
+    apr: String(effApr),
+    garage: garageProof ? '1' : '0',
+    wfee: String(warrantyFee),
+    wlabel: warrantyLabel,
+    tfee: String(delivery ? Math.max(0, transportFee) : 0),
+  }).toString()}`;
 
   return (
     <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
@@ -179,8 +191,8 @@ export function PriceBreakdown({ price, vehicle, pricing = PRICING_DEFAULTS }: {
       {useLoan && (
         <>
           <div className="mt-4"><StepLabel n={4} text="ローン審査にすすむ" /></div>
-          <Link href={`/loan/apply`} className="btn-accent w-full justify-center py-3 text-sm">
-            ローン仮審査にすすむ <ArrowRight className="h-4 w-4" />
+          <Link href={loanHref} className="btn-accent w-full justify-center py-3 text-sm">
+            この内容でローン仮審査にすすむ <ArrowRight className="h-4 w-4" />
           </Link>
           <p className="mt-1 text-center text-[11px] text-slate-400">仮審査は無料・最短で結果をご案内します。</p>
         </>

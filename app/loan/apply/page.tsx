@@ -15,6 +15,17 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 export default async function LoanApplyPage({ searchParams }: { searchParams: SearchParams }) {
   const sp = await searchParams;
   const listingId = typeof sp.listing === 'string' ? sp.listing : undefined;
+  const numParam = (v: unknown) => (typeof v === 'string' && v !== '' && Number.isFinite(Number(v)) ? Math.max(0, Number(v)) : undefined);
+  const prefill = {
+    down: numParam(sp.down),
+    term: numParam(sp.term),
+    apr: numParam(sp.apr),
+    garage: sp.garage === '1' ? true : sp.garage === '0' ? false : undefined,
+    warrantyFee: numParam(sp.wfee),
+    warrantyLabel: typeof sp.wlabel === 'string' ? sp.wlabel : undefined,
+    transportFee: numParam(sp.tfee),
+    fromSim: sp.down !== undefined || sp.term !== undefined,
+  };
 
   const supabase = await createClient();
   const {
@@ -55,6 +66,7 @@ export default async function LoanApplyPage({ searchParams }: { searchParams: Se
         defaultEmail={user!.email ?? ''}
         vehicle={vehicle}
         pricing={pricing}
+        prefill={prefill}
       />
     </div>
   );

@@ -534,6 +534,7 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
             // 個人出品：現金でのお支払い目安（エスクロー＋名義変更 等）
             return (
               <PriceBreakdown
+                listingId={listing.id}
                 price={listing.price}
                 vehicle={{ year: listing.year, mileageKm: listing.mileage_km, maker: listing.maker, bodyType: listing.body_type }}
                 pricing={pricing}
