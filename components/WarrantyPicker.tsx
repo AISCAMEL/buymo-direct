@@ -11,8 +11,8 @@ import {
   type DisplacementKey, type WarrantyPlan,
 } from '@/lib/warranty-domestic';
 import {
-  IMPORT_CLASSES, IMPORT_DISPLACEMENTS, importWarrantyFee, importAgeTier, importModelsForMaker,
-  isImportWarrantyIneligible,
+  IMPORT_CLASSES, IMPORT_DISPLACEMENTS, IMPORT_AGE_TIERS, importWarrantyFee, importAgeTier, importModelsForMaker,
+  isImportWarrantyIneligible, WARRANTY_IMPORT_CUSTOMER_MARKUP_EXCL,
   type ImportClass, type ImportDispKey,
 } from '@/lib/warranty-import';
 
@@ -50,12 +50,12 @@ export function WarrantyPicker({ vehicle, onChange, adjustPercent = 0 }: { vehic
       </label>
 
       <a
-        href="/warranty/hosho-naiyo.pdf"
+        href={isImport ? '/warranty/hosho-naiyo-import.pdf' : '/warranty/hosho-naiyo.pdf'}
         target="_blank"
         rel="noopener noreferrer"
         className="ml-7 mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-accent-600 hover:underline"
       >
-        <FileText className="h-3.5 w-3.5" /> 保証内容を見る（PDF）
+        <FileText className="h-3.5 w-3.5" /> 保証内容を見る（PDF{isImport ? '・輸入車' : ''}）
       </a>
 
       {enabled && (
@@ -152,7 +152,14 @@ function ImportPicker({ vehicle, onChange, adjustPercent = 0 }: { vehicle: Vehic
   }, [modelIdx, models]);
 
   const feeExcl = eligible ? importWarrantyFee(cls, disp, vehicle.year, vehicle.mileageKm, months) : null;
-  const feeIncl = feeExcl != null ? applyWarrantyAdjust(Math.round(feeExcl * TAX), adjustPercent) : null;
+  // 仕切り（税抜）＋ お客様上乗せ（税抜）→ 税込。
+  const customerExcl = feeExcl != null ? feeExcl + WARRANTY_IMPORT_CUSTOMER_MARKUP_EXCL : null;
+  const feeIncl = customerExcl != null ? applyWarrantyAdjust(Math.round(customerExcl * TAX), adjustPercent) : null;
+  // 登録年数・走行距離は車両情報から自動把握。
+  const nowY = new Date().getFullYear();
+  const age = vehicle.year ? nowY - vehicle.year : null;
+  const manKm = vehicle.mileageKm != null ? Math.round(vehicle.mileageKm / 1000) / 10 : null;
+  const tierLabel = IMPORT_AGE_TIERS.find((t) => t.key === importAgeTier(vehicle.year, vehicle.mileageKm))?.label ?? null;
 
   useEffect(() => {
     if (feeIncl) onChange(feeIncl, `保証 クラス${cls}・${months >= 12 ? '1年' : '6ヶ月'}`);
@@ -168,6 +175,11 @@ function ImportPicker({ vehicle, onChange, adjustPercent = 0 }: { vehicle: Vehic
         <span className="text-[11px] font-bold text-slate-500">料金（税込）</span>
         {feeIncl != null && <span className="text-sm font-bold text-accent-600">{formatYen(feeIncl)}</span>}
       </div>
+
+      {/* 登録年数・走行距離の自動判定 */}
+      <p className="rounded-lg bg-slate-50 px-2 py-1.5 text-[10px] font-bold text-slate-500">
+        自動判定：{age != null ? `登録${age}年相当` : '登録年 不明'}／{manKm != null ? `走行${manKm}万km` : '走行距離 不明'}{tierLabel ? `（${tierLabel}区分）` : ''}
+      </p>
 
       {models.length === 0 && (
         <p className="rounded-lg bg-slate-50 p-2 text-[11px] text-slate-500">
