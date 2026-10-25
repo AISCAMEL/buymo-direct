@@ -29,8 +29,8 @@ export const OPERATOR = {
   /** 公開サイトURL */
   url: 'https://buymo.me',
   /** 任意項目（未確定なら空） */
-  corporateNumber: '',
-  invoiceNumber: '',
+  corporateNumber: '9380003004349',
+  invoiceNumber: 'T9380003004349',
   established: '',
 } as const;
 
