@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { FileText } from 'lucide-react';
 import { formatYen } from '@/lib/format';
 import { applyWarrantyAdjust } from '@/lib/pricing-config';
 import { isImportMaker } from '@/lib/warranty';
 import {
   DISPLACEMENTS, WARRANTY_PLANS, domesticWarrantyFee, ageTier, kmTier,
+  WARRANTY_CUSTOMER_MARKUP_EXCL,
   type DisplacementKey, type WarrantyPlan,
 } from '@/lib/warranty-domestic';
 import {
@@ -47,6 +49,15 @@ export function WarrantyPicker({ vehicle, onChange, adjustPercent = 0 }: { vehic
         </div>
       </label>
 
+      <a
+        href="/warranty/hosho-naiyo.pdf"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="ml-7 mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-accent-600 hover:underline"
+      >
+        <FileText className="h-3.5 w-3.5" /> 保証内容を見る（PDF）
+      </a>
+
       {enabled && (
         <div className="mt-3 pl-7">
           {isImport
@@ -75,7 +86,9 @@ function DomesticPicker({ vehicle, isKei, onChange, adjustPercent = 0 }: { vehic
   const effDisp: DisplacementKey = isKei ? 'kei' : disp;
   const effMonths = plan === 'simple' ? 12 : months;
   const feeExcl = eligible ? domesticWarrantyFee(effDisp, vehicle.year, vehicle.mileageKm, plan, effMonths) : null;
-  const feeIncl = feeExcl != null ? applyWarrantyAdjust(Math.round(feeExcl * TAX), adjustPercent) : null;
+  // 仕切り（税抜）＋ お客様上乗せ（税抜）→ 税込。
+  const customerExcl = feeExcl != null ? feeExcl + WARRANTY_CUSTOMER_MARKUP_EXCL : null;
+  const feeIncl = customerExcl != null ? applyWarrantyAdjust(Math.round(customerExcl * TAX), adjustPercent) : null;
   const planLabel = WARRANTY_PLANS.find((p) => p.key === plan)?.label ?? '';
 
   useEffect(() => {
