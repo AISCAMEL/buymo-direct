@@ -91,6 +91,13 @@ function DomesticPicker({ vehicle, isKei, onChange, adjustPercent = 0 }: { vehic
   const feeIncl = customerExcl != null ? applyWarrantyAdjust(Math.round(customerExcl * TAX), adjustPercent) : null;
   const planLabel = WARRANTY_PLANS.find((p) => p.key === plan)?.label ?? '';
 
+  // 登録年数・走行距離は車両情報から自動把握（区分も自動判定）。
+  const nowY = new Date().getFullYear();
+  const age = vehicle.year ? nowY - vehicle.year : null;
+  const aTier = ageTier(vehicle.year);
+  const kTier = kmTier(vehicle.mileageKm);
+  const manKm = vehicle.mileageKm != null ? Math.round(vehicle.mileageKm / 1000) / 10 : null;
+
   useEffect(() => {
     if (feeIncl) onChange(feeIncl, `保証 ${planLabel}・${effMonths >= 24 ? '2年' : '1年'}`);
     else onChange(0, '');
@@ -104,6 +111,10 @@ function DomesticPicker({ vehicle, isKei, onChange, adjustPercent = 0 }: { vehic
         <span className="text-[11px] font-bold text-slate-500">料金（税込）</span>
         {feeIncl != null && <span className="text-sm font-bold text-accent-600">{formatYen(feeIncl)}</span>}
       </div>
+      {/* 登録年数・走行距離の自動判定 */}
+      <p className="rounded-lg bg-slate-50 px-2 py-1.5 text-[10px] font-bold text-slate-500">
+        自動判定：{age != null ? `登録${age}年相当（${aTier}年以内区分）` : '登録年 不明'}／{manKm != null ? `走行${manKm}万km（${kTier}万km以内区分）` : '走行距離 不明'}
+      </p>
       {/* 排気量 */}
       <Field label="排気量">
         {DISPLACEMENTS.map((d) => (
