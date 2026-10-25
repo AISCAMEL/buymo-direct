@@ -32,7 +32,8 @@ export function PriceBreakdown({ price, vehicle, pricing = PRICING_DEFAULTS }: {
 
   const optionsTotal = transferPrice + warrantyFee + (delivery ? Math.max(0, transportFee) : 0);
   const useLoan = payMode === 'loan';
-  const quote = computeQuote({ price, downPayment: useLoan ? downPayment : 0, optionsTotal, useLoan, aprPercent: apr, months }, pricing);
+  const effApr = Math.max(LOAN_APR_FROM, apr); // 年率は最低基準(提携ローン%)未満にしない
+  const quote = computeQuote({ price, downPayment: useLoan ? downPayment : 0, optionsTotal, useLoan, aprPercent: effApr, months }, pricing);
 
   const totalPayments = useLoan ? downPayment + quote.monthly * months : quote.grandTotal; // お客様が払う総額
   const interest = useLoan ? Math.max(0, quote.monthly * months - quote.financed) : 0;
@@ -87,21 +88,25 @@ export function PriceBreakdown({ price, vehicle, pricing = PRICING_DEFAULTS }: {
         <>
           <div className="mt-4"><StepLabel n={3} text="ローンを試算する" /></div>
           <div className="overflow-hidden rounded-xl border-2 border-navy-500">
-            <div className="grid grid-cols-3 gap-2 p-3">
+            <div className="space-y-2 p-3">
               <label className="block">
-                <span className="mb-0.5 block text-[10px] font-bold text-slate-500">頭金（円）</span>
-                <input type="number" min={0} step={10000} className="input h-9 text-sm" value={downPayment || ''} onChange={(e) => setDownPayment(Math.max(0, Number(e.target.value)))} placeholder="0" />
+                <span className="mb-0.5 block text-[11px] font-bold text-slate-500">頭金（円）</span>
+                <input type="number" inputMode="numeric" min={0} step={10000} className="input" value={downPayment || ''} onChange={(e) => setDownPayment(Math.max(0, Number(e.target.value)))} placeholder="0" />
               </label>
-              <label className="block">
-                <span className="mb-0.5 block text-[10px] font-bold text-slate-500">支払回数</span>
-                <select className="input h-9 text-sm" value={months} onChange={(e) => setMonths(Number(e.target.value))}>
-                  {LOAN_TERMS.map((t) => <option key={t} value={t}>{t}回</option>)}
-                </select>
-              </label>
-              <label className="block">
-                <span className="mb-0.5 block text-[10px] font-bold text-slate-500">年率（%）</span>
-                <input type="number" min={0} step={0.1} className="input h-9 text-sm" value={apr} onChange={(e) => setApr(Math.max(0, Number(e.target.value)))} />
-              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <label className="block">
+                  <span className="mb-0.5 block text-[11px] font-bold text-slate-500">支払回数</span>
+                  <select className="input" value={months} onChange={(e) => setMonths(Number(e.target.value))}>
+                    {LOAN_TERMS.map((t) => <option key={t} value={t}>{t}回</option>)}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="mb-0.5 block text-[11px] font-bold text-slate-500">年率（%）<span className="font-normal text-slate-400">最低{LOAN_APR_FROM}</span></span>
+                  <input type="number" inputMode="decimal" min={LOAN_APR_FROM} step={0.1} className="input" value={apr}
+                    onChange={(e) => setApr(Number(e.target.value))}
+                    onBlur={(e) => setApr(Math.max(LOAN_APR_FROM, Number(e.target.value) || LOAN_APR_FROM))} />
+                </label>
+              </div>
             </div>
             <div className="bg-navy-700 p-3 text-white">
               <div className="flex items-end justify-between">
