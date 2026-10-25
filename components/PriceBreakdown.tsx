@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import Link from 'next/link';
-import { Receipt, Wallet, CreditCard, ArrowRight } from 'lucide-react';
+import { Receipt, Wallet, CreditCard, ArrowRight, PiggyBank } from 'lucide-react';
 import { computeQuote } from '@/lib/fees';
 import { LOAN_TERMS } from '@/lib/loan';
 import { LOAN_APR_FROM } from '@/lib/constants';
@@ -23,6 +23,7 @@ export function PriceBreakdown({ price, vehicle, pricing = PRICING_DEFAULTS }: {
   const [warrantyLabel, setWarrantyLabel] = useState('');
   const [delivery, setDelivery] = useState(false);
   const [transportFee, setTransportFee] = useState(0);
+  const [garageProof, setGarageProof] = useState(true); // 車庫証明代行（既定で付ける）
   const onWarranty = useCallback((fee: number, label: string) => { setWarrantyFee(fee); setWarrantyLabel(label); }, []);
 
   // ローン入力
@@ -30,7 +31,8 @@ export function PriceBreakdown({ price, vehicle, pricing = PRICING_DEFAULTS }: {
   const [months, setMonths] = useState(60);
   const [apr, setApr] = useState(LOAN_APR_FROM);
 
-  const optionsTotal = transferPrice + warrantyFee + (delivery ? Math.max(0, transportFee) : 0);
+  const garageFee = garageProof ? pricing.garageProofFee : 0;
+  const optionsTotal = transferPrice + garageFee + warrantyFee + (delivery ? Math.max(0, transportFee) : 0);
   const useLoan = payMode === 'loan';
   const effApr = Math.max(LOAN_APR_FROM, apr); // 年率は最低基準(提携ローン%)未満にしない
   const quote = computeQuote({ price, downPayment: useLoan ? downPayment : 0, optionsTotal, useLoan, aprPercent: effApr, months }, pricing);
@@ -38,6 +40,11 @@ export function PriceBreakdown({ price, vehicle, pricing = PRICING_DEFAULTS }: {
   const totalPayments = useLoan ? downPayment + quote.monthly * months : quote.grandTotal; // お客様が払う総額
   const interest = useLoan ? Math.max(0, quote.monthly * months - quote.financed) : 0;
   const years = Math.round(months / 12 * 10) / 10;
+
+  // おトク比較（手続き代行＝名義変更＋車庫証明）。市場相場＝P2P大手の公表料金ベース（当社調べ）。
+  const buymoProc = transferPrice + garageFee;
+  const marketProc = pricing.marketNameChange + (garageProof ? pricing.marketGarageProof : 0);
+  const savings = Math.max(0, marketProc - buymoProc);
 
   return (
     <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
@@ -62,6 +69,15 @@ export function PriceBreakdown({ price, vehicle, pricing = PRICING_DEFAULTS }: {
       {/* STEP2 オプション（現金・ローン共通で選択可） */}
       <div className="mt-4"><StepLabel n={2} text="オプションをえらぶ" /></div>
       <WarrantyPicker vehicle={vehicle} onChange={onWarranty} adjustPercent={pricing.warrantyAdjustPercent} />
+      {/* 車庫証明取得代行 */}
+      <label className={`mt-2 flex cursor-pointer items-start gap-3 rounded-xl border-2 p-3 transition ${garageProof ? 'border-navy-400 bg-navy-50' : 'border-slate-200'}`}>
+        <input type="checkbox" className="mt-0.5 h-4 w-4 rounded border-slate-300" checked={garageProof} onChange={(e) => setGarageProof(e.target.checked)} />
+        <div className="flex-1">
+          <span className="text-sm font-bold text-navy-800">車庫証明取得代行</span>
+          <p className="mt-0.5 text-[11px] text-slate-400">陸運局・警察署での手続きを代行。ご自身で取得する場合は外せます。</p>
+        </div>
+        <span className="shrink-0 text-sm font-bold text-accent-600">{formatYen(pricing.garageProofFee)}</span>
+      </label>
       {/* 受け取り方法 */}
       <div className="mt-2">
         <span className="mb-1 block text-[11px] font-bold text-slate-500">受け取り方法</span>
@@ -130,6 +146,7 @@ export function PriceBreakdown({ price, vehicle, pricing = PRICING_DEFAULTS }: {
         <div className="flex justify-between"><dt className="text-slate-500">車両価格</dt><dd className="font-bold">{formatYen(price)}</dd></div>
         <div className="flex justify-between"><dt className="text-slate-500">エスクロー・取引手数料</dt><dd>{formatYen(quote.escrow)}</dd></div>
         <div className="flex justify-between"><dt className="text-slate-500">名義変更代行{isKei ? '（軽）' : '（普通車）'}</dt><dd>{formatYen(transferPrice)}</dd></div>
+        {garageProof && <div className="flex justify-between"><dt className="text-slate-500">車庫証明取得代行</dt><dd>{formatYen(garageFee)}</dd></div>}
         {warrantyFee > 0 && <div className="flex justify-between"><dt className="text-slate-500">{warrantyLabel || '保証'}</dt><dd>{formatYen(warrantyFee)}</dd></div>}
         {delivery && transportFee > 0 && <div className="flex justify-between"><dt className="text-slate-500">陸送でお届け</dt><dd>{formatYen(transportFee)}</dd></div>}
         {useLoan && quote.loanFee > 0 && <div className="flex justify-between"><dt className="text-slate-500">ローン事務手数料</dt><dd>{formatYen(quote.loanFee)}</dd></div>}
@@ -138,6 +155,25 @@ export function PriceBreakdown({ price, vehicle, pricing = PRICING_DEFAULTS }: {
           <dd className="font-black text-navy-800">{formatYen(quote.grandTotal)}</dd>
         </div>
       </dl>
+
+      {/* おトク比較（手続き代行：名義変更＋車庫証明） */}
+      {savings > 0 && (
+        <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+          <div className="flex items-center gap-1.5 text-xs font-black text-emerald-700">
+            <PiggyBank className="h-4 w-4" /> 手続き代行の おトク比較
+          </div>
+          <dl className="mt-2 space-y-0.5 text-sm">
+            <div className="flex justify-between"><dt className="text-slate-500">市場相場（同種サービス大手）</dt><dd className="text-slate-400 line-through tabular-nums">{formatYen(marketProc)}</dd></div>
+            <div className="flex justify-between"><dt className="font-bold text-slate-700">BUYMO</dt><dd className="font-bold tabular-nums">{formatYen(buymoProc)}</dd></div>
+          </dl>
+          <div className="mt-2 rounded-lg bg-emerald-600 px-3 py-2 text-center text-white">
+            <span className="text-sm font-bold">約 </span>
+            <span className="text-xl font-black tabular-nums">{formatYen(savings)}</span>
+            <span className="text-sm font-bold"> おトク</span>
+          </div>
+          <p className="mt-1 text-[10px] leading-relaxed text-slate-400">※ 名義変更{garageProof ? '＋車庫証明' : ''}代行の比較。市場相場は個人間売買サービス大手の公表料金より（当社調べ・2026年時点）。実際の費用は車両・地域により異なります。</p>
+        </div>
+      )}
 
       {/* STEP4 ローン審査（最後） */}
       {useLoan && (

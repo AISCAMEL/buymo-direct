@@ -10,6 +10,11 @@ export interface PricingConfig {
   // 名義変更代行
   transferNormal: number; // 普通車
   transferKei: number;    // 軽自動車
+  // 車庫証明取得代行（任意オプション）
+  garageProofFee: number;
+  // 市場相場の参考額（おトク比較表示用。P2P大手の公表料金ベース・当社調べ）
+  marketNameChange: number;  // 名義変更の市場相場参考
+  marketGarageProof: number; // 車庫証明の市場相場参考
   // 保証（計算式）
   warrantyBaseKei: number;
   warrantyBaseDomestic: number;
@@ -51,8 +56,11 @@ export const PRICING_DEFAULTS: PricingConfig = {
   ],
   loanRate: 0.036,
   loanFeeMin: 11000,
-  transferNormal: 19800,
-  transferKei: 13200,
+  transferNormal: 49800,
+  transferKei: 39800,
+  garageProofFee: 18000,
+  marketNameChange: 55000,
+  marketGarageProof: 20000,
   warrantyBaseKei: 12000,
   warrantyBaseDomestic: 18000,
   warrantyBaseImport: 40000,
@@ -112,6 +120,9 @@ export function mergePricingConfig(partial?: Partial<PricingConfig> | null): Pri
     loanFeeMin: num(partial.loanFeeMin, PRICING_DEFAULTS.loanFeeMin),
     transferNormal: num(partial.transferNormal, PRICING_DEFAULTS.transferNormal),
     transferKei: num(partial.transferKei, PRICING_DEFAULTS.transferKei),
+    garageProofFee: num(partial.garageProofFee, PRICING_DEFAULTS.garageProofFee),
+    marketNameChange: num(partial.marketNameChange, PRICING_DEFAULTS.marketNameChange),
+    marketGarageProof: num(partial.marketGarageProof, PRICING_DEFAULTS.marketGarageProof),
     warrantyBaseKei: num(partial.warrantyBaseKei, PRICING_DEFAULTS.warrantyBaseKei),
     warrantyBaseDomestic: num(partial.warrantyBaseDomestic, PRICING_DEFAULTS.warrantyBaseDomestic),
     warrantyBaseImport: num(partial.warrantyBaseImport, PRICING_DEFAULTS.warrantyBaseImport),
