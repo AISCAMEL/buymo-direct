@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import Link from 'next/link';
-import { Receipt, Wallet, CreditCard } from 'lucide-react';
+import { Receipt, Wallet, CreditCard, ArrowRight } from 'lucide-react';
 import { computeQuote } from '@/lib/fees';
 import { LOAN_TERMS } from '@/lib/loan';
 import { LOAN_APR_FROM } from '@/lib/constants';
@@ -13,7 +13,7 @@ import { formatYen } from '@/lib/format';
 type Vehicle = { year?: number | null; mileageKm?: number | null; maker?: string | null; bodyType?: string | null };
 type PayMode = 'cash' | 'loan';
 
-/** 商品詳細に置く「お支払い目安」。現金／ローンを切り替えて、ローン時は総合シミュレーションを表示。 */
+/** 商品詳細に置く「お支払い目安」。流れ：支払い方法 → オプション選択 → (ローンなら試算) → 総額 → ローン審査。 */
 export function PriceBreakdown({ price, vehicle, pricing = PRICING_DEFAULTS }: { price: number; vehicle: Vehicle; pricing?: PricingConfig }) {
   const isKei = !!vehicle.bodyType && vehicle.bodyType.includes('軽');
   const transferPrice = isKei ? pricing.transferKei : pricing.transferNormal;
@@ -45,7 +45,8 @@ export function PriceBreakdown({ price, vehicle, pricing = PRICING_DEFAULTS }: {
         <h3 className="text-sm font-black text-navy-800">お支払い目安</h3>
       </div>
 
-      {/* 支払い方法 */}
+      {/* STEP1 支払い方法 */}
+      <StepLabel n={1} text="支払い方法をえらぶ" />
       <div className="grid grid-cols-2 gap-1.5">
         <button type="button" onClick={() => setPayMode('cash')}
           className={`flex items-center justify-center gap-1.5 rounded-lg border-2 px-2 py-2 text-xs font-bold transition ${payMode === 'cash' ? 'border-navy-500 bg-navy-50 text-navy-700' : 'border-slate-200 text-slate-500'}`}>
@@ -57,13 +58,36 @@ export function PriceBreakdown({ price, vehicle, pricing = PRICING_DEFAULTS }: {
         </button>
       </div>
 
-      {/* ローン試算（切替直後にまとめて表示） */}
+      {/* STEP2 オプション（現金・ローン共通で選択可） */}
+      <div className="mt-4"><StepLabel n={2} text="オプションをえらぶ" /></div>
+      <WarrantyPicker vehicle={vehicle} onChange={onWarranty} adjustPercent={pricing.warrantyAdjustPercent} />
+      {/* 受け取り方法 */}
+      <div className="mt-2">
+        <span className="mb-1 block text-[11px] font-bold text-slate-500">受け取り方法</span>
+        <div className="grid grid-cols-2 gap-1.5">
+          <button type="button" onClick={() => setDelivery(false)}
+            className={`rounded-lg border-2 px-2 py-1.5 text-xs font-bold transition ${!delivery ? 'border-navy-500 bg-navy-50 text-navy-700' : 'border-slate-200 text-slate-500'}`}>
+            引き取り<span className="ml-1 text-emerald-600">無料</span>
+          </button>
+          <button type="button" onClick={() => setDelivery(true)}
+            className={`rounded-lg border-2 px-2 py-1.5 text-xs font-bold transition ${delivery ? 'border-navy-500 bg-navy-50 text-navy-700' : 'border-slate-200 text-slate-500'}`}>
+            陸送でお届け
+          </button>
+        </div>
+      </div>
+      {delivery && (
+        <div className="mt-1.5">
+          <input type="number" min={0} step={1000} className="input h-9 text-sm" value={transportFee || ''} onChange={(e) => setTransportFee(Math.max(0, Number(e.target.value)))} placeholder="陸送費（円）例）44000" />
+          <p className="mt-0.5 text-[11px] text-slate-400"><Link href="/transport" target="_blank" className="text-accent-600 underline">陸送シミュレーション</Link>で金額を確認</p>
+        </div>
+      )}
+
+      {/* STEP3 ローン試算（ローン選択時のみ・オプションの後） */}
       {useLoan && (
-        <div className="mt-3 overflow-hidden rounded-xl border-2 border-navy-500">
-          <div className="bg-navy-500 px-3 py-1.5 text-xs font-black text-white">ローン試算（毎月のお支払い）</div>
-          <div className="space-y-3 p-3">
-            {/* 条件 */}
-            <div className="grid grid-cols-3 gap-2">
+        <>
+          <div className="mt-4"><StepLabel n={3} text="ローンを試算する" /></div>
+          <div className="overflow-hidden rounded-xl border-2 border-navy-500">
+            <div className="grid grid-cols-3 gap-2 p-3">
               <label className="block">
                 <span className="mb-0.5 block text-[10px] font-bold text-slate-500">頭金（円）</span>
                 <input type="number" min={0} step={10000} className="input h-9 text-sm" value={downPayment || ''} onChange={(e) => setDownPayment(Math.max(0, Number(e.target.value)))} placeholder="0" />
@@ -79,8 +103,7 @@ export function PriceBreakdown({ price, vehicle, pricing = PRICING_DEFAULTS }: {
                 <input type="number" min={0} step={0.1} className="input h-9 text-sm" value={apr} onChange={(e) => setApr(Math.max(0, Number(e.target.value)))} />
               </label>
             </div>
-            {/* 結果 */}
-            <div className="rounded-lg bg-navy-700 p-3 text-white">
+            <div className="bg-navy-700 p-3 text-white">
               <div className="flex items-end justify-between">
                 <span className="text-xs font-bold text-navy-200">月々のお支払い</span>
                 <span className="text-3xl font-black tabular-nums">{formatYen(quote.monthly)}<span className="ml-0.5 text-sm font-bold">/月</span></span>
@@ -92,37 +115,13 @@ export function PriceBreakdown({ price, vehicle, pricing = PRICING_DEFAULTS }: {
                 <div className="flex justify-between"><dt className="text-navy-200">借入額（分割元金）</dt><dd className="tabular-nums">{formatYen(quote.financed)}</dd></div>
               </dl>
             </div>
-            <p className="text-[10px] text-slate-400">※ 年率は目安（提携ローン {LOAN_APR_FROM}%〜）。実際の金利・回数は審査で決定します。下の保証・受け取り方法を変えると試算に反映されます。</p>
-            <Link href={`/loan/apply`} className="btn-outline w-full justify-center py-2.5 text-sm">ローン仮審査にすすむ</Link>
           </div>
-        </div>
+          <p className="mt-1 text-[10px] text-slate-400">※ 年率は目安（提携ローン {LOAN_APR_FROM}%〜）。実際の金利・回数は審査で決定します。</p>
+        </>
       )}
 
-      {/* 保証（料金表・自動計算） */}
-      <div className="mt-3">
-        <WarrantyPicker vehicle={vehicle} onChange={onWarranty} adjustPercent={pricing.warrantyAdjustPercent} />
-      </div>
-
-      {/* 受け取り方法 */}
-      <div className="mt-2 grid grid-cols-2 gap-1.5">
-        <button type="button" onClick={() => setDelivery(false)}
-          className={`rounded-lg border-2 px-2 py-1.5 text-xs font-bold transition ${!delivery ? 'border-navy-500 bg-navy-50 text-navy-700' : 'border-slate-200 text-slate-500'}`}>
-          引き取り<span className="ml-1 text-emerald-600">無料</span>
-        </button>
-        <button type="button" onClick={() => setDelivery(true)}
-          className={`rounded-lg border-2 px-2 py-1.5 text-xs font-bold transition ${delivery ? 'border-navy-500 bg-navy-50 text-navy-700' : 'border-slate-200 text-slate-500'}`}>
-          陸送でお届け
-        </button>
-      </div>
-      {delivery && (
-        <div className="mt-1.5">
-          <input type="number" min={0} step={1000} className="input h-9 text-sm" value={transportFee || ''} onChange={(e) => setTransportFee(Math.max(0, Number(e.target.value)))} placeholder="陸送費（円）例）44000" />
-          <p className="mt-0.5 text-[11px] text-slate-400"><Link href="/transport" target="_blank" className="text-accent-600 underline">陸送シミュレーション</Link>で金額を確認</p>
-        </div>
-      )}
-
-      {/* 内訳 */}
-      <dl className="mt-3 space-y-1 border-t border-slate-100 pt-3 text-sm">
+      {/* 内訳（総額） */}
+      <dl className="mt-4 space-y-1 border-t border-slate-100 pt-3 text-sm">
         <div className="flex justify-between"><dt className="text-slate-500">車両価格</dt><dd className="font-bold">{formatYen(price)}</dd></div>
         <div className="flex justify-between"><dt className="text-slate-500">エスクロー・取引手数料</dt><dd>{formatYen(quote.escrow)}</dd></div>
         <div className="flex justify-between"><dt className="text-slate-500">名義変更代行{isKei ? '（軽）' : '（普通車）'}</dt><dd>{formatYen(transferPrice)}</dd></div>
@@ -135,10 +134,30 @@ export function PriceBreakdown({ price, vehicle, pricing = PRICING_DEFAULTS }: {
         </div>
       </dl>
 
-      <p className="mt-2 text-[11px] text-slate-400">
+      {/* STEP4 ローン審査（最後） */}
+      {useLoan && (
+        <>
+          <div className="mt-4"><StepLabel n={4} text="ローン審査にすすむ" /></div>
+          <Link href={`/loan/apply`} className="btn-accent w-full justify-center py-3 text-sm">
+            ローン仮審査にすすむ <ArrowRight className="h-4 w-4" />
+          </Link>
+          <p className="mt-1 text-center text-[11px] text-slate-400">仮審査は無料・最短で結果をご案内します。</p>
+        </>
+      )}
+
+      <p className="mt-3 text-[11px] text-slate-400">
         ※ エスクローと名義変更代行は安全のため必ず含まれます。保証は料金表（税込）で自動計算。金額は目安です。
-        {!useLoan && ' ローンご希望の方は上の「ローンで購入」をお選びください。'}
       </p>
+    </div>
+  );
+}
+
+/** ステップ番号つきの小見出し。 */
+function StepLabel({ n, text }: { n: number; text: string }) {
+  return (
+    <div className="mb-1.5 flex items-center gap-1.5">
+      <span className="flex h-4 w-4 items-center justify-center rounded-full bg-navy-500 text-[10px] font-black text-white">{n}</span>
+      <span className="text-[11px] font-black text-navy-700">{text}</span>
     </div>
   );
 }
