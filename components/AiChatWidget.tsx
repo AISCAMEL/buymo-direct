@@ -51,6 +51,7 @@ export function AiChatWidget() {
   // 会員＝ページ文脈、加盟店＝加盟店サポート文脈
   const ctx = audience === 'dealer' ? DEALER_CTX : pageCtx;
   const [open, setOpen] = useState(false);
+  const [nudge, setNudge] = useState(false); // チャットに気づいてもらう誘導（吹き出し）
   const [messages, setMessages] = useState<Message[]>([{ role: 'assistant', content: ctx.greeting }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -61,6 +62,25 @@ export function AiChatWidget() {
   useEffect(() => {
     if (open) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, open]);
+
+  // 初回だけ、少ししてから吹き出しで「チャットできます」と誘導（セッション中1回）。
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try { if (sessionStorage.getItem('buymo_chat_hinted') === '1') return; } catch {}
+    const t = setTimeout(() => {
+      setNudge(true);
+      try { sessionStorage.setItem('buymo_chat_hinted', '1'); } catch {}
+    }, 3500);
+    return () => clearTimeout(t);
+  }, []);
+
+  // 開いたら誘導は消す。表示後は一定時間で自動で引っ込める。
+  useEffect(() => { if (open) setNudge(false); }, [open]);
+  useEffect(() => {
+    if (!nudge) return;
+    const t = setTimeout(() => setNudge(false), 12000);
+    return () => clearTimeout(t);
+  }, [nudge]);
 
   // パスが変わったら既定の対象も追従（まだ会話していないときのみ）
   useEffect(() => {
@@ -234,9 +254,29 @@ export function AiChatWidget() {
         </div>
       )}
 
-      <button onClick={() => setOpen((v) => !v)} className="flex h-14 w-14 items-center justify-center rounded-full bg-navy-600 text-white shadow-lg transition hover:bg-navy-700" aria-label="サポートチャットを開く">
-        {open ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
-      </button>
+      {/* 気づいてもらう吹き出し（初回のみ） */}
+      {!open && nudge && (
+        <div className="mb-2 flex max-w-[16rem] items-start gap-1.5 rounded-2xl bg-navy-700 px-3 py-2 text-xs font-bold text-white shadow-lg motion-safe:animate-[fadeInUp_0.3s_ease-out]">
+          <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gold-300" />
+          <span>ご質問はチャットへ！AIがすぐ回答します🚗</span>
+          <button onClick={() => setNudge(false)} className="-mr-1 ml-0.5 shrink-0 text-white/70 hover:text-white" aria-label="閉じる"><X className="h-3 w-3" /></button>
+        </div>
+      )}
+
+      <div className="relative">
+        {/* 波紋（閉じている間だけ・控えめ） */}
+        {!open && <span className="pointer-events-none absolute inset-0 rounded-full bg-navy-500/40 motion-safe:animate-ping" />}
+        <button
+          onClick={() => { setOpen((v) => !v); setNudge(false); }}
+          className={`relative flex h-14 w-14 items-center justify-center rounded-full bg-navy-600 text-white shadow-lg transition hover:bg-navy-700 ${!open && nudge ? 'motion-safe:animate-bounce' : ''}`}
+          aria-label="サポートチャットを開く"
+        >
+          {open ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
+          {!open && (
+            <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-gold-500 text-[9px] font-black text-navy-900 ring-2 ring-white">1</span>
+          )}
+        </button>
+      </div>
     </div>
   );
 }
