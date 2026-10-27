@@ -32,6 +32,14 @@ export const metadata: Metadata = {
   },
   description:
     '買取保証つきで安心の中古車ダイレクト販売。オンラインで完結、全国どこでもOK。出品・検索・チャット・エスクロー決済・名義変更まで、BUYMOがまるごとサポート。',
+  keywords: [
+    '中古車', '中古車 個人売買', '中古車 ダイレクト販売', '中古車 オンライン',
+    '車 個人間売買', '車 買取', '買取保証', 'エスクロー 中古車', '名義変更代行',
+    '車庫証明 代行', '陸送 車', '故障保証 中古車', 'マイカーローン', '中古車 通販',
+    'BUYMO', 'バイモ', '合同会社アイズ',
+  ],
+  applicationName: 'BUYMO ダイレクト',
+  authors: [{ name: '合同会社アイズ' }],
   openGraph: {
     siteName: 'BUYMO ダイレクト',
     locale: 'ja_JP',
@@ -60,6 +68,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     .limit(1)
     .maybeSingle();
   const ann = banner as Pick<Announcement, 'id' | 'title' | 'level'> | null;
+  const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? OPERATOR.url;
 
   const {
     data: { user: navUser },
@@ -73,16 +82,41 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               '@context': 'https://schema.org',
-              '@type': 'Organization',
-              name: OPERATOR.brandName,
-              legalName: OPERATOR.companyName,
-              url: process.env.NEXT_PUBLIC_SITE_URL ?? OPERATOR.url,
-              email: OPERATOR.email,
-              address: {
-                '@type': 'PostalAddress',
-                addressCountry: 'JP',
-                streetAddress: OPERATOR.address,
-              },
+              '@graph': [
+                {
+                  '@type': ['Organization', 'AutoDealer'],
+                  '@id': `${SITE}/#org`,
+                  name: OPERATOR.brandName,
+                  legalName: OPERATOR.companyName,
+                  url: SITE,
+                  email: OPERATOR.email,
+                  areaServed: 'JP',
+                  knowsAbout: [
+                    '中古車', '中古車の個人間売買', 'ダイレクト販売', 'エスクロー決済',
+                    '名義変更代行', '車庫証明代行', '陸送', '故障保証', 'マイカーローン', '買取保証',
+                  ],
+                  address: {
+                    '@type': 'PostalAddress',
+                    addressCountry: 'JP',
+                    addressRegion: '福島県',
+                    streetAddress: OPERATOR.address,
+                  },
+                  founder: { '@type': 'Person', name: OPERATOR.representative },
+                },
+                {
+                  '@type': 'WebSite',
+                  '@id': `${SITE}/#website`,
+                  url: SITE,
+                  name: OPERATOR.serviceName,
+                  inLanguage: 'ja-JP',
+                  publisher: { '@id': `${SITE}/#org` },
+                  potentialAction: {
+                    '@type': 'SearchAction',
+                    target: { '@type': 'EntryPoint', urlTemplate: `${SITE}/listings?q={search_term_string}` },
+                    'query-input': 'required name=search_term_string',
+                  },
+                },
+              ],
             }),
           }}
         />
