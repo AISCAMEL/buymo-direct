@@ -3,6 +3,8 @@ import { notFound, redirect } from 'next/navigation';
 import { MessageSquare, XCircle, CheckCircle2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { EscrowStepper } from '@/components/EscrowStepper';
+import { EscrowTimeline } from '@/components/EscrowTimeline';
+import { loadEscrowEvents } from '@/lib/escrow-events-data';
 import { ReviewForm } from '@/components/ReviewForm';
 import { PaymentPanel } from '@/components/PaymentPanel';
 import { advanceEscrow, cancelEscrow, setTitleOption, setInstallment } from '@/app/escrow/actions';
@@ -48,6 +50,7 @@ export default async function EscrowPage({ params }: { params: Params }) {
     .eq('reviewer_id', user.id)
     .maybeSingle();
   const role: 'buyer' | 'seller' = isBuyer ? 'buyer' : 'seller';
+  const events = await loadEscrowEvents(id);
   const status = tx.status as EscrowStatus;
   const couponDiscount = (tx as any).coupon_discount ?? 0;
   const loanFeeAmt = (tx as any).loan_fee ?? 0;
@@ -111,6 +114,11 @@ export default async function EscrowPage({ params }: { params: Params }) {
           <EscrowStepper status={status} />
         )}
       </div>
+
+      {/* 進捗タイムライン（報告＋通知） */}
+      {status !== 'cancelled' && (
+        <EscrowTimeline escrowId={id} events={events} viewerRole={role} />
+      )}
 
       {/* 金額内訳 */}
       <div className="card p-6">

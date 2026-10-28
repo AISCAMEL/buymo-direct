@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server';
 import { formatYen, formatDate } from '@/lib/format';
 import { adminSetEscrowStatus, adminConfirmBankTransfer } from '@/app/admin/actions';
 import { ESCROW_STEPS } from '@/lib/constants';
+import { EscrowTimeline } from '@/components/EscrowTimeline';
+import { loadEscrowEventsBulk } from '@/lib/escrow-events-data';
 import type { EscrowTransaction } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -19,6 +21,7 @@ export default async function AdminEscrowPage() {
     .select('*, listings(title, maker, model), buyer:profiles!escrow_transactions_buyer_id_fkey(display_name), seller:profiles!escrow_transactions_seller_id_fkey(display_name)')
     .order('updated_at', { ascending: false });
   const txs = (data ?? []) as (EscrowTransaction & any)[];
+  const eventsByTx = await loadEscrowEventsBulk(txs.map((t) => t.id));
 
   return (
     <div>
@@ -73,6 +76,16 @@ export default async function AdminEscrowPage() {
                     )}
                   </div>
                 </div>
+                {t.status !== 'cancelled' && (
+                  <details className="mt-3 border-t border-slate-100 pt-3">
+                    <summary className="cursor-pointer text-xs font-bold text-navy-600">
+                      進捗タイムライン / 本部から報告する（{(eventsByTx[t.id] ?? []).length}）
+                    </summary>
+                    <div className="mt-2">
+                      <EscrowTimeline escrowId={t.id} events={eventsByTx[t.id] ?? []} viewerRole="admin" />
+                    </div>
+                  </details>
+                )}
               </li>
             );
           })}

@@ -392,6 +392,26 @@ export async function sendDealerInviteEmail(
   await sendEmail({ to, subject: `【BUYMO】${opts.dealerName} からスタッフ招待が届きました`, html });
 }
 
+/** エスクロー進捗タイムラインの報告メール（相手当事者・本部向け）。 */
+export async function sendEscrowProgressEmail(
+  to: string,
+  opts: { listingTitle: string; title: string; message: string; escrowId: string },
+): Promise<void> {
+  if (!to) return;
+  const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const url = `${_siteUrl()}/escrow/${opts.escrowId}`;
+  const html = _wrap(`
+    ${_h('取引の進捗が更新されました')}
+    ${_p(`${_strong(esc(opts.listingTitle))} の取引で、新しい進捗の報告がありました。`)}
+    <div style="margin:12px 0;padding:12px 16px;background:#f0fdfa;border-left:3px solid #0F766E;border-radius:4px">
+      <p style="margin:0;font-weight:700;color:#0C3A44;font-size:15px">${esc(opts.title)}</p>
+      ${opts.message ? `<p style="margin:6px 0 0;color:#475569;font-size:14px;line-height:1.6">${esc(opts.message)}</p>` : ''}
+    </div>
+    ${_btn('取引を確認する', url)}
+  `);
+  await sendEmail({ to, subject: `【BUYMO】取引の進捗：${opts.title} — ${opts.listingTitle}`, html });
+}
+
 /** 廃車買取 進捗更新メール（申込者向け）。 */
 export async function sendHaishaStatusEmail(
   to: string,
