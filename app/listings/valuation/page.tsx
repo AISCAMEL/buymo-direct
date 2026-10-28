@@ -10,6 +10,7 @@ import { OPTION_KEYS } from '@/lib/valuation';
 import { formatYen } from '@/lib/format';
 import { PriceGuide } from '@/components/PriceGuide';
 import { PriceHistogram, PriceTrend } from '@/components/ValuationCharts';
+import { AppraisalFlowSteps } from '@/components/AppraisalFlowSteps';
 
 type PhotoDiagnosis = { condition: 'excellent' | 'good' | 'fair'; accidentHint: 'none' | 'possible' | 'unknown'; summary: string; points: string[] };
 
@@ -172,6 +173,8 @@ export default function ValuationPage() {
           <p className="text-sm text-slate-500">登録不要。売るなら、もっと高く。</p>
         </div>
       </div>
+
+      <AppraisalFlowSteps current="ai" />
 
       <div className="card p-5">
         <p className="mb-4 text-sm text-slate-500">

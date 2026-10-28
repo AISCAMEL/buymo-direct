@@ -10,6 +10,7 @@ import { APPRAISAL_PHOTO_GUIDE, appraisalGuideIndex } from '@/lib/photo-guide';
 import { DIAGNOSIS_QUESTIONS, SELL_TIMING_OPTIONS } from '@/lib/appraisal-diagnosis';
 import { MILEAGE_OPTIONS, mileageToOption } from '@/lib/mileage';
 import { formatYen } from '@/lib/format';
+import { AppraisalFlowSteps } from '@/components/AppraisalFlowSteps';
 
 const CURRENT_YEAR = new Date().getFullYear();
 function wareki(year: number): string {
@@ -213,7 +214,12 @@ export function AppraisalDetailForm() {
         </p>
       </div>
 
-      {/* ステッパー */}
+      {/* 査定〜売却までの全体の流れ（現在地＝正式査定） */}
+      <div className="mb-5">
+        <AppraisalFlowSteps current="formal" />
+      </div>
+
+      {/* 入力ステッパー */}
       <div className="mb-5 flex items-center gap-1">
         {STEPS.map((label, i) => {
           const n = i + 1;
