@@ -63,6 +63,15 @@ export function AiChatWidget() {
     if (open) bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, open]);
 
+  // メール等からの ?chat=open（または chat=1）でチャットを自動的に開く
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const v = new URLSearchParams(window.location.search).get('chat');
+      if (v === 'open' || v === '1') setOpen(true);
+    } catch {}
+  }, []);
+
   // 初回だけ、少ししてから吹き出しで「チャットできます」と誘導（セッション中1回）。
   useEffect(() => {
     if (typeof window === 'undefined') return;

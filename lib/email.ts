@@ -72,7 +72,7 @@ function _wrap(content: string): string {
 <div style="background:#0C3A44;padding:20px 24px">
   <span style="color:white;font-weight:900;font-size:18px">BUYMO ダイレクト</span>
 </div>
-<div style="padding:24px">${content}</div>
+<div style="padding:24px">${content}${_supportFooter()}</div>
 <div style="background:#f1f5f9;padding:16px 24px;text-align:center;font-size:12px;color:#94a3b8">
   © 2026 BUYMO ダイレクト — <a href="https://buymo.me" style="color:#64748b">buymo.me</a>
 </div>
@@ -97,6 +97,24 @@ function _strong(text: string): string {
 
 function _siteUrl(): string {
   return process.env.NEXT_PUBLIC_SITE_URL ?? 'https://buymo.me';
+}
+
+/** お問い合わせ導線ブロック（チャット・問い合わせ・FAQ・マイページ）。
+ *  受信者がすぐ相談・行動できるよう、顧客向けメールの末尾に差し込む。 */
+function _supportFooter(): string {
+  const site = _siteUrl();
+  const link = (href: string, label: string) =>
+    `<a href="${href}" style="display:inline-block;margin:6px 6px 0 0;padding:10px 14px;background:#ffffff;border:1px solid #cbd5e1;border-radius:8px;color:#0C3A44;text-decoration:none;font-size:13px;font-weight:700;white-space:nowrap">${label}</a>`;
+  return `<div style="margin-top:24px;padding:16px 18px;background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px">
+    <p style="margin:0 0 4px;font-weight:700;color:#0C3A44;font-size:14px">お困りですか？ いつでもご相談ください</p>
+    <p style="margin:0 0 6px;color:#475569;font-size:13px;line-height:1.6">AIチャットなら24時間すぐに回答。ログインすれば取引状況・お見積りもすぐ確認できます。</p>
+    <div>
+      ${link(`${site}/?chat=open`, '💬 チャットで相談')}
+      ${link(`${site}/contact`, '✉️ お問い合わせ')}
+      ${link(`${site}/questions`, '❓ よくある質問')}
+      ${link(`${site}/dashboard`, '👤 マイページ')}
+    </div>
+  </div>`;
 }
 
 // ── 取引メールテンプレート ─────────────────────────────────────────────
@@ -246,7 +264,8 @@ export async function sendContactEmails(opts: {
       `${_p(`${_strong(esc(opts.name))} 様`)}
        ${_p('この度はBUYMOへお問い合わせいただきありがとうございます。以下の内容で受け付けました。通常2営業日以内にご返信いたします。')}
        ${bodyLines}
-       ${_p('お急ぎの場合は「無料査定」やアプリ内チャットもご利用ください。')}`,
+       ${_p('お急ぎの場合は下のボタンからチャット・お問い合わせもご利用ください。')}
+       ${_supportFooter()}`,
     ),
   });
 }
@@ -288,7 +307,8 @@ export async function sendFormalAppraisalEmails(opts: {
         '正式査定のお申し込みを受け付けました',
         `${_p(`${_strong(esc(opts.name))} 様`)}
          ${_p('この度は正式査定をお申し込みいただきありがとうございます。担当より確定金額のご案内をご連絡いたします（通常1〜2営業日）。')}
-         ${body}`,
+         ${body}
+         ${_supportFooter()}`,
       ),
     });
   }
