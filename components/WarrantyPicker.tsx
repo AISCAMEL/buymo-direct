@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { FileText } from 'lucide-react';
+import { FileText, Info } from 'lucide-react';
 import { formatYen } from '@/lib/format';
 import { applyWarrantyAdjust } from '@/lib/pricing-config';
 import { isImportMaker } from '@/lib/warranty';
@@ -60,6 +60,15 @@ export function WarrantyPicker({ vehicle, onChange, adjustPercent = 0 }: { vehic
 
       {enabled && (
         <div className="mt-3 pl-7">
+          <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-[11px] leading-relaxed text-amber-800">
+            <p className="flex items-center gap-1 font-bold"><Info className="h-3.5 w-3.5" /> ご利用の条件・流れ</p>
+            <p className="mt-1">
+              故障保証のご利用には、<span className="font-bold">ディーラーまたは認定工場での12ヶ月点検／24ヶ月点検（法定点検）の点検記録簿</span>が必要です。あらかじめご用意ください。
+            </p>
+            <p className="mt-1">
+              お車の<span className="font-bold">名義変更後に、お客様ご自身で点検を受けていただき</span>、その点検記録簿をもとに保証をご登録いただく流れとなります。
+            </p>
+          </div>
           {isImport
             ? <ImportPicker vehicle={vehicle} onChange={onChange} adjustPercent={adjustPercent} />
             : <DomesticPicker vehicle={vehicle} isKei={isKei} onChange={onChange} adjustPercent={adjustPercent} />}
