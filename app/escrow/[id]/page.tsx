@@ -8,7 +8,7 @@ import { loadEscrowEvents } from '@/lib/escrow-events-data';
 import { ReviewForm } from '@/components/ReviewForm';
 import { PaymentPanel } from '@/components/PaymentPanel';
 import { advanceEscrow, cancelEscrow, setTitleOption, setInstallment } from '@/app/escrow/actions';
-import { TITLE_OPTIONS, PAYMENT_METHODS, INSTALLMENT_FEE } from '@/lib/constants';
+import { TITLE_OPTIONS, PAYMENT_METHODS, INSTALLMENT_FEE, isCardAllowed, CARD_MAX_YEN } from '@/lib/constants';
 import { isSquareConfigured } from '@/lib/square';
 import { getBankAccount } from '@/lib/settings';
 import { formatYen } from '@/lib/format';
@@ -259,8 +259,8 @@ export default async function EscrowPage({ params }: { params: Params }) {
         </div>
       )}
 
-      {/* Square Checkout Link による支払い（ホスト型決済ページへリダイレクト） */}
-      {status === 'initiated' && isBuyer && nextCharge > 0 && (
+      {/* Square Checkout Link による支払い（カード上限内のときのみ表示） */}
+      {status === 'initiated' && isBuyer && nextCharge > 0 && isCardAllowed(nextCharge) && (
         <div className="card p-6">
           <h2 className="mb-2 font-bold">Squareの決済ページで支払う</h2>
           <p className="mb-4 text-sm text-slate-500">
@@ -268,6 +268,18 @@ export default async function EscrowPage({ params }: { params: Params }) {
             {payStage && <span className="ml-1 font-bold text-navy-600">（{payStage}）</span>}
           </p>
           <EscrowPayButton escrowId={id} amount={nextCharge} note={payStage || undefined} />
+        </div>
+      )}
+
+      {/* カード上限超：事前に「カード不可・銀行振込へ」を明示 */}
+      {status === 'initiated' && isBuyer && nextCharge > 0 && !isCardAllowed(nextCharge) && (
+        <div className="card p-6">
+          <h2 className="mb-1 font-bold">お支払いについて</h2>
+          <p className="text-sm text-slate-600">
+            お支払い総額が <span className="font-bold">{formatYen(CARD_MAX_YEN)}</span> を超えるため、クレジットカード決済はご利用いただけません。
+            <span className="font-bold text-navy-700">銀行振込</span>でのお支払いをお選びください（上の「お支払い方法」）。
+          </p>
+          <p className="mt-1 text-xs text-slate-400">※ カード決済は {formatYen(CARD_MAX_YEN)} までのお取引が対象です。</p>
         </div>
       )}
 
