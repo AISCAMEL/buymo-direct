@@ -159,7 +159,8 @@ export default async function EscrowPage({ params }: { params: Params }) {
         </dl>
       </div>
 
-      {/* 売り手の受取内訳（当事者双方に表示：透明性のため） */}
+      {/* 売り手の受取内訳（売主本人のみ表示。買主には出さない） */}
+      {!isBuyer && (
       <div className="card p-6">
         <h2 className="mb-3 font-bold">売主の受取内訳</h2>
         <dl className="space-y-2 text-sm">
@@ -173,13 +174,15 @@ export default async function EscrowPage({ params }: { params: Params }) {
           </div>
         </dl>
       </div>
+      )}
 
-      {/* 名義変更オプション（取引開始前・買主のみ変更可） */}
+      {/* 名義変更オプション（取引開始前・買主のみ変更可）。
+          エスクローでは当事者間の自己手続きは不可のため「自分で手続き」は除外し代行のみ。 */}
       {status === 'initiated' && isBuyer && (
         <div className="card p-6">
           <h2 className="mb-3 font-bold">名義変更オプション</h2>
           <div className="space-y-2">
-            {(Object.keys(TITLE_OPTIONS) as TitleTransferOption[]).map((key) => {
+            {(Object.keys(TITLE_OPTIONS) as TitleTransferOption[]).filter((key) => key !== 'self').map((key) => {
               const opt = TITLE_OPTIONS[key];
               const selected = tx.title_option === key;
               const setBound = setTitleOption.bind(null, id, key);

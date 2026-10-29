@@ -171,11 +171,15 @@ export async function setTitleOption(escrowId: string, option: TitleTransferOpti
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
+  // エスクローでは当事者間の自己手続き（self）は不可。代行のみ許可。
+  if (option === 'self') redirect(`/escrow/${escrowId}`);
+
   await supabase
     .from('escrow_transactions')
     .update({ title_option: option, title_fee: TITLE_OPTIONS[option].fee })
     .eq('id', escrowId)
-    .eq('status', 'initiated');
+    .eq('status', 'initiated')
+    .eq('buyer_id', user.id);
   revalidatePath(`/escrow/${escrowId}`);
 }
 

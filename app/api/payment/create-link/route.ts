@@ -24,15 +24,24 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'escrow_id is required' }, { status: 400 });
   }
 
-  const { data: tx } = await supabase
+  // select('*') で取得（一部の任意カラムが未定義でもクエリ全体が失敗しないように）。
+  const { data: txRow, error: txErr } = await supabase
     .from('escrow_transactions')
-    .select('id, amount, escrow_fee, title_fee, installment_fee, installment_count, installment_1_paid, installment_2_paid, coupon_discount, buyer_id, status, listing_id')
+    .select('*')
     .eq('id', escrow_id)
     .maybeSingle();
 
-  if (!tx) {
+  if (txErr) {
+    return NextResponse.json({ error: '取引情報の取得に失敗しました' }, { status: 500 });
+  }
+  if (!txRow) {
     return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
   }
+  const tx = txRow as {
+    amount: number; escrow_fee: number; title_fee: number; installment_fee?: number;
+    installment_count?: number; installment_1_paid?: boolean; installment_2_paid?: boolean;
+    coupon_discount?: number; buyer_id: string; status: string; listing_id: string;
+  };
   if (tx.buyer_id !== user.id) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
