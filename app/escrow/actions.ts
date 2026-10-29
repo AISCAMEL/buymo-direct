@@ -9,6 +9,7 @@ import { escrowFee, loanFee } from '@/lib/fees';
 import { getPricingConfig } from '@/lib/settings';
 import { createSquarePayment, refundByStoredIds, isSquareConfigured } from '@/lib/square';
 import type { EscrowStatus, TitleTransferOption, PaymentMethod } from '@/lib/types';
+import { ESCROW_NEXT_ACTION } from '@/lib/escrow';
 import { dispatchWebhook } from '@/lib/dealer';
 import { recordDealerSaleCommission } from '@/lib/sale-commission';
 import { sendPaymentConfirmedEmail, sendDealCompletedEmail, sendEmail, opsEmail, emailLayout } from '@/lib/email';
@@ -80,11 +81,25 @@ export async function advanceEscrow(escrowId: string) {
     .maybeSingle();
   if (!tx || (tx.buyer_id !== user.id && tx.seller_id !== user.id)) redirect('/messages');
 
+  // この段階で操作してよい役割か（UI だけでなくサーバー側でも厳格に検証）。
+  // 例：title_transfer → completed（＝売主への送金確定）は買主のみ実行可。
+  const callerRole: 'buyer' | 'seller' = tx.buyer_id === user.id ? 'buyer' : 'seller';
+  const na = ESCROW_NEXT_ACTION[tx.status as EscrowStatus];
+  if (!na || (na.by !== 'both' && na.by !== callerRole)) {
+    redirect(`/escrow/${escrowId}`);
+  }
+
   const idx = ORDER.indexOf(tx.status as EscrowStatus);
   if (idx < 0 || idx >= ORDER.length - 1) return;
   const next = ORDER[idx + 1];
 
-  await supabase.from('escrow_transactions').update({ status: next }).eq('id', escrowId);
+  // 競合防止：現在ステータスのときだけ遷移（二重送信・同時操作対策）。
+  const { error: upErr } = await supabase
+    .from('escrow_transactions')
+    .update({ status: next })
+    .eq('id', escrowId)
+    .eq('status', tx.status);
+  if (upErr) redirect(`/escrow/${escrowId}`);
   if (next === 'completed') {
     await supabase.from('listings').update({ status: 'sold' }).eq('id', tx.listing_id);
 
