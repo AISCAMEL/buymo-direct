@@ -6,6 +6,7 @@ export type EscrowEventRole = 'admin' | 'seller' | 'buyer';
 export type EscrowEventType =
   | 'payment_reported'          // 買主：振込しました（入金報告）
   | 'transport_arranged'        // 売主：陸送を手配しました
+  | 'docs_submitted'            // 買主/売主：書類を提出・発送しました
   | 'docs_ready'                // 本部：必要書類が揃いました
   | 'eta'                       // 到着予定のご案内
   | 'vehicle_received'          // 買主：車両を受け取りました
@@ -28,7 +29,8 @@ export type EscrowEventDef = {
 export const ESCROW_EVENT_DEFS: EscrowEventDef[] = [
   { type: 'payment_reported',          emoji: '💴', label: '入金（振込）を報告', roles: ['buyer', 'admin'], notify: '買主より入金（お振込み）の報告がありました。' },
   { type: 'transport_arranged',        emoji: '🚚', label: '陸送を手配しました', roles: ['seller', 'admin'], hasEta: true, notify: '車両の陸送が手配されました。' },
-  { type: 'docs_ready',                emoji: '📄', label: '必要書類が揃いました', roles: ['admin'], notify: '名義変更に必要な書類が揃いました。' },
+  { type: 'docs_submitted',            emoji: '📤', label: '書類を提出・発送しました', roles: ['buyer', 'seller', 'admin'], notify: '必要書類が提出・発送されました。到着までしばらくお待ちください。' },
+  { type: 'docs_ready',                emoji: '📄', label: '必要書類が届き、揃いました', roles: ['admin'], notify: '必要書類がすべて届き、揃いました。名義変更の準備が整いました。' },
   { type: 'eta',                       emoji: '🗓', label: '到着予定のご案内', roles: ['admin', 'seller'], hasEta: true, notify: '車両の到着予定をご案内します。' },
   { type: 'vehicle_received',          emoji: '📦', label: '車両を受け取りました', roles: ['buyer', 'admin'], notify: '買主が車両を受け取りました。' },
   { type: 'title_completed',           emoji: '📝', label: '名義変更が完了しました', roles: ['admin'], notify: '名義変更の手続きが完了しました。' },
