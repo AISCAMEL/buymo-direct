@@ -62,6 +62,7 @@ const GROUPS: Group[] = [
       { href: '/admin/audit', label: '監査ログ' },
       { href: '/admin/settings', label: '料金設定' },
       { href: '/admin/seed', label: 'デモデータ' },
+      { href: '/admin/test-flow', label: '購入フローテスト' },
     ],
   },
 ];
