@@ -10,6 +10,7 @@ import { getPricingConfig } from '@/lib/settings';
 import { createSquarePayment, refundByStoredIds, isSquareConfigured } from '@/lib/square';
 import type { EscrowStatus, TitleTransferOption, PaymentMethod } from '@/lib/types';
 import { ESCROW_NEXT_ACTION } from '@/lib/escrow';
+import { judgeTitleTransfer } from '@/lib/title-region';
 import { dispatchWebhook } from '@/lib/dealer';
 import { recordDealerSaleCommission } from '@/lib/sale-commission';
 import { sendPaymentConfirmedEmail, sendDealCompletedEmail, sendEmail, opsEmail, emailLayout } from '@/lib/email';
@@ -26,7 +27,7 @@ export async function createEscrow(conversationId: string) {
 
   const { data: conv } = await supabase
     .from('conversations')
-    .select('id, listing_id, buyer_id, seller_id, listings(price, status)')
+    .select('id, listing_id, buyer_id, seller_id, listings(price, status, prefecture)')
     .eq('id', conversationId)
     .maybeSingle();
   if (!conv || conv.buyer_id !== user.id) redirect(`/messages/${conversationId}`);
@@ -43,6 +44,9 @@ export async function createEscrow(conversationId: string) {
   // エスクロー手数料は規定の段階制。売り手・買い手の両方に同額を課す（履歴として両方を記録）。
   const cfg = await getPricingConfig();
   const fee = escrowFee(price, cfg);
+  // 名義変更オプションを地域から自動判定（買主の登録地域 × 車両の所在地）。
+  const { data: buyerProf } = await supabase.from('profiles').select('prefecture').eq('id', conv.buyer_id).maybeSingle();
+  const judged = judgeTitleTransfer((buyerProf as { prefecture?: string | null } | null)?.prefecture, (conv as any).listings?.prefecture);
   const { data: created, error } = await supabase
     .from('escrow_transactions')
     .insert({
@@ -53,8 +57,8 @@ export async function createEscrow(conversationId: string) {
       amount: price,
       escrow_fee: fee,
       seller_fee: fee,
-      title_option: 'standard',
-      title_fee: TITLE_OPTIONS.standard.fee,
+      title_option: judged.option,
+      title_fee: TITLE_OPTIONS[judged.option].fee,
       status: 'initiated',
     })
     .select('id')
@@ -184,6 +188,45 @@ export async function setTitleOption(escrowId: string, option: TitleTransferOpti
   revalidatePath(`/escrow/${escrowId}`);
 }
 
+/** 追加オプション（保証・車庫証明など）を取引に保存（取引開始前・買主のみ）。
+ *  金額は買主が選んだ内容。合計を options_total に保存し、支払総額へ反映する。
+ *  不正値を避けるため key/label/amount をサニタイズ・上限クランプする。 */
+const ALLOWED_OPTION_KEYS = new Set(['warranty', 'garage']);
+export async function setEscrowOptions(
+  escrowId: string,
+  options: { key: string; label: string; amount: number }[],
+): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: '未ログインです' };
+
+  const clean = (Array.isArray(options) ? options : [])
+    .filter((o) => o && ALLOWED_OPTION_KEYS.has(o.key))
+    .map((o) => ({
+      key: String(o.key).slice(0, 24),
+      label: String(o.label ?? '').slice(0, 60),
+      // 0〜200万円の整数にクランプ（異常値ガード）
+      amount: Math.max(0, Math.min(2_000_000, Math.round(Number(o.amount) || 0))),
+    }))
+    .filter((o) => o.amount > 0);
+
+  const optionsTotal = clean.reduce((s, o) => s + o.amount, 0);
+
+  const { error } = await supabase
+    .from('escrow_transactions')
+    .update({ options: clean, options_total: optionsTotal })
+    .eq('id', escrowId)
+    .eq('status', 'initiated')
+    .eq('buyer_id', user.id);
+  if (error) {
+    return { error: 'オプションの保存に失敗しました（設定が未完了の可能性）。運営にお問い合わせください。' };
+  }
+  revalidatePath(`/escrow/${escrowId}`);
+  return { error: null };
+}
+
 /** 支払い方法を選択（取引開始前のみ）。クレジット時は分割手数料(4.2%)を再計算。 */
 export async function setPaymentMethod(escrowId: string, method: PaymentMethod) {
   const supabase = await createClient();
@@ -261,9 +304,10 @@ export async function confirmEscrowPayment(
   } = await supabase.auth.getUser();
   if (!user) return { error: '未ログインです' };
 
+  // select('*') で取得（options_total 等の任意カラムが未追加でもクエリ全体が失敗しないように）
   const { data: tx } = await supabase
     .from('escrow_transactions')
-    .select('id, amount, escrow_fee, title_fee, payment_method, installment_count, buyer_id, seller_id, listing_id, status')
+    .select('*')
     .eq('id', escrowId)
     .maybeSingle();
   if (!tx || tx.buyer_id !== user.id) return { error: '権限がありません' };
@@ -286,9 +330,12 @@ export async function confirmEscrowPayment(
   const method = tx.payment_method as PaymentMethod | null;
   if (!method) return { error: '支払い方法を選択してください' };
 
-  const subtotal = tx.amount + tx.escrow_fee + tx.title_fee;
+  const optionsTotal = (tx as { options_total?: number }).options_total ?? 0;
+  const subtotal = tx.amount + tx.escrow_fee + tx.title_fee + optionsTotal;
   const installment = installmentFeeFor(method, subtotal);
-  const total = subtotal + installment;
+  // クーポン割引を課金額へ反映（カード/銀行振込とも整合させる）
+  const discount = couponDiscount ?? 0;
+  const total = Math.max(0, subtotal + installment - discount);
 
   // 高額取引はカード不可（Square の高率手数料を避け、銀行振込へ誘導）
   if (method === 'credit' && !isCardAllowed(subtotal)) {
@@ -315,7 +362,6 @@ export async function confirmEscrowPayment(
     // 開発時のみ Square 未設定でデモ（無課金）続行
   }
 
-  const discount = couponDiscount ?? 0;
   // 銀行振込は即時 funds_held にせず、振込申告を記録して運営の入金確認を待つ
   const isBankTransfer = method === 'cash';
   const { error } = await supabase

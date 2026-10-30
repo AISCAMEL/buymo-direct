@@ -5,17 +5,19 @@ import { createClient } from '@/lib/supabase/server';
 import { EscrowStepper } from '@/components/EscrowStepper';
 import { EscrowTimeline } from '@/components/EscrowTimeline';
 import { EscrowConsentGate } from '@/components/EscrowConsentGate';
+import { EscrowOptionsPicker } from '@/components/EscrowOptionsPicker';
 import { loadEscrowEvents } from '@/lib/escrow-events-data';
 import { ReviewForm } from '@/components/ReviewForm';
 import { PaymentPanel } from '@/components/PaymentPanel';
 import { advanceEscrow, cancelEscrow, setTitleOption, setInstallment } from '@/app/escrow/actions';
 import { TITLE_OPTIONS, PAYMENT_METHODS, INSTALLMENT_FEE, isCardAllowed, CARD_MAX_YEN } from '@/lib/constants';
 import { isSquareConfigured } from '@/lib/square';
-import { getBankAccount } from '@/lib/settings';
+import { getBankAccount, getPricingConfig } from '@/lib/settings';
 import { formatYen } from '@/lib/format';
 import { EscrowPayButton } from '@/components/EscrowPayButton';
 import { ExportButton } from '@/components/ExportButton';
 import { ESCROW_NEXT_ACTION as NEXT_ACTION } from '@/lib/escrow';
+import { judgeTitleTransfer } from '@/lib/title-region';
 import type { EscrowStatus, TitleTransferOption, PaymentMethod } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -33,7 +35,7 @@ export default async function EscrowPage({ params }: { params: Params }) {
 
   const { data: tx } = await supabase
     .from('escrow_transactions')
-    .select('*, listings(id, title, maker, model), conversation_id, buyer:profiles!escrow_transactions_buyer_id_fkey(id, display_name), seller:profiles!escrow_transactions_seller_id_fkey(id, display_name)')
+    .select('*, listings(id, title, maker, model, year, mileage_km, body_type, prefecture), conversation_id, buyer:profiles!escrow_transactions_buyer_id_fkey(id, display_name, prefecture), seller:profiles!escrow_transactions_seller_id_fkey(id, display_name)')
     .eq('id', id)
     .maybeSingle();
   if (!tx) notFound();
@@ -57,13 +59,21 @@ export default async function EscrowPage({ params }: { params: Params }) {
   const status = tx.status as EscrowStatus;
   const couponDiscount = (tx as any).coupon_discount ?? 0;
   const loanFeeAmt = (tx as any).loan_fee ?? 0;
-  const total = tx.amount + tx.escrow_fee + tx.title_fee + tx.installment_fee + loanFeeAmt - couponDiscount;
+  // 追加オプション（保証・車庫証明など）
+  const optionsTotal = (tx as any).options_total ?? 0;
+  const savedOptions = (Array.isArray((tx as any).options) ? (tx as any).options : []) as { key: string; label: string; amount: number }[];
+  const total = tx.amount + tx.escrow_fee + tx.title_fee + optionsTotal + tx.installment_fee + loanFeeAmt - couponDiscount;
   // 売り手の受取内訳：車両代金からエスクロー手数料（売り手負担）を控除
   const sellerFeeAmt = (tx as any).seller_fee ?? 0;
   const sellerPayout = Math.max(0, tx.amount - sellerFeeAmt);
   const paymentMethod = tx.payment_method as PaymentMethod | null;
   const transferReported = !!(tx as any).transfer_reported_at;
   const bankAccount = await getBankAccount();
+  const pricing = await getPricingConfig();
+  // 名義変更の通常/遠隔を地域から自動判定（買主の登録地域 × 車両の所在地）
+  const buyerPrefecture = (tx as any).buyer?.prefecture ?? null;
+  const carPrefecture = listing?.prefecture ?? null;
+  const titleJudge = judgeTitleTransfer(buyerPrefecture, carPrefecture);
 
   // 2回分割払いの状態と、次に支払う回の金額
   const installmentCount = (tx as any).installment_count ?? 1;
@@ -133,6 +143,12 @@ export default async function EscrowPage({ params }: { params: Params }) {
             <dt className="text-slate-500">名義変更（{TITLE_OPTIONS[tx.title_option as TitleTransferOption].label}）</dt>
             <dd className="font-bold">{tx.title_fee === 0 ? '—' : formatYen(tx.title_fee)}</dd>
           </div>
+          {savedOptions.map((o) => (
+            <div className="flex justify-between" key={o.key}>
+              <dt className="text-slate-500">{o.label}</dt>
+              <dd className="font-bold">{formatYen(o.amount)}</dd>
+            </div>
+          ))}
           {tx.installment_fee > 0 && (
             <div className="flex justify-between">
               <dt className="text-slate-500">クレジット分割手数料（4.2%）</dt>
@@ -183,11 +199,30 @@ export default async function EscrowPage({ params }: { params: Params }) {
           エスクローでは当事者間の自己手続きは不可のため「自分で手続き」は除外し代行のみ。 */}
       {status === 'initiated' && isBuyer && (
         <div className="card p-6">
-          <h2 className="mb-3 font-bold">名義変更オプション</h2>
+          <h2 className="mb-1 font-bold">名義変更オプション</h2>
+          {/* 地域による自動判定の案内 */}
+          {titleJudge.distance !== 'unknown' ? (
+            <div className={`mb-3 rounded-lg border p-3 text-xs leading-relaxed ${titleJudge.distance === 'far' ? 'border-amber-200 bg-amber-50 text-amber-800' : 'border-emerald-200 bg-emerald-50 text-emerald-800'}`}>
+              <p className="font-bold">
+                自動判定：あなたの登録地域「{titleJudge.buyerRegion}」と車両の所在地「{titleJudge.carRegion}」は
+                <span className="mx-0.5">{titleJudge.distance === 'far' ? '遠距離' : '近距離'}</span>です。
+              </p>
+              <p className="mt-0.5">
+                {titleJudge.distance === 'far'
+                  ? '出張封印を含む「遠隔代行」を推奨します。ご希望に応じて変更も可能です。'
+                  : '通常の「名義変更代行」で対応できます。'}
+              </p>
+            </div>
+          ) : (
+            <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-500">
+              登録地域が未設定のため自動判定できません。<Link href="/dashboard/profile" className="font-bold text-accent-600 hover:underline">プロフィールで地域を設定</Link>すると、通常／遠隔を自動でご提案します。
+            </div>
+          )}
           <div className="space-y-2">
             {(Object.keys(TITLE_OPTIONS) as TitleTransferOption[]).filter((key) => key !== 'self').map((key) => {
               const opt = TITLE_OPTIONS[key];
               const selected = tx.title_option === key;
+              const recommended = titleJudge.distance !== 'unknown' && titleJudge.option === key;
               const setBound = setTitleOption.bind(null, id, key);
               return (
                 <form action={setBound} key={key}>
@@ -197,7 +232,10 @@ export default async function EscrowPage({ params }: { params: Params }) {
                     }`}
                   >
                     <span>
-                      <span className="font-bold">{opt.label}</span>
+                      <span className="font-bold">
+                        {opt.label}
+                        {recommended && <span className="ml-2 rounded-full bg-accent-100 px-2 py-0.5 text-[10px] font-bold text-accent-700">推奨</span>}
+                      </span>
                       <span className="block text-xs text-slate-500">{opt.desc}</span>
                     </span>
                     <span className="shrink-0 font-bold">{opt.fee === 0 ? '無料' : formatYen(opt.fee)}</span>
@@ -207,6 +245,22 @@ export default async function EscrowPage({ params }: { params: Params }) {
             })}
           </div>
         </div>
+      )}
+
+      {/* 追加オプション（保証・車庫証明）。取引開始前・買主のみ。支払総額へ反映。 */}
+      {status === 'initiated' && isBuyer && (
+        <EscrowOptionsPicker
+          escrowId={id}
+          vehicle={{
+            year: listing?.year,
+            mileageKm: listing?.mileage_km,
+            maker: listing?.maker,
+            bodyType: listing?.body_type,
+          }}
+          warrantyAdjustPercent={pricing.warrantyAdjustPercent}
+          garageProofFee={pricing.garageProofFee}
+          saved={savedOptions}
+        />
       )}
 
       {/* 購入前の重要事項同意（必須）。同意するまで支払いには進めない。 */}
@@ -219,7 +273,7 @@ export default async function EscrowPage({ params }: { params: Params }) {
         <PaymentPanel
           escrowId={id}
           currentMethod={paymentMethod}
-          loanPrincipal={tx.amount + tx.escrow_fee + tx.title_fee}
+          loanPrincipal={tx.amount + tx.escrow_fee + tx.title_fee + optionsTotal}
           squareConfigured={squareConfigured}
           squareAppId={squareAppId}
           squareLocationId={squareLocationId}

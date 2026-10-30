@@ -38,7 +38,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
   }
   const tx = txRow as {
-    amount: number; escrow_fee: number; title_fee: number; installment_fee?: number;
+    amount: number; escrow_fee: number; title_fee: number; options_total?: number; installment_fee?: number;
     installment_count?: number; installment_1_paid?: boolean; installment_2_paid?: boolean;
     coupon_discount?: number; buyer_id: string; status: string; listing_id: string;
   };
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
   }
 
   // 高額取引はカード不可（Square の高率手数料を避け、銀行振込へ誘導）
-  const cardBasis = tx.amount + tx.escrow_fee + tx.title_fee;
+  const cardBasis = tx.amount + tx.escrow_fee + tx.title_fee + (tx.options_total ?? 0);
   if (!isCardAllowed(cardBasis)) {
     return NextResponse.json(
       { error: `${(CARD_MAX_YEN / 10000).toLocaleString()}万円を超えるお取引はカード決済をご利用いただけません。銀行振込でのお支払いをお選びください。` },
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
   // クーポン割引・分割手数料を反映した実請求額（画面表示と一致させる）
   const total = Math.max(
     0,
-    tx.amount + tx.escrow_fee + tx.title_fee + (tx.installment_fee ?? 0) - (tx.coupon_discount ?? 0)
+    tx.amount + tx.escrow_fee + tx.title_fee + (tx.options_total ?? 0) + (tx.installment_fee ?? 0) - (tx.coupon_discount ?? 0)
   );
 
   // 2回分割払い：未払いの回の金額と、保存先の識別子カラムを決定する
