@@ -173,12 +173,12 @@ export async function sendDealCompletedEmail(
     ${_h('取引が完了しました')}
     ${_p(`${_strong(opts.listingTitle)} の取引が完了しました。${isSeller ? '売上が振り込まれます。' : 'ありがとうございました。'}`)}
     ${_p(`取引金額: ${_strong('¥' + opts.amount.toLocaleString())}`)}
-    ${_p('取引相手への評価をお忘れなく。良い評価は次の取引に繋がります。')}
-    ${_btn('評価を投稿する', url)}
+    ${_p(`取引相手への口コミ投稿にご協力ください。投稿いただくと、お礼として${_strong('次回使える¥5,000クーポン')}をプレゼントします。`)}
+    ${_btn('口コミを投稿する（¥5,000クーポン）', url)}
   `);
   await sendEmail({
     to,
-    subject: `【BUYMO】取引完了 — ${opts.listingTitle}`,
+    subject: `【BUYMO】取引完了 — 口コミ投稿で¥5,000クーポン`,
     html,
   });
 }

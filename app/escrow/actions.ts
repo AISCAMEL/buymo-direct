@@ -14,6 +14,7 @@ import { dispatchWebhook } from '@/lib/dealer';
 import { recordDealerSaleCommission } from '@/lib/sale-commission';
 import { sendPaymentConfirmedEmail, sendDealCompletedEmail, sendEmail, opsEmail, emailLayout } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
+import { grantPersonalCoupon } from '@/lib/coupons-grant';
 
 /** 会話からエスクロー取引を作成（買主のみ）。出品は「商談中」に更新。 */
 export async function createEscrow(conversationId: string) {
@@ -420,8 +421,28 @@ export async function submitReview(
   });
   if (error) return { error: error.message };
 
+  // 口コミ投稿のお礼：個人宛¥5,000クーポンを発行（取引×投稿者ごとに1枚・冪等）。
+  // クーポン発行や通知の失敗はレビュー投稿自体の成功を妨げない。
+  let coupon: string | null = null;
+  try {
+    const svc = createServiceClient();
+    const res = await grantPersonalCoupon(svc, 'review', [escrowId, user.id]);
+    coupon = res.code;
+    if (res.created && res.code) {
+      await createNotification(
+        user.id,
+        'system',
+        '🎁 口コミ投稿ありがとうございます',
+        `お礼として次回のお取引で使える¥${res.value.toLocaleString()}クーポンをプレゼント！ クーポンコード：${res.code}（180日間有効・1回限り）`,
+        '/dashboard',
+      );
+    }
+  } catch {
+    /* クーポン発行失敗は無視 */
+  }
+
   revalidatePath(`/escrow/${escrowId}`);
-  return { error: null };
+  return { error: null, coupon };
 }
 
 /** 取引をキャンセル（initiated / funds_held のみ）。出品は active に戻す。入金済みクレジットは返金。 */
