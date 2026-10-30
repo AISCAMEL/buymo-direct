@@ -9,7 +9,12 @@ import { createServiceClient } from '@/lib/supabase/service';
 // Square Developer Dashboard > Webhooks > Endpoint URL に
 //   https://<your-domain>/api/webhooks/square
 // を登録し、以下のイベントを購読してください:
-//   payment.completed  payment.failed  refund.created  refund.updated
+//   payment.created  payment.updated  refund.created  refund.updated
+//
+// ※ Square は「payment.completed / payment.failed」というイベントは送りません。
+//    決済の成否は payment.updated（または payment.created）の
+//    data.object.payment.status（COMPLETED / FAILED / CANCELED）で判定します。
+//    1決済につき payment.updated が複数回届くことがあるため、処理は冪等にしています。
 //
 // SQUARE_WEBHOOK_SIGNATURE_KEY を環境変数に設定すること（本番では必須・未設定時は拒否）。
 
@@ -42,23 +47,36 @@ export async function POST(req: Request) {
   const data = event.data as Record<string, unknown> | undefined;
   const supabase = createServiceClient();
 
+  const squarePayment = (): Record<string, unknown> | undefined =>
+    (data?.object as Record<string, unknown>)?.payment as Record<string, unknown> | undefined;
+
   const paymentIds = (): string[] => {
-    const payment = (data?.object as Record<string, unknown>)?.payment as Record<string, unknown> | undefined;
+    const payment = squarePayment();
     // 決済リンク経由では order_id が保存済みの識別子。payment.id もフォールバックで照合。
     return [payment?.order_id as string | undefined, payment?.id as string | undefined].filter(Boolean) as string[];
   };
 
   switch (eventType) {
-    case 'payment.completed': {
-      // 冪等に funds_held へ遷移（1回払い／2回分割払いの両対応）
-      const affectedId = await settleSquarePaymentCompleted(supabase, paymentIds());
-      if (affectedId) revalidatePath(`/escrow/${affectedId}`);
-      break;
-    }
+    // Square は payment.created / payment.updated を送る。成否は status で判定する。
+    // （payment.completed / payment.failed というイベントは存在しない）
+    case 'payment.created':
+    case 'payment.updated':
+    // 後方互換：もし独自送信やテストで下記が来ても拾えるようにする
+    case 'payment.completed':
     case 'payment.failed': {
-      // 該当する回の識別子をクリアし、buyer に再入金を促す
-      const affectedId = await clearFailedSquarePayment(supabase, paymentIds());
-      if (affectedId) revalidatePath(`/escrow/${affectedId}`);
+      const status = (squarePayment()?.status as string | undefined)?.toUpperCase();
+      // 明示的な失敗イベント名は status を問わず失敗扱い
+      const isFailedEvent = eventType === 'payment.failed';
+      if (status === 'COMPLETED' || (!status && eventType === 'payment.completed')) {
+        // 冪等に funds_held へ遷移（1回払い／2回分割払いの両対応）
+        const affectedId = await settleSquarePaymentCompleted(supabase, paymentIds());
+        if (affectedId) revalidatePath(`/escrow/${affectedId}`);
+      } else if (isFailedEvent || status === 'FAILED' || status === 'CANCELED') {
+        // 該当する回の識別子をクリアし、buyer に再入金を促す
+        const affectedId = await clearFailedSquarePayment(supabase, paymentIds());
+        if (affectedId) revalidatePath(`/escrow/${affectedId}`);
+      }
+      // APPROVED / PENDING 等の中間状態は何もしない（後続の updated を待つ）
       break;
     }
     case 'refund.created':
