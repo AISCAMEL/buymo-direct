@@ -4,6 +4,7 @@ import { MessageSquare, XCircle, CheckCircle2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { EscrowStepper } from '@/components/EscrowStepper';
 import { EscrowTimeline } from '@/components/EscrowTimeline';
+import { EscrowConsentGate } from '@/components/EscrowConsentGate';
 import { loadEscrowEvents } from '@/lib/escrow-events-data';
 import { ReviewForm } from '@/components/ReviewForm';
 import { PaymentPanel } from '@/components/PaymentPanel';
@@ -51,6 +52,8 @@ export default async function EscrowPage({ params }: { params: Params }) {
     .maybeSingle();
   const role: 'buyer' | 'seller' = isBuyer ? 'buyer' : 'seller';
   const events = await loadEscrowEvents(id);
+  // 買主の重要事項同意（書面確認）の有無。未同意なら支払いに進めない。
+  const hasConsent = events.some((e) => e.type === 'buyer_consent');
   const status = tx.status as EscrowStatus;
   const couponDiscount = (tx as any).coupon_discount ?? 0;
   const loanFeeAmt = (tx as any).loan_fee ?? 0;
@@ -206,8 +209,13 @@ export default async function EscrowPage({ params }: { params: Params }) {
         </div>
       )}
 
-      {/* 入金（取引開始前・買主のみ）：支払い方法選択＋Square決済 */}
-      {status === 'initiated' && isBuyer && (
+      {/* 購入前の重要事項同意（必須）。同意するまで支払いには進めない。 */}
+      {status === 'initiated' && isBuyer && !hasConsent && (
+        <EscrowConsentGate escrowId={id} />
+      )}
+
+      {/* 入金（取引開始前・買主のみ・同意後）：支払い方法選択＋Square決済 */}
+      {status === 'initiated' && isBuyer && hasConsent && (
         <PaymentPanel
           escrowId={id}
           currentMethod={paymentMethod}
@@ -222,7 +230,7 @@ export default async function EscrowPage({ params }: { params: Params }) {
       )}
 
       {/* 支払い回数（カードの1回あたり上限が不安な場合に2回へ分割） */}
-      {status === 'initiated' && isBuyer && (
+      {status === 'initiated' && isBuyer && hasConsent && (
         <div className="card p-6">
           <h2 className="mb-1 font-bold">お支払い回数</h2>
           <p className="mb-3 text-sm text-slate-500">
@@ -259,8 +267,8 @@ export default async function EscrowPage({ params }: { params: Params }) {
         </div>
       )}
 
-      {/* Square Checkout Link による支払い（カード上限内のときのみ表示） */}
-      {status === 'initiated' && isBuyer && nextCharge > 0 && isCardAllowed(nextCharge) && (
+      {/* Square Checkout Link による支払い（カード上限内かつ同意後のみ表示） */}
+      {status === 'initiated' && isBuyer && hasConsent && nextCharge > 0 && isCardAllowed(nextCharge) && (
         <div className="card p-6">
           <h2 className="mb-2 font-bold">Squareの決済ページで支払う</h2>
           <p className="mb-4 text-sm text-slate-500">
@@ -272,7 +280,7 @@ export default async function EscrowPage({ params }: { params: Params }) {
       )}
 
       {/* カード上限超：事前に「カード不可・銀行振込へ」を明示 */}
-      {status === 'initiated' && isBuyer && nextCharge > 0 && !isCardAllowed(nextCharge) && (
+      {status === 'initiated' && isBuyer && hasConsent && nextCharge > 0 && !isCardAllowed(nextCharge) && (
         <div className="card p-6">
           <h2 className="mb-1 font-bold">お支払いについて</h2>
           <p className="text-sm text-slate-600">

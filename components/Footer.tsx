@@ -51,6 +51,8 @@ const FOOTER_LINKS: { heading: string; links: FooterLink[] }[] = [
       { label: 'お知らせ', href: '/announcements' },
       { label: 'プライバシーポリシー', href: '/privacy' },
       { label: '利用規約', href: '/terms' },
+      { label: 'キャンセルポリシー', href: '/cancellation' },
+      { label: 'クレーム・返品対応', href: '/claims' },
       { label: '特定商取引法', href: '/tokushoho' },
       { label: 'お問い合わせ', href: '/contact' },
     ],

@@ -267,6 +267,17 @@ export async function confirmEscrowPayment(
     .maybeSingle();
   if (!tx || tx.buyer_id !== user.id) return { error: '権限がありません' };
   if (tx.status !== 'initiated') return { error: 'この取引はすでに入金済みです' };
+  // 購入前の重要事項同意（書面確認）が記録されているか。未同意なら決済不可。
+  {
+    let consented = true;
+    try {
+      const svcC = createServiceClient();
+      const { data: c, error: ce } = await svcC
+        .from('escrow_events').select('id').eq('escrow_id', escrowId).eq('type', 'buyer_consent').limit(1).maybeSingle();
+      if (!ce) consented = !!c;
+    } catch { /* 判定不可時は通す */ }
+    if (!consented) return { error: '購入前の重要事項への同意が必要です。取引ページでご確認のうえお進みください。' };
+  }
   // 2回分割払いは Square の決済ページ（リダイレクト）専用。インライン一括とは併用しない。
   if ((tx as { installment_count?: number }).installment_count === 2) {
     return { error: '2回に分けてのお支払いは「Squareの決済ページで支払う」からお手続きください。' };

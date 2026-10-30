@@ -103,3 +103,48 @@ export async function postEscrowEvent(
   revalidatePath('/admin/escrow');
   return { error: null };
 }
+
+/** 買主の重要事項同意を記録（現状渡し・クレーム/返品条件・キャンセル規定等）。
+ *  escrow_events に 'buyer_consent' として保存し、書面確認の証跡とする。 */
+export async function recordBuyerConsent(escrowId: string): Promise<{ error: string | null }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: '未ログインです' };
+
+  const svc = createServiceClient();
+  const { data: tx } = await svc
+    .from('escrow_transactions')
+    .select('id, buyer_id')
+    .eq('id', escrowId)
+    .maybeSingle();
+  if (!tx) return { error: '取引が見つかりません' };
+  if (tx.buyer_id !== user.id) return { error: '買主のみ同意できます' };
+
+  const { data: existing } = await svc
+    .from('escrow_events')
+    .select('id')
+    .eq('escrow_id', escrowId)
+    .eq('type', 'buyer_consent')
+    .limit(1)
+    .maybeSingle();
+
+  if (!existing) {
+    const { error: insErr } = await svc.from('escrow_events').insert({
+      escrow_id: escrowId,
+      type: 'buyer_consent',
+      actor_role: 'buyer',
+      created_by: user.id,
+      title: '✅ 重要事項に同意しました',
+      body: '現状渡し・遠隔取引の性質、クレーム・返品対応ポリシー、キャンセルポリシー、利用規約に同意のうえ購入手続きに進みました。',
+      meta: {},
+    });
+    if (insErr) {
+      return { error: '同意の記録に失敗しました（設定が未完了の可能性）。運営にお問い合わせください。' };
+    }
+  }
+
+  revalidatePath(`/escrow/${escrowId}`);
+  return { error: null };
+}

@@ -49,6 +49,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'この取引はすでに入金済みです' }, { status: 400 });
   }
 
+  // 購入前の重要事項同意（書面確認）が記録されているか。未同意なら決済不可。
+  {
+    let consented = true;
+    try {
+      const { data: c, error: ce } = await supabase
+        .from('escrow_events').select('id').eq('escrow_id', escrow_id).eq('type', 'buyer_consent').limit(1).maybeSingle();
+      if (!ce) consented = !!c;
+    } catch { /* 判定不可時は通す */ }
+    if (!consented) {
+      return NextResponse.json({ error: '購入前の重要事項への同意が必要です。取引ページでご確認ください。' }, { status: 400 });
+    }
+  }
+
   // 高額取引はカード不可（Square の高率手数料を避け、銀行振込へ誘導）
   const cardBasis = tx.amount + tx.escrow_fee + tx.title_fee;
   if (!isCardAllowed(cardBasis)) {
