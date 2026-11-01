@@ -43,6 +43,7 @@ const GROUPS: Group[] = [
     title: '安全・サポート',
     items: [
       { href: '/admin/messages', label: 'チャット監視' },
+      { href: '/admin/assistant', label: 'AI運用アシスタント' },
       { href: '/admin/risk', label: 'AIリスクセンター' },
       { href: '/admin/community', label: 'コミュニティ管理' },
       { href: '/admin/reports', label: '通報' },

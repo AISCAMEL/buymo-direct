@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { generateWithClaude, isAiEnabled } from '@/lib/ai';
+import { chatWithClaude, isAiEnabled, type ChatTurn } from '@/lib/ai';
 import { faqMatch, type Audience } from '@/lib/faq';
 
 const FALLBACK_MEMBER =
@@ -50,13 +50,15 @@ export async function POST(req: Request) {
     context ? `ユーザーは今「${context}」を見ています。この文脈に沿って、そのページで迷いやすい点を先回りして具体的に案内してください。` : '',
   ].filter(Boolean).join('\n');
 
-  const historyText = history
-    .map((h) => `${h.role === 'user' ? 'ユーザー' : 'AI'}: ${h.content}`)
-    .join('\n');
-  const prompt = historyText ? `${historyText}\nユーザー: ${message}` : message;
+  // 会話履歴を Claude の messages 配列に変換（直近12往復まで）。
+  const turns: ChatTurn[] = history
+    .slice(-24)
+    .map((h) => ({ role: h.role === 'assistant' ? 'assistant' : 'user', content: h.content } as ChatTurn))
+    .filter((t) => t.content && t.content.trim());
+  turns.push({ role: 'user', content: message });
 
   try {
-    const reply = await generateWithClaude(prompt, systemPrompt);
+    const reply = await chatWithClaude(turns, systemPrompt);
     return NextResponse.json({ reply, source: 'ai', audience });
   } catch {
     return NextResponse.json({ reply: faqMatch(message, audience) ?? fallback, source: 'faq', audience });
