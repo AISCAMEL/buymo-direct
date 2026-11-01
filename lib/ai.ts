@@ -50,6 +50,22 @@ export function anthropicClient(): Anthropic | null {
   return getAnthropic();
 }
 
+/** Markdown の装飾記号を除き、チャット吹き出し向けのプレーンテキストにする。
+ *  （チャットUIはプレーン表示のため ** や - がそのまま見えてしまうのを防ぐ） */
+export function toPlainText(s: string): string {
+  return s
+    .replace(/```[\s\S]*?```/g, (m) => m.replace(/```[a-zA-Z]*/g, '').replace(/```/g, '').trim())
+    .replace(/`([^`]+)`/g, '$1')              // インラインコード
+    .replace(/\*\*([^*]+)\*\*/g, '$1')        // **bold**
+    .replace(/__([^_]+)__/g, '$1')            // __bold__
+    .replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1$2') // *italic*
+    .replace(/^#{1,6}\s+/gm, '')              // 見出し #
+    .replace(/^\s{0,3}[-*+]\s+/gm, '・')       // 箇条書き → ・
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')  // [text](url) → text
+    .replace(/\n{3,}/g, '\n\n')               // 余分な空行を圧縮
+    .trim();
+}
+
 /** Claude のレスポンスから最初のテキストブロックを取り出す。 */
 function textFromMessage(msg: Anthropic.Message): string {
   for (const block of msg.content) {

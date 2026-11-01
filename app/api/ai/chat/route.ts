@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { chatWithClaude, isAiEnabled, type ChatTurn } from '@/lib/ai';
+import { chatWithClaude, isAiEnabled, toPlainText, type ChatTurn } from '@/lib/ai';
 import { faqMatch, type Audience } from '@/lib/faq';
 
 const FALLBACK_MEMBER =
@@ -33,6 +33,7 @@ export async function POST(req: Request) {
     '特徴：明朗な手数料の買取／買取保証つきのダイレクト販売／エスクロー決済で安全／名義変更まで代行／全国対応。',
     'システムやページの操作・必要書類など「使い方の相談」にも、具体的な手順で答えてください。',
     'ユーザーの質問に、丁寧でわかりやすい日本語で簡潔に回答してください。わからないことは推測せず、無料査定やお問い合わせ（加盟店はダッシュボードのサポート）を案内してください。',
+    '重要：返答はチャット用のプレーンテキストで書いてください。Markdown記法は使わないこと（** や * で太字にしない、# で見出しにしない、- や * で箇条書きにしない）。強調したい語はそのまま書き、箇条書きが必要なときは行頭に「・」を使ってください。',
   ];
   const role =
     audience === 'dealer'
@@ -59,7 +60,7 @@ export async function POST(req: Request) {
 
   try {
     const reply = await chatWithClaude(turns, systemPrompt);
-    return NextResponse.json({ reply, source: 'ai', audience });
+    return NextResponse.json({ reply: toPlainText(reply), source: 'ai', audience });
   } catch {
     return NextResponse.json({ reply: faqMatch(message, audience) ?? fallback, source: 'faq', audience });
   }

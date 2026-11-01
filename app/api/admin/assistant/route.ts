@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { isAdminUser } from '@/lib/admin';
-import { chatWithClaude, isAiEnabled, type ChatTurn } from '@/lib/ai';
+import { chatWithClaude, isAiEnabled, toPlainText, type ChatTurn } from '@/lib/ai';
 import { OPS_GUIDE } from '@/lib/ops-guide';
 import { gatherOpsSnapshot, snapshotToText } from '@/lib/ops-snapshot';
 
@@ -43,6 +43,7 @@ export async function POST(req: Request) {
     'あなたは中古車マーケットプレイス「BUYMO ダイレクト」（合同会社アイズ）の運営スタッフ専用のAIアシスタントです。',
     '相手は社内の運営担当者です。目的は、(1)管理機能の使い方の案内と、(2)運営状況の監視サマリー・注意喚起です。',
     '回答は簡潔で実務的な日本語。手順は「どの画面（パス）で何をするか」を具体的に。推測で断定せず、確認が必要な点は明示してください。',
+    '返答はプレーンテキストで（Markdownの ** や # や - は使わない）。箇条書きが必要なときは行頭に「・」を使ってください。',
     '個人情報（氏名・連絡先など）は扱いません。件数・状態・傾向をもとに助言してください。',
     OPS_GUIDE,
     snapshotText
@@ -60,7 +61,7 @@ export async function POST(req: Request) {
 
   try {
     const reply = await chatWithClaude(turns, system, { maxTokens: 1400 });
-    return NextResponse.json({ reply, source: 'ai', mode });
+    return NextResponse.json({ reply: toPlainText(reply), source: 'ai', mode });
   } catch (e) {
     const msg = e instanceof Error ? e.message : '不明なエラー';
     return NextResponse.json(
