@@ -3,11 +3,14 @@ import Image from 'next/image';
 import type { Metadata } from 'next';
 import { BookOpen, ChevronRight } from 'lucide-react';
 import { COLUMNS, COLUMN_CATEGORIES, columnThumb } from '@/lib/columns';
+import { loadDbColumns } from '@/lib/columns-db';
 import { SITE_BASE, itemListJsonLd, breadcrumbJsonLd } from '@/lib/seo';
 
-export const revalidate = 3600;
+export const revalidate = 600;
 
 const BASE = SITE_BASE;
+
+type Card = { slug: string; title: string; meta: string; cat: string; thumb: string };
 
 export const metadata: Metadata = {
   title: 'コラム｜車の買取・売却のお役立ち記事',
@@ -15,7 +18,14 @@ export const metadata: Metadata = {
   alternates: { canonical: `${BASE}/column` },
 };
 
-export default function ColumnHubPage() {
+export default async function ColumnHubPage() {
+  const dbCols = await loadDbColumns();
+  const categories = Array.from(new Set([...COLUMN_CATEGORIES, ...dbCols.map((c) => c.cat)]));
+  // AI生成（新しい順）→ 静的コラム の順でカード化
+  const cards: Card[] = [
+    ...dbCols.map((c) => ({ slug: c.slug, title: c.title, meta: c.meta, cat: c.cat, thumb: c.thumb_url || columnThumb(c.cat) })),
+    ...COLUMNS.map((c) => ({ slug: c.slug, title: c.title, meta: c.meta, cat: c.cat, thumb: columnThumb(c.cat) })),
+  ];
   return (
     <div className="space-y-8">
       <script
@@ -41,7 +51,7 @@ export default function ColumnHubPage() {
       <section>
         <h2 className="mb-3 text-sm font-black text-slate-500">カテゴリから探す</h2>
         <div className="flex flex-wrap gap-2">
-          {COLUMN_CATEGORIES.map((c) => (
+          {categories.map((c) => (
             <Link
               key={c}
               href={`/column/category/${encodeURIComponent(c)}`}
@@ -54,11 +64,11 @@ export default function ColumnHubPage() {
       </section>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        {COLUMNS.map((c) => (
+        {cards.map((c) => (
           <Link key={c.slug} href={`/column/${c.slug}`} className="card group flex flex-col overflow-hidden transition hover:shadow-md">
             <div className="relative aspect-[16/9] overflow-hidden bg-slate-100">
               <Image
-                src={columnThumb(c.cat)}
+                src={c.thumb}
                 alt=""
                 fill
                 sizes="(max-width:640px) 100vw, 50vw"

@@ -4,12 +4,15 @@ import Image from 'next/image';
 import type { Metadata } from 'next';
 import { BookOpen, ChevronRight } from 'lucide-react';
 import { COLUMNS, COLUMN_CATEGORIES, columnThumb } from '@/lib/columns';
+import { loadDbColumns } from '@/lib/columns-db';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { SITE_BASE, itemListJsonLd } from '@/lib/seo';
 
-export const revalidate = 3600;
+export const revalidate = 600;
+export const dynamicParams = true;
 
 type Params = Promise<{ cat: string }>;
+type Card = { slug: string; title: string; meta: string; cat: string; thumb: string };
 
 export function generateStaticParams() {
   return COLUMN_CATEGORIES.map((cat) => ({ cat: encodeURIComponent(cat) }));
@@ -18,7 +21,6 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { cat: enc } = await params;
   const cat = decodeURIComponent(enc);
-  if (!COLUMN_CATEGORIES.includes(cat)) return { title: '見つかりません' };
   return {
     title: `${cat}のコラム一覧｜車の買取・売却`,
     description: `「${cat}」に関する車の買取・売却お役立ち記事の一覧。BUYMO ダイレクトがやさしく解説します。`,
@@ -29,9 +31,14 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 export default async function ColumnCategoryPage({ params }: { params: Params }) {
   const { cat: enc } = await params;
   const cat = decodeURIComponent(enc);
-  if (!COLUMN_CATEGORIES.includes(cat)) notFound();
 
-  const items = COLUMNS.filter((c) => c.cat === cat);
+  const dbCols = await loadDbColumns();
+  const items: Card[] = [
+    ...dbCols.filter((c) => c.cat === cat).map((c) => ({ slug: c.slug, title: c.title, meta: c.meta, cat: c.cat, thumb: c.thumb_url || columnThumb(c.cat) })),
+    ...COLUMNS.filter((c) => c.cat === cat).map((c) => ({ slug: c.slug, title: c.title, meta: c.meta, cat: c.cat, thumb: columnThumb(c.cat) })),
+  ];
+  if (items.length === 0) notFound();
+  const categories = Array.from(new Set([...COLUMN_CATEGORIES, ...dbCols.map((c) => c.cat)]));
 
   return (
     <div className="space-y-6">
@@ -64,7 +71,7 @@ export default async function ColumnCategoryPage({ params }: { params: Params })
 
       {/* 他カテゴリ */}
       <div className="flex flex-wrap gap-2">
-        {COLUMN_CATEGORIES.map((c) => (
+        {categories.map((c) => (
           <Link
             key={c}
             href={`/column/category/${encodeURIComponent(c)}`}
@@ -83,7 +90,7 @@ export default async function ColumnCategoryPage({ params }: { params: Params })
         {items.map((c) => (
           <Link key={c.slug} href={`/column/${c.slug}`} className="card group flex flex-col overflow-hidden transition hover:shadow-md">
             <div className="relative aspect-[16/9] overflow-hidden bg-slate-100">
-              <Image src={columnThumb(c.cat)} alt="" fill sizes="(max-width:640px) 100vw, 50vw" className="object-cover transition duration-300 group-hover:scale-105" />
+              <Image src={c.thumb} alt="" fill sizes="(max-width:640px) 100vw, 50vw" className="object-cover transition duration-300 group-hover:scale-105" />
               <span className="absolute left-3 top-3 inline-flex items-center rounded-full bg-white/90 px-2.5 py-0.5 text-xs font-bold text-accent-600 shadow-sm">{c.cat}</span>
             </div>
             <div className="flex flex-1 flex-col p-5">

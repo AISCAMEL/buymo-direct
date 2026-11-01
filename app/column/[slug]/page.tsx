@@ -4,12 +4,25 @@ import Image from 'next/image';
 import type { Metadata } from 'next';
 import { ChevronRight } from 'lucide-react';
 import { COLUMNS, COLUMN_BY_SLUG, columnThumb } from '@/lib/columns';
+import { getDbColumn } from '@/lib/columns-db';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { SITE_BASE } from '@/lib/seo';
 
-export const revalidate = 3600;
+export const revalidate = 600;
+export const dynamicParams = true; // DB生成コラム（静的paramsに無いslug）も動的に表示
 
 type Params = Promise<{ slug: string }>;
+
+type Article = { title: string; meta: string; cat: string; html: string; thumb: string };
+
+/** 静的コラム → なければDBコラム の順で取得。 */
+async function loadArticle(slug: string): Promise<Article | null> {
+  const s = COLUMN_BY_SLUG[slug];
+  if (s) return { title: s.title, meta: s.meta, cat: s.cat, html: s.html, thumb: columnThumb(s.cat) };
+  const d = await getDbColumn(slug);
+  if (d) return { title: d.title, meta: d.meta, cat: d.cat, html: d.html, thumb: d.thumb_url || columnThumb(d.cat) };
+  return null;
+}
 
 export async function generateStaticParams() {
   return COLUMNS.map((c) => ({ slug: c.slug }));
@@ -17,7 +30,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { slug } = await params;
-  const c = COLUMN_BY_SLUG[slug];
+  const c = await loadArticle(slug);
   if (!c) return { title: '見つかりません' };
   const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://buymo.me';
   return {
@@ -30,7 +43,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 
 export default async function ColumnArticlePage({ params }: { params: Params }) {
   const { slug } = await params;
-  const c = COLUMN_BY_SLUG[slug];
+  const c = await loadArticle(slug);
   if (!c) notFound();
 
   const BASE = SITE_BASE;
@@ -71,7 +84,7 @@ export default async function ColumnArticlePage({ params }: { params: Params }) 
         <h1 className="text-2xl font-black leading-snug text-navy-900 sm:text-3xl">{c.title}</h1>
 
         <div className="relative mt-5 aspect-[16/9] overflow-hidden rounded-2xl bg-slate-100">
-          <Image src={columnThumb(c.cat)} alt="" fill sizes="(max-width:768px) 100vw, 768px" className="object-cover" priority />
+          <Image src={c.thumb} alt="" fill sizes="(max-width:768px) 100vw, 768px" className="object-cover" priority />
         </div>
 
         <div className="column-body mt-6" dangerouslySetInnerHTML={{ __html: c.html }} />

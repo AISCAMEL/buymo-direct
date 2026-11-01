@@ -44,6 +44,12 @@ function getAnthropic(): Anthropic {
   return _anthropic;
 }
 
+/** Anthropic クライアント（キーがあれば）。web_search 等の高度な呼び出し用。無ければ null。 */
+export function anthropicClient(): Anthropic | null {
+  if (!process.env.ANTHROPIC_API_KEY) return null;
+  return getAnthropic();
+}
+
 /** Claude のレスポンスから最初のテキストブロックを取り出す。 */
 function textFromMessage(msg: Anthropic.Message): string {
   for (const block of msg.content) {
