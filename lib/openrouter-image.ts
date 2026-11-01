@@ -6,7 +6,7 @@
 //   OPENROUTER_IMAGE_MODEL … 画像出力対応モデル（既定: google/gemini-2.5-flash-image-preview）
 //
 // OpenRouter は chat/completions で modalities に "image" を含めると画像を返す。
-// レスポンス形状は複数あり得るため、寛容にパースする（message.images / data[].b64_json 等）。
+// レスポンス形状は複数あり得るため、寛容にパースする（message.images / message.content / data[]）。
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
@@ -23,10 +23,10 @@ function headers(apiKey: string): Record<string, string> {
   return h;
 }
 
-/** data:image/png;base64,xxxx または 生のbase64 から {buffer, contentType} を得る。 */
-function decodeImage(raw: string): GeneratedImage | null {
-  if (!raw) return null;
-  const m = raw.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+/** data:image/...;base64,xxxx または 生base64 から {buffer, contentType} を得る。 */
+function decodeImage(raw: unknown): GeneratedImage | null {
+  if (typeof raw !== 'string' || !raw) return null;
+  const m = raw.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/s);
   if (m) {
     try {
       return { buffer: Buffer.from(m[2], 'base64'), contentType: m[1] };
@@ -34,8 +34,7 @@ function decodeImage(raw: string): GeneratedImage | null {
       return null;
     }
   }
-  // 生base64（データURIでない）
-  if (/^[A-Za-z0-9+/=\s]+$/.test(raw) && raw.length > 100) {
+  if (/^[A-Za-z0-9+/=\s]+$/.test(raw) && raw.replace(/\s/g, '').length > 100) {
     try {
       return { buffer: Buffer.from(raw.replace(/\s/g, ''), 'base64'), contentType: 'image/png' };
     } catch {
@@ -45,30 +44,48 @@ function decodeImage(raw: string): GeneratedImage | null {
   return null;
 }
 
+function fromImageItem(img: unknown): GeneratedImage | null {
+  if (typeof img === 'string') return decodeImage(img);
+  if (img && typeof img === 'object') {
+    const o = img as Record<string, unknown>;
+    const urlObj = o.image_url as Record<string, unknown> | undefined;
+    const candidate =
+      (urlObj?.url as string) ?? (o.url as string) ?? (o.b64_json as string) ?? (o.data as string) ?? (o.image as string);
+    return decodeImage(candidate);
+  }
+  return null;
+}
+
 /** レスポンスJSONから最初の画像を取り出す（複数の既知形状に対応）。 */
 function extractImage(data: unknown): GeneratedImage | null {
   const d = data as Record<string, unknown>;
-
-  // 1) chat/completions: choices[0].message.images[]
   const choices = d?.choices as Array<Record<string, unknown>> | undefined;
   const message = choices?.[0]?.message as Record<string, unknown> | undefined;
+
+  // 1) message.images[]
   const images = message?.images as unknown[] | undefined;
   if (Array.isArray(images)) {
     for (const img of images) {
-      if (typeof img === 'string') {
-        const got = decodeImage(img);
-        if (got) return got;
-      } else if (img && typeof img === 'object') {
-        const o = img as Record<string, unknown>;
-        const urlObj = o.image_url as Record<string, unknown> | undefined;
-        const url = (urlObj?.url as string) ?? (o.url as string) ?? (o.b64_json as string) ?? (o.data as string);
-        const got = url ? decodeImage(url) : null;
-        if (got) return got;
+      const got = fromImageItem(img);
+      if (got) return got;
+    }
+  }
+
+  // 2) message.content が配列（OpenAI風マルチモーダル）: [{type:'image_url',image_url:{url}}]
+  const content = message?.content;
+  if (Array.isArray(content)) {
+    for (const part of content) {
+      if (part && typeof part === 'object') {
+        const p = part as Record<string, unknown>;
+        if (p.type === 'image_url' || p.type === 'image' || p.image_url || p.b64_json) {
+          const got = fromImageItem(p);
+          if (got) return got;
+        }
       }
     }
   }
 
-  // 2) images API 形状: data[].b64_json
+  // 3) images API 形状: data[].b64_json
   const dataArr = d?.data as Array<Record<string, unknown>> | undefined;
   if (Array.isArray(dataArr)) {
     for (const item of dataArr) {
@@ -86,10 +103,14 @@ function extractImage(data: unknown): GeneratedImage | null {
 
 /**
  * OpenRouter で画像を1枚生成する。失敗時は null（呼び出し側は画像なしで続行）。
+ * 失敗理由は console に出す（Vercelログで診断可能にする）。
  */
 export async function generateImageOpenRouter(prompt: string): Promise<GeneratedImage | null> {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) return null;
+  if (!apiKey) {
+    console.error('[openrouter-image] OPENROUTER_API_KEY 未設定');
+    return null;
+  }
   const model = process.env.OPENROUTER_IMAGE_MODEL || 'google/gemini-2.5-flash-image-preview';
 
   try {
@@ -102,10 +123,43 @@ export async function generateImageOpenRouter(prompt: string): Promise<Generated
         messages: [{ role: 'user', content: prompt }],
       }),
     });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return extractImage(data);
-  } catch {
+
+    const bodyText = await res.text();
+    if (!res.ok) {
+      console.error(`[openrouter-image] HTTP ${res.status} model=${model} body=${bodyText.slice(0, 500)}`);
+      return null;
+    }
+
+    let data: unknown;
+    try {
+      data = JSON.parse(bodyText);
+    } catch {
+      console.error(`[openrouter-image] JSON解析失敗 body=${bodyText.slice(0, 300)}`);
+      return null;
+    }
+
+    const img = extractImage(data);
+    if (!img) {
+      // 画像が取り出せない → レスポンス構造をログに出して原因特定できるようにする
+      console.error(`[openrouter-image] 画像抽出失敗 model=${model} keys=${JSON.stringify(topKeys(data))} snippet=${bodyText.slice(0, 500)}`);
+      return null;
+    }
+    return img;
+  } catch (e) {
+    console.error(`[openrouter-image] 例外: ${e instanceof Error ? e.message : 'unknown'}`);
     return null;
   }
+}
+
+/** レスポンスの大まかな構造（キー）を返す（ログ用）。 */
+function topKeys(data: unknown): unknown {
+  const d = data as Record<string, unknown>;
+  const message = (d?.choices as Array<Record<string, unknown>> | undefined)?.[0]?.message as Record<string, unknown> | undefined;
+  return {
+    top: d ? Object.keys(d) : null,
+    messageKeys: message ? Object.keys(message) : null,
+    contentType: message ? typeof message.content : null,
+    hasImages: Array.isArray(message?.images),
+    error: d?.error ?? null,
+  };
 }
