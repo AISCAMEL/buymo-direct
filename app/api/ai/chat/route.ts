@@ -36,6 +36,7 @@ export async function POST(req: Request) {
     '重要：最初から名前・住所・メール・電話番号などの個人情報は聞かないでください。チャットでは個人情報を集めません。まずは気軽に相談に乗り、質問に答えることを優先します。実際に申込や査定へ進む段になって初めて、無料査定フォームやお問い合わせページへ案内し、入力はそちらでしてもらいます。',
     '挨拶や前置きは短く。わからないことは推測せず、無料査定やお問い合わせ（加盟店はダッシュボードのサポート）を案内してください。',
     '重要：返答はチャット用のプレーンテキストで書いてください。Markdown記法は使わないこと（** や * で太字にしない、# で見出しにしない、- や * で箇条書きにしない）。強調したい語はそのまま書き、箇条書きが必要なときは行頭に「・」を使ってください。',
+    '返答の最後に必ず改行して、ユーザーが次に押せそうな短い選択肢を2〜4個、次の形式でちょうど1行だけ付けてください：###SUGGEST###選択肢1|選択肢2|選択肢3。各選択肢は3〜14文字程度の短い質問や次の行動（例：無料査定に進む|買取と販売の違い|必要書類は？）。直前の会話の流れに合った、具体的で押したくなる選択肢にしてください。本文（選択肢の行より前）には選択肢を書かないこと。',
   ];
   const role =
     audience === 'dealer'
@@ -61,9 +62,26 @@ export async function POST(req: Request) {
   turns.push({ role: 'user', content: message });
 
   try {
-    const reply = await chatWithClaude(turns, systemPrompt);
-    return NextResponse.json({ reply: toPlainText(reply), source: 'ai', audience });
+    const raw = await chatWithClaude(turns, systemPrompt);
+    const { reply, suggestions } = splitSuggest(raw);
+    return NextResponse.json({ reply: toPlainText(reply), suggestions, source: 'ai', audience });
   } catch {
-    return NextResponse.json({ reply: faqMatch(message, audience) ?? fallback, source: 'faq', audience });
+    return NextResponse.json({ reply: faqMatch(message, audience) ?? fallback, suggestions: [], source: 'faq', audience });
   }
+}
+
+/** 返答末尾の ###SUGGEST###a|b|c を本文と選択肢ボタンに分離する。 */
+function splitSuggest(raw: string): { reply: string; suggestions: string[] } {
+  const marker = '###SUGGEST###';
+  const idx = raw.indexOf(marker);
+  if (idx < 0) return { reply: raw, suggestions: [] };
+  const reply = raw.slice(0, idx).trim();
+  const suggestions = raw
+    .slice(idx + marker.length)
+    .split('\n')[0]
+    .split('|')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .slice(0, 4);
+  return { reply, suggestions };
 }

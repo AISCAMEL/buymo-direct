@@ -55,6 +55,8 @@ export function AiChatWidget() {
   const [messages, setMessages] = useState<Message[]>([{ role: 'assistant', content: ctx.greeting }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  // 会話に合わせてAIが提案する選択肢ボタン（最新の返答に対して表示）
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
   // 日本語入力（IME）変換中かどうか。変換確定のEnterで誤送信しないために使う。
   const composingRef = useRef(false);
@@ -119,6 +121,7 @@ export function AiChatWidget() {
     const history = messages.map((m) => ({ role: m.role, content: m.content }));
     setMessages((prev) => [...prev, { role: 'user', content: msg }]);
     setInput('');
+    setSuggestions([]); // 新しい質問を送ったら前の提案ボタンは消す
     setLoading(true);
 
     try {
@@ -127,11 +130,12 @@ export function AiChatWidget() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: msg, history, context: ctx.label, audience }),
       });
-      const data = (await res.json()) as { reply?: string };
+      const data = (await res.json()) as { reply?: string; suggestions?: string[] };
       setMessages((prev) => [
         ...prev,
         { role: 'assistant', content: data.reply ?? '申し訳ありません。回答できませんでした。' },
       ]);
+      setSuggestions(Array.isArray(data.suggestions) ? data.suggestions.slice(0, 4) : []);
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -156,8 +160,6 @@ export function AiChatWidget() {
       void send();
     }
   }
-
-  const showQuickReplies = messages.filter((m) => m.role === 'user').length === 0;
 
   return (
     <div className="fixed bottom-20 right-4 z-50 flex flex-col items-end sm:bottom-6">
@@ -209,12 +211,11 @@ export function AiChatWidget() {
               </div>
             )}
 
-            {/* クイック返信 */}
-            {showQuickReplies && !loading && (
-              <div className="space-y-1.5 pt-1">
-                <p className="text-[11px] font-bold text-slate-400">{audience === 'dealer' ? 'よくある相談（加盟店）' : 'このページのよくある質問'}</p>
-                {ctx.quick.map((q) => (
-                  <button key={q} onClick={() => void send(q)} className="block w-full rounded-xl border border-navy-200 bg-white px-3 py-2 text-left text-xs font-bold text-navy-700 transition hover:border-navy-400 hover:bg-navy-50">
+            {/* 会話に合わせた提案ボタン（AIが最新返答に付けた選択肢・最初は無し） */}
+            {suggestions.length > 0 && !loading && (
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {suggestions.map((q) => (
+                  <button key={q} onClick={() => void send(q)} className="rounded-full border border-navy-200 bg-white px-3 py-1.5 text-left text-xs font-bold text-navy-700 transition hover:border-navy-400 hover:bg-navy-50">
                     {q}
                   </button>
                 ))}
