@@ -102,7 +102,7 @@ async function writeArticle(client: Anthropic): Promise<GeneratedColumn | null> 
     '  "meta": "SEO用の説明文（120文字以内）",',
     '  "cat": "上のカテゴリから1つ",',
     '  "html": "本文HTML。<p>,<h2>,<h3>,<ul>,<li>,<table>,<tr>,<th>,<td>,<strong> のみ使用。先頭に要点の<div class=\\"answer\\">結論：...</div> を置く",',
-    '  "imagePrompt": "記事に合うサムネ画像の英語プロンプト（写実的でクリーン、車/書類/日本の街など。画像内に文字は入れない）",',
+    '  "imagePrompt": "記事に合う画像の英語プロンプト。実写写真として撮影できる具体的な実在シーンを描写する（例: a clean compact car parked in front of a Japanese house / a person filling out vehicle paperwork at a desk with a car key）。グラフ・チャート・アイコン・インフォグラフィック・文字・3Dイラストは禁止。被写体は実物の車・書類・人・日本の風景などに限る",',
     '  "caption": "Instagram等のSNS投稿用キャプション。記事の要点を2〜3文で、親しみやすく。最後に「詳しくはプロフィールのリンク/サイトで」等の誘導。絵文字は控えめに1〜2個まで",',
     '  "hashtags": ["中古車", "車買取", "車売却"],',
     '  "sources": [{"title":"参考にしたページ名","url":"URL"}]',
@@ -165,9 +165,11 @@ export async function generateAndSaveColumn(): Promise<GenerateResult> {
   let imageModel: string | undefined;
   try {
     const { image: img, diagnostic, model } = await generateImageOpenRouter(
-      `A high-quality social media image for Instagram, for a Japanese used-car marketplace article. ` +
+      `A professional photorealistic photograph for an Instagram post, for a Japanese used-car marketplace article. ` +
         `Subject: ${article.imagePrompt}. ` +
-        `Natural lighting, clean modern composition, realistic Japanese setting where relevant (cars, documents, dealership, city). ` +
+        `Shot like a real high-end DSLR photo: natural lighting, true-to-life colors, realistic materials and textures, shallow depth of field, ` +
+        `authentic Japanese setting where relevant (real cars, real paper documents, car dealership, Japanese street or home). ` +
+        `This MUST look like a REAL photograph — absolutely NOT an illustration, NOT a 3D render, NOT CGI, NOT a cartoon, NOT a flat graphic. ` +
         `IMPORTANT: the image MUST be a perfect SQUARE with a 1:1 aspect ratio, full-bleed and filling the entire square frame edge to edge — absolutely no borders, no black bars, no letterboxing, no padding. ` +
         `No text, no letters, no numbers, no watermark, no logos.`,
     );
