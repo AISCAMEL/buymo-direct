@@ -3,7 +3,7 @@
 //
 // 環境変数:
 //   OPENROUTER_API_KEY     … 必須
-//   OPENROUTER_IMAGE_MODEL … 画像出力対応モデル（既定: google/gemini-2.5-flash-image-preview）
+//   OPENROUTER_IMAGE_MODEL … 画像出力対応モデル（任意。既定: google/gemini-2.5-flash-image を筆頭に数モデルを順に試行）
 //
 // OpenRouter は chat/completions で modalities に "image" を含めると画像を返す。
 // レスポンス形状は複数あり得るため、寛容にパースする（message.images / message.content / data[]）。
@@ -103,17 +103,21 @@ function extractImage(data: unknown): GeneratedImage | null {
 
 export type ImageGenResult = { image: GeneratedImage | null; diagnostic: string; model: string };
 
-/**
- * OpenRouter で画像を1枚生成する。失敗時は image=null＋diagnostic（理由）。
- * 失敗理由は console にも出すが、呼び出し側が画面に出せるよう diagnostic でも返す。
- */
-export async function generateImageOpenRouter(prompt: string): Promise<ImageGenResult> {
-  const model = process.env.OPENROUTER_IMAGE_MODEL || 'google/gemini-3-pro-image';
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
-    return { image: null, diagnostic: 'OPENROUTER_API_KEY が未設定です', model };
-  }
+/** 試行するモデルの候補（先頭から順に。env 指定があれば最優先）。
+ *  OpenRouter で chat/completions（modalities:image）に対応する画像生成モデル。 */
+function candidateModels(): string[] {
+  const envModel = process.env.OPENROUTER_IMAGE_MODEL?.trim();
+  const defaults = [
+    'google/gemini-2.5-flash-image',   // Nano Banana（画像生成・2025/10〜）正式slug
+    'google/gemini-3-pro-image',       // 新しい上位モデル（利用可能なら）
+    'black-forest-labs/flux.2-flex',   // 予備（別系統）
+  ];
+  // env 指定を先頭に、重複を除外
+  return [envModel, ...defaults].filter((m): m is string => !!m).filter((m, i, a) => a.indexOf(m) === i);
+}
 
+/** 1モデルで画像生成を1回試す。成功なら image、失敗なら理由を返す。 */
+async function tryOneModel(prompt: string, model: string, apiKey: string): Promise<{ image: GeneratedImage | null; diagnostic: string }> {
   try {
     const res = await fetch(OPENROUTER_API_URL, {
       method: 'POST',
@@ -129,7 +133,7 @@ export async function generateImageOpenRouter(prompt: string): Promise<ImageGenR
     if (!res.ok) {
       const diag = `HTTP ${res.status}: ${bodyText.slice(0, 200)}`;
       console.error(`[openrouter-image] ${diag} model=${model}`);
-      return { image: null, diagnostic: diag, model };
+      return { image: null, diagnostic: diag };
     }
 
     let data: unknown;
@@ -137,22 +141,46 @@ export async function generateImageOpenRouter(prompt: string): Promise<ImageGenR
       data = JSON.parse(bodyText);
     } catch {
       const diag = `JSON解析失敗: ${bodyText.slice(0, 160)}`;
-      console.error(`[openrouter-image] ${diag}`);
-      return { image: null, diagnostic: diag, model };
+      console.error(`[openrouter-image] ${diag} model=${model}`);
+      return { image: null, diagnostic: diag };
     }
 
     const img = extractImage(data);
     if (!img) {
-      const diag = `画像が返りませんでした（構造: ${JSON.stringify(topKeys(data)).slice(0, 220)}）`;
+      const diag = `画像が返りませんでした（構造: ${JSON.stringify(topKeys(data)).slice(0, 200)}）`;
       console.error(`[openrouter-image] ${diag} model=${model} snippet=${bodyText.slice(0, 400)}`);
-      return { image: null, diagnostic: diag, model };
+      return { image: null, diagnostic: diag };
     }
-    return { image: img, diagnostic: '', model };
+    return { image: img, diagnostic: '' };
   } catch (e) {
     const diag = `例外: ${e instanceof Error ? e.message : 'unknown'}`;
-    console.error(`[openrouter-image] ${diag}`);
-    return { image: null, diagnostic: diag, model };
+    console.error(`[openrouter-image] ${diag} model=${model}`);
+    return { image: null, diagnostic: diag };
   }
+}
+
+/**
+ * OpenRouter で画像を1枚生成する。複数モデルを順に試し、最初に成功したものを返す。
+ * すべて失敗なら image=null＋diagnostic（最後の理由とモデル）。
+ */
+export async function generateImageOpenRouter(prompt: string): Promise<ImageGenResult> {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  const models = candidateModels();
+  if (!apiKey) {
+    return { image: null, diagnostic: 'OPENROUTER_API_KEY が未設定です', model: models[0] };
+  }
+
+  const tried: string[] = [];
+  let lastDiag = '不明';
+  for (const model of models) {
+    tried.push(model);
+    const { image, diagnostic } = await tryOneModel(prompt, model, apiKey);
+    if (image) return { image, diagnostic: '', model };
+    lastDiag = diagnostic;
+    // モデル未対応/権限なし系は次の候補へ。レート制限(429)は打ち切り。
+    if (/HTTP 429/.test(diagnostic)) break;
+  }
+  return { image: null, diagnostic: `${lastDiag}（試行: ${tried.join(', ')}）`, model: tried[tried.length - 1] };
 }
 
 /** レスポンスの大まかな構造（キー）を返す（ログ用）。 */
