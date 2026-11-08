@@ -165,9 +165,10 @@ export async function generateAndSaveColumn(): Promise<GenerateResult> {
   let imageModel: string | undefined;
   try {
     const { image: img, diagnostic, model } = await generateImageOpenRouter(
-      `High-quality photorealistic editorial thumbnail, 16:9 aspect ratio, for a Japanese used-car marketplace article. ` +
+      `A high-quality social media image for Instagram, for a Japanese used-car marketplace article. ` +
         `Subject: ${article.imagePrompt}. ` +
         `Natural lighting, clean modern composition, realistic Japanese setting where relevant (cars, documents, dealership, city). ` +
+        `IMPORTANT: the image MUST be a perfect SQUARE with a 1:1 aspect ratio, full-bleed and filling the entire square frame edge to edge — absolutely no borders, no black bars, no letterboxing, no padding. ` +
         `No text, no letters, no numbers, no watermark, no logos.`,
     );
     imageModel = model;
