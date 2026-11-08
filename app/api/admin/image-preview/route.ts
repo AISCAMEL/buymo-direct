@@ -3,7 +3,7 @@
 import { NextResponse } from 'next/server';
 import { isAdminUser } from '@/lib/admin';
 import { generateImageOpenRouter } from '@/lib/openrouter-image';
-import { getImageStyle, getImageRef } from '@/lib/settings';
+import { getImageStyle, getImageRef, getImagePeople, composeImagePrompt } from '@/lib/settings';
 import { createServiceClient } from '@/lib/supabase/service';
 
 export const dynamic = 'force-dynamic';
@@ -14,13 +14,19 @@ const SAMPLE_SUBJECT = 'a clean compact used car parked in front of a modern Jap
 export async function POST(req: Request) {
   if (!(await isAdminUser())) return NextResponse.json({ error: '権限がありません' }, { status: 403 });
 
-  const body = (await req.json().catch(() => ({}))) as { subject?: string; style?: string; ref?: string };
+  const body = (await req.json().catch(() => ({}))) as {
+    subject?: string;
+    style?: string;
+    ref?: string;
+    people?: string;
+  };
   const style = (body.style && body.style.trim()) || (await getImageStyle());
+  const people = body.people !== undefined ? body.people.trim() : await getImagePeople();
   const subject = (body.subject && body.subject.trim()) || SAMPLE_SUBJECT;
   // ref は明示指定（空文字＝参照なし）を尊重。未指定（undefined）のときだけ保存値を使う。
   const ref = body.ref !== undefined ? body.ref.trim() : (await getImageRef()) ?? '';
 
-  const prompt = `${style}\n\nDepict this specific scene: ${subject}.`;
+  const prompt = composeImagePrompt(style, people, subject);
 
   let img, diagnostic = '', model = '';
   try {

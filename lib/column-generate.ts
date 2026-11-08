@@ -9,7 +9,7 @@ import { createServiceClient } from '@/lib/supabase/service';
 import { loadDbColumns } from '@/lib/columns-db';
 import { COLUMNS, columnThumb } from '@/lib/columns';
 import { postColumnToZapier } from '@/lib/social-webhook';
-import { getImageStyle, getImageRef } from '@/lib/settings';
+import { getImageStyle, getImageRef, getImagePeople, composeImagePrompt } from '@/lib/settings';
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://buymo.me';
 
@@ -165,9 +165,9 @@ export async function generateAndSaveColumn(): Promise<GenerateResult> {
   let imageError: string | undefined;
   let imageModel: string | undefined;
   try {
-    const style = await getImageStyle();
+    const [style, people] = await Promise.all([getImageStyle(), getImagePeople()]);
     const refUrl = await getImageRef();
-    const fullPrompt = `${style}\n\nDepict this specific scene for the article: ${article.imagePrompt}.`;
+    const fullPrompt = composeImagePrompt(style, people, article.imagePrompt);
     const { image: img, diagnostic, model } = await generateImageOpenRouter(fullPrompt, refUrl ?? undefined);
     imageModel = model;
     if (img) {

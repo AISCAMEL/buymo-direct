@@ -4,7 +4,7 @@ import { isAdminUser } from '@/lib/admin';
 import { getDbColumn } from '@/lib/columns-db';
 import { generateWithClaude, aiUtilityModel } from '@/lib/ai';
 import { generateImageOpenRouter } from '@/lib/openrouter-image';
-import { getImageStyle, getImageRef } from '@/lib/settings';
+import { getImageStyle, getImageRef, getImagePeople, composeImagePrompt } from '@/lib/settings';
 import { createServiceClient } from '@/lib/supabase/service';
 
 export const dynamic = 'force-dynamic';
@@ -40,9 +40,9 @@ export async function POST(req: Request) {
   if (!scene) scene = `a realistic photograph related to buying and selling used cars in Japan, about: ${col.title}`;
 
   // 2) 画像生成（現在のスタイル指示文＋基準画像）
-  const style = await getImageStyle();
+  const [style, people] = await Promise.all([getImageStyle(), getImagePeople()]);
   const ref = await getImageRef();
-  const prompt = `${style}\n\nDepict this specific scene for the article: ${scene}.`;
+  const prompt = composeImagePrompt(style, people, scene);
   const { image, diagnostic, model } = await generateImageOpenRouter(prompt, ref ?? undefined);
   if (!image) return NextResponse.json({ ok: false, slug, error: diagnostic || '画像生成に失敗しました', model });
 

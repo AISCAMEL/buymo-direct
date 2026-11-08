@@ -3,11 +3,12 @@
 import { useState } from 'react';
 import { Loader2, Image as ImageIcon, Wand2, Save, RotateCcw, Pin } from 'lucide-react';
 
-type Props = { initialStyle: string; initialRef: string; defaultStyle: string; aiOn: boolean };
+type Props = { initialStyle: string; initialRef: string; initialPeople: string; defaultStyle: string; aiOn: boolean };
 
-export function AdminImageStyle({ initialStyle, initialRef, defaultStyle, aiOn }: Props) {
+export function AdminImageStyle({ initialStyle, initialRef, initialPeople, defaultStyle, aiOn }: Props) {
   const [style, setStyle] = useState(initialStyle);
   const [refUrl, setRefUrl] = useState(initialRef);
+  const [people, setPeople] = useState(initialPeople);
   const [subject, setSubject] = useState('');
   const [preview, setPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState<'preview' | 'save' | null>(null);
@@ -21,7 +22,7 @@ export function AdminImageStyle({ initialStyle, initialRef, defaultStyle, aiOn }
       const res = await fetch('/api/admin/image-preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subject, style, ref: refUrl }),
+        body: JSON.stringify({ subject, style, ref: refUrl, people }),
       });
       const data = await res.json();
       if (data.ok) {
@@ -44,7 +45,7 @@ export function AdminImageStyle({ initialStyle, initialRef, defaultStyle, aiOn }
       const res = await fetch('/api/admin/image-settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ style, ref: refUrl }),
+        body: JSON.stringify({ style, ref: refUrl, people }),
       });
       const data = await res.json();
       if (data.ok) setMsg({ kind: 'ok', text: '保存しました。以降の自動生成に反映されます。' });
@@ -97,6 +98,21 @@ export function AdminImageStyle({ initialStyle, initialRef, defaultStyle, aiOn }
         >
           <RotateCcw className="h-3 w-3" /> 既定（写真風・正方形）に戻す
         </button>
+      </div>
+
+      {/* 人物の指定 */}
+      <div>
+        <label className="text-sm font-bold">人物の指定（任意）</label>
+        <textarea
+          value={people}
+          onChange={(e) => setPeople(e.target.value)}
+          rows={2}
+          className="mt-1 w-full rounded-lg border border-slate-200 p-2.5 text-sm focus:border-accent-500 focus:outline-none"
+          placeholder="例：30代の日本人女性スタッフ、ビジネスカジュアル、自然な笑顔 ／ 作業着の男性整備士 ／ 人物は入れない"
+        />
+        <p className="mt-1 text-xs text-slate-400">
+          日本語でOK（例「人物は入れない」「40代の男性オーナー」など）。全ての画像に反映されます。
+        </p>
       </div>
 
       {/* 基準画像 */}

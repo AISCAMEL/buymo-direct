@@ -53,6 +53,7 @@ export function isBankAccountSet(a: BankAccount): boolean {
 // ── コラム画像生成のスタイル設定（管理画面で編集可能） ─────────────────────
 export const SETTING_IMAGE_STYLE = 'column_image_style';
 export const SETTING_IMAGE_REF = 'column_image_ref_url';
+export const SETTING_IMAGE_PEOPLE = 'column_image_people';
 
 /** 画像生成のスタイル指示文（被写体は別途 append する）。 */
 export const DEFAULT_IMAGE_STYLE =
@@ -102,4 +103,16 @@ export async function getImageStyle(): Promise<string> {
 export async function getImageRef(): Promise<string | null> {
   const s = await getAppSetting(SETTING_IMAGE_REF);
   return s && s.trim() ? s : null;
+}
+
+/** 現在の人物指示（登場人物の指定）。未設定なら空文字。 */
+export async function getImagePeople(): Promise<string> {
+  const s = await getAppSetting(SETTING_IMAGE_PEOPLE);
+  return s && s.trim() ? s : '';
+}
+
+/** 画像生成プロンプトを組み立てる（スタイル＋人物指示＋被写体シーン）。 */
+export function composeImagePrompt(style: string, people: string, scene: string): string {
+  const peoplePart = people && people.trim() ? `People / characters in the image: ${people.trim()}. ` : '';
+  return `${style}\n\n${peoplePart}Depict this specific scene for the article: ${scene}.`;
 }

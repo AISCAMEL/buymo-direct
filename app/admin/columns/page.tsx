@@ -1,7 +1,7 @@
 import { requireAdmin } from '@/lib/admin';
 import { isAiEnabled } from '@/lib/ai';
 import { loadDbColumns } from '@/lib/columns-db';
-import { getImageStyle, getImageRef, DEFAULT_IMAGE_STYLE } from '@/lib/settings';
+import { getImageStyle, getImageRef, getImagePeople, DEFAULT_IMAGE_STYLE } from '@/lib/settings';
 import { AdminColumnGenerate } from '@/components/AdminColumnGenerate';
 import { AdminImageStyle } from '@/components/AdminImageStyle';
 import { AdminReimage } from '@/components/AdminReimage';
@@ -14,7 +14,7 @@ export default async function AdminColumnsPage() {
   const aiOn = isAiEnabled();
   const cols = await loadDbColumns(100);
   const zapierOn = !!process.env.ZAPIER_COLUMN_WEBHOOK_URL;
-  const [imgStyle, imgRef] = await Promise.all([getImageStyle(), getImageRef()]);
+  const [imgStyle, imgRef, imgPeople] = await Promise.all([getImageStyle(), getImageRef(), getImagePeople()]);
 
   return (
     <div className="space-y-5">
@@ -29,7 +29,13 @@ export default async function AdminColumnsPage() {
 
       <AdminColumnGenerate aiOn={aiOn} />
 
-      <AdminImageStyle initialStyle={imgStyle} initialRef={imgRef ?? ''} defaultStyle={DEFAULT_IMAGE_STYLE} aiOn={aiOn} />
+      <AdminImageStyle
+        initialStyle={imgStyle}
+        initialRef={imgRef ?? ''}
+        initialPeople={imgPeople}
+        defaultStyle={DEFAULT_IMAGE_STYLE}
+        aiOn={aiOn}
+      />
 
       {/* SNS自動投稿の設定案内（RSS方式＝無料 / Webhook方式＝有料） */}
       <div className="card p-5">
