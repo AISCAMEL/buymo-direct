@@ -52,6 +52,31 @@ function rfc822(d: Date): string {
   return d.toUTCString();
 }
 
+// SNS投稿キャプション用のハッシュタグ（共通＋カテゴリ別）。
+const BASE_TAGS = ['中古車', '車買取', '車売却', 'BUYMO'];
+const CAT_TAGS: Record<string, string[]> = {
+  相場: ['買取相場', '愛車相場'],
+  事故車: ['事故車', '不動車', '廃車'],
+  書類: ['必要書類', '名義変更'],
+  手続き: ['車の手続き', '名義変更'],
+  タイミング: ['車売却タイミング', '売り時'],
+  名義変更: ['名義変更', '移転登録'],
+  買取の流れ: ['車査定', '出張査定'],
+  'ダイレクト販売': ['個人売買', 'エスクロー', '安心取引'],
+  メンテナンス: ['車メンテナンス', '洗車'],
+  '税金・制度': ['自動車税', '車の税金'],
+};
+
+function hashtagLine(cat: string): string {
+  const uniq = Array.from(new Set([...BASE_TAGS, ...(CAT_TAGS[cat] ?? [])]));
+  return uniq.map((t) => `#${t}`).join(' ');
+}
+
+/** Instagram等のキャプション本文を組み立てる（要約＋誘導＋ハッシュタグ）。 */
+function buildCaption(summary: string, cat: string): string {
+  return `${summary}\n\n🚗 無料査定・ご相談はプロフィールのリンクから\n\n${hashtagLine(cat)}`;
+}
+
 export async function GET() {
   const db = await loadDbColumns(50);
 
@@ -107,7 +132,7 @@ export async function GET() {
         `      <guid isPermaLink="true">${esc(link)}</guid>`,
         `      <pubDate>${rfc822(it.date)}</pubDate>`,
         `      <category>${esc(it.cat)}</category>`,
-        `      <description>${esc(it.desc)}</description>`,
+        `      <description>${esc(buildCaption(it.desc, it.cat))}</description>`,
         `      <enclosure url="${esc(it.image)}" type="${type}" length="0" />`,
         `      <media:content url="${esc(it.image)}" medium="image" type="${type}" />`,
         `      <media:thumbnail url="${esc(it.image)}" />`,
