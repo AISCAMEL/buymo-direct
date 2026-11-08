@@ -9,6 +9,7 @@ import { createServiceClient } from '@/lib/supabase/service';
 import { loadDbColumns } from '@/lib/columns-db';
 import { COLUMNS, columnThumb } from '@/lib/columns';
 import { postColumnToZapier } from '@/lib/social-webhook';
+import { getImageStyle, getImageRef } from '@/lib/settings';
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://buymo.me';
 
@@ -164,15 +165,10 @@ export async function generateAndSaveColumn(): Promise<GenerateResult> {
   let imageError: string | undefined;
   let imageModel: string | undefined;
   try {
-    const { image: img, diagnostic, model } = await generateImageOpenRouter(
-      `A professional photorealistic photograph for an Instagram post, for a Japanese used-car marketplace article. ` +
-        `Subject: ${article.imagePrompt}. ` +
-        `Shot like a real high-end DSLR photo: natural lighting, true-to-life colors, realistic materials and textures, shallow depth of field, ` +
-        `authentic Japanese setting where relevant (real cars, real paper documents, car dealership, Japanese street or home). ` +
-        `This MUST look like a REAL photograph — absolutely NOT an illustration, NOT a 3D render, NOT CGI, NOT a cartoon, NOT a flat graphic. ` +
-        `IMPORTANT: the image MUST be a perfect SQUARE with a 1:1 aspect ratio, full-bleed and filling the entire square frame edge to edge — absolutely no borders, no black bars, no letterboxing, no padding. ` +
-        `No text, no letters, no numbers, no watermark, no logos.`,
-    );
+    const style = await getImageStyle();
+    const refUrl = await getImageRef();
+    const fullPrompt = `${style}\n\nDepict this specific scene for the article: ${article.imagePrompt}.`;
+    const { image: img, diagnostic, model } = await generateImageOpenRouter(fullPrompt, refUrl ?? undefined);
     imageModel = model;
     if (img) {
       const ext = img.contentType.includes('jpeg') ? 'jpg' : img.contentType.includes('webp') ? 'webp' : 'png';

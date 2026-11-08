@@ -116,16 +116,28 @@ function candidateModels(): string[] {
   return [envModel, ...defaults].filter((m): m is string => !!m).filter((m, i, a) => a.indexOf(m) === i);
 }
 
-/** 1モデルで画像生成を1回試す。成功なら image、失敗なら理由を返す。 */
-async function tryOneModel(prompt: string, model: string, apiKey: string): Promise<{ image: GeneratedImage | null; diagnostic: string }> {
+/** 1モデルで画像生成を1回試す。成功なら image、失敗なら理由を返す。
+ *  referenceUrl を渡すと、その画像をスタイル参照として同送する（雰囲気を寄せる）。 */
+async function tryOneModel(
+  prompt: string,
+  model: string,
+  apiKey: string,
+  referenceUrl?: string,
+): Promise<{ image: GeneratedImage | null; diagnostic: string }> {
   try {
+    const content: unknown = referenceUrl
+      ? [
+          { type: 'text', text: prompt },
+          { type: 'image_url', image_url: { url: referenceUrl } },
+        ]
+      : prompt;
     const res = await fetch(OPENROUTER_API_URL, {
       method: 'POST',
       headers: headers(apiKey),
       body: JSON.stringify({
         model,
         modalities: ['image', 'text'],
-        messages: [{ role: 'user', content: prompt }],
+        messages: [{ role: 'user', content }],
       }),
     });
 
@@ -163,7 +175,7 @@ async function tryOneModel(prompt: string, model: string, apiKey: string): Promi
  * OpenRouter で画像を1枚生成する。複数モデルを順に試し、最初に成功したものを返す。
  * すべて失敗なら image=null＋diagnostic（最後の理由とモデル）。
  */
-export async function generateImageOpenRouter(prompt: string): Promise<ImageGenResult> {
+export async function generateImageOpenRouter(prompt: string, referenceUrl?: string): Promise<ImageGenResult> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   const models = candidateModels();
   if (!apiKey) {
@@ -174,7 +186,7 @@ export async function generateImageOpenRouter(prompt: string): Promise<ImageGenR
   let lastDiag = '不明';
   for (const model of models) {
     tried.push(model);
-    const { image, diagnostic } = await tryOneModel(prompt, model, apiKey);
+    const { image, diagnostic } = await tryOneModel(prompt, model, apiKey, referenceUrl);
     if (image) return { image, diagnostic: '', model };
     lastDiag = diagnostic;
     // モデル未対応/権限なし系は次の候補へ。レート制限(429)は打ち切り。
