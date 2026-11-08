@@ -129,7 +129,7 @@ async function writeArticle(client: Anthropic): Promise<GeneratedColumn | null> 
 }
 
 export type GenerateResult =
-  | { ok: true; slug: string; title: string; hadImage: boolean }
+  | { ok: true; slug: string; title: string; hadImage: boolean; imageError?: string; imageModel?: string }
   | { ok: false; reason: string };
 
 /** コラムを1本生成して保存・公開する。 */
@@ -150,18 +150,24 @@ export async function generateAndSaveColumn(): Promise<GenerateResult> {
 
   // 画像生成（OpenRouter）→ Storage アップロード（失敗しても記事は保存）
   let thumbUrl: string | null = null;
+  let imageError: string | undefined;
+  let imageModel: string | undefined;
   try {
-    const img = await generateImageOpenRouter(
+    const { image: img, diagnostic, model } = await generateImageOpenRouter(
       `${article.imagePrompt}. Editorial thumbnail for a Japanese used-car marketplace blog. Clean, realistic, no text, no watermark, 16:9.`,
     );
+    imageModel = model;
     if (img) {
       const ext = img.contentType.includes('jpeg') ? 'jpg' : img.contentType.includes('webp') ? 'webp' : 'png';
       const path = `columns/${slug}.${ext}`;
       const up = await svc.storage.from('listing-images').upload(path, img.buffer, { contentType: img.contentType, upsert: true, cacheControl: '86400' });
-      if (!up.error) thumbUrl = svc.storage.from('listing-images').getPublicUrl(path).data.publicUrl;
+      if (up.error) imageError = `アップロード失敗: ${up.error.message}`;
+      else thumbUrl = svc.storage.from('listing-images').getPublicUrl(path).data.publicUrl;
+    } else {
+      imageError = diagnostic || '画像生成に失敗しました';
     }
-  } catch {
-    /* 画像失敗は無視 */
+  } catch (e) {
+    imageError = `画像処理の例外: ${e instanceof Error ? e.message : 'unknown'}`;
   }
 
   const cat = (COLUMN_CATS as readonly string[]).includes(article.cat) ? article.cat : 'その他';
@@ -178,5 +184,5 @@ export async function generateAndSaveColumn(): Promise<GenerateResult> {
   });
   if (error) return { ok: false, reason: `保存に失敗: ${error.message}（columns テーブル未作成の可能性）` };
 
-  return { ok: true, slug, title: article.title, hadImage: !!thumbUrl };
+  return { ok: true, slug, title: article.title, hadImage: !!thumbUrl, imageError: thumbUrl ? undefined : imageError, imageModel };
 }

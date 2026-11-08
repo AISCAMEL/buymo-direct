@@ -101,17 +101,18 @@ function extractImage(data: unknown): GeneratedImage | null {
   return null;
 }
 
+export type ImageGenResult = { image: GeneratedImage | null; diagnostic: string; model: string };
+
 /**
- * OpenRouter で画像を1枚生成する。失敗時は null（呼び出し側は画像なしで続行）。
- * 失敗理由は console に出す（Vercelログで診断可能にする）。
+ * OpenRouter で画像を1枚生成する。失敗時は image=null＋diagnostic（理由）。
+ * 失敗理由は console にも出すが、呼び出し側が画面に出せるよう diagnostic でも返す。
  */
-export async function generateImageOpenRouter(prompt: string): Promise<GeneratedImage | null> {
+export async function generateImageOpenRouter(prompt: string): Promise<ImageGenResult> {
+  const model = process.env.OPENROUTER_IMAGE_MODEL || 'google/gemini-2.5-flash-image-preview';
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
-    console.error('[openrouter-image] OPENROUTER_API_KEY 未設定');
-    return null;
+    return { image: null, diagnostic: 'OPENROUTER_API_KEY が未設定です', model };
   }
-  const model = process.env.OPENROUTER_IMAGE_MODEL || 'google/gemini-2.5-flash-image-preview';
 
   try {
     const res = await fetch(OPENROUTER_API_URL, {
@@ -126,28 +127,31 @@ export async function generateImageOpenRouter(prompt: string): Promise<Generated
 
     const bodyText = await res.text();
     if (!res.ok) {
-      console.error(`[openrouter-image] HTTP ${res.status} model=${model} body=${bodyText.slice(0, 500)}`);
-      return null;
+      const diag = `HTTP ${res.status}: ${bodyText.slice(0, 200)}`;
+      console.error(`[openrouter-image] ${diag} model=${model}`);
+      return { image: null, diagnostic: diag, model };
     }
 
     let data: unknown;
     try {
       data = JSON.parse(bodyText);
     } catch {
-      console.error(`[openrouter-image] JSON解析失敗 body=${bodyText.slice(0, 300)}`);
-      return null;
+      const diag = `JSON解析失敗: ${bodyText.slice(0, 160)}`;
+      console.error(`[openrouter-image] ${diag}`);
+      return { image: null, diagnostic: diag, model };
     }
 
     const img = extractImage(data);
     if (!img) {
-      // 画像が取り出せない → レスポンス構造をログに出して原因特定できるようにする
-      console.error(`[openrouter-image] 画像抽出失敗 model=${model} keys=${JSON.stringify(topKeys(data))} snippet=${bodyText.slice(0, 500)}`);
-      return null;
+      const diag = `画像が返りませんでした（構造: ${JSON.stringify(topKeys(data)).slice(0, 220)}）`;
+      console.error(`[openrouter-image] ${diag} model=${model} snippet=${bodyText.slice(0, 400)}`);
+      return { image: null, diagnostic: diag, model };
     }
-    return img;
+    return { image: img, diagnostic: '', model };
   } catch (e) {
-    console.error(`[openrouter-image] 例外: ${e instanceof Error ? e.message : 'unknown'}`);
-    return null;
+    const diag = `例外: ${e instanceof Error ? e.message : 'unknown'}`;
+    console.error(`[openrouter-image] ${diag}`);
+    return { image: null, diagnostic: diag, model };
   }
 }
 
