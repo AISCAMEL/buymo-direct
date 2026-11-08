@@ -154,7 +154,10 @@ export async function generateAndSaveColumn(): Promise<GenerateResult> {
   let imageModel: string | undefined;
   try {
     const { image: img, diagnostic, model } = await generateImageOpenRouter(
-      `${article.imagePrompt}. Editorial thumbnail for a Japanese used-car marketplace blog. Clean, realistic, no text, no watermark, 16:9.`,
+      `High-quality photorealistic editorial thumbnail, 16:9 aspect ratio, for a Japanese used-car marketplace article. ` +
+        `Subject: ${article.imagePrompt}. ` +
+        `Natural lighting, clean modern composition, realistic Japanese setting where relevant (cars, documents, dealership, city). ` +
+        `No text, no letters, no numbers, no watermark, no logos.`,
     );
     imageModel = model;
     if (img) {

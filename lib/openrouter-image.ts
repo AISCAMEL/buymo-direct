@@ -108,7 +108,7 @@ export type ImageGenResult = { image: GeneratedImage | null; diagnostic: string;
  * 失敗理由は console にも出すが、呼び出し側が画面に出せるよう diagnostic でも返す。
  */
 export async function generateImageOpenRouter(prompt: string): Promise<ImageGenResult> {
-  const model = process.env.OPENROUTER_IMAGE_MODEL || 'google/gemini-2.5-flash-image-preview';
+  const model = process.env.OPENROUTER_IMAGE_MODEL || 'google/gemini-3-pro-image';
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     return { image: null, diagnostic: 'OPENROUTER_API_KEY が未設定です', model };
