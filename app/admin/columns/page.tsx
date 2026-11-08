@@ -26,22 +26,42 @@ export default async function AdminColumnsPage() {
 
       <AdminColumnGenerate aiOn={aiOn} />
 
-      {/* SNS自動投稿（Zapier）の設定案内 */}
+      {/* SNS自動投稿の設定案内（RSS方式＝無料 / Webhook方式＝有料） */}
       <div className="card p-5">
-        <h2 className="mb-2 font-bold">SNS自動投稿（Instagram等・Zapier連携）</h2>
-        <p className="text-sm text-slate-600">
-          新着記事を Zapier に通知し、Instagram／X／Facebook などへ自動投稿できます（画像・キャプション・ハッシュタグ付き）。
-        </p>
-        <p className={`mt-2 text-sm font-bold ${zapierOn ? 'text-emerald-600' : 'text-amber-600'}`}>
-          {zapierOn ? '✅ 連携済み（ZAPIER_COLUMN_WEBHOOK_URL 設定あり）。新着記事は自動でZapierへ送信されます。' : '⏳ 未連携。下記の手順で有効化してください。'}
-        </p>
-        <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-slate-600">
-          <li>Zapierで Zap を作成：Trigger =「Webhooks by Zapier → Catch Hook」。表示されるURLをコピー。</li>
-          <li>Vercelの環境変数に <span className="font-mono">ZAPIER_COLUMN_WEBHOOK_URL</span> としてそのURLを設定 → 再デプロイ。</li>
-          <li>Zapier の Action に「Instagram（や X / Facebook）へ投稿」を追加し、受け取ったフィールドをマッピング：
-            <span className="font-mono"> caption_full</span>（本文＋タグ＋URL）、<span className="font-mono">image_url</span>（画像）、<span className="font-mono">title</span>、<span className="font-mono">url</span>、<span className="font-mono">brand</span>。</li>
-          <li>※ ブランド横展開は <span className="font-mono">brand</span> で判別（Zapier側でフィルタ）。別ブランドも同じ仕組みで追加できます。</li>
-        </ol>
+        <h2 className="mb-2 font-bold">SNS自動投稿（Instagram等）</h2>
+
+        {/* 推奨：RSS方式（無料） */}
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+          <p className="text-sm font-bold text-emerald-700">★ 推奨：RSS方式（Zapier無料プランでOK）</p>
+          <p className="mt-1 text-sm text-slate-700">
+            新着コラムを配信する<strong>RSSフィード</strong>を用意しました。Zapierの無料トリガー「RSS by Zapier」でこれを監視すれば、Webhook（有料）なしで自動投稿できます。
+          </p>
+          <p className="mt-2 text-sm">
+            RSSフィードURL：
+            <a href="/feed.xml" target="_blank" className="font-mono font-bold text-accent-700 hover:underline">{'/feed.xml'}</a>
+            <span className="text-slate-500">（画像・タイトル・本文要約・記事URL入り）</span>
+          </p>
+          <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-slate-600">
+            <li>Zapierで Zap を作成：Trigger =「<span className="font-mono">RSS by Zapier → New Item in Feed</span>」。</li>
+            <li>Feed URL に上記フィードのフルURL（https://〜/feed.xml）を貼る。</li>
+            <li>Action に「<span className="font-mono">Instagram for Business → Publish Photo</span>」。
+              Photo = <span className="font-mono">Media URL（enclosure）</span>、Caption = <span className="font-mono">Title ＋ Description</span> をマッピング。</li>
+            <li>Instagramは<strong>ビジネスアカウント＋Facebookページ連携</strong>が前提（BUYMO用を接続）。</li>
+          </ol>
+        </div>
+
+        {/* 代替：Webhook方式（有料） */}
+        <details className="mt-3">
+          <summary className="cursor-pointer text-sm font-bold text-slate-600">代替：Webhook方式（Zapier有料プラン・即時投稿）</summary>
+          <p className={`mt-2 text-sm font-bold ${zapierOn ? 'text-emerald-600' : 'text-slate-500'}`}>
+            {zapierOn ? '✅ Webhook連携済み（ZAPIER_COLUMN_WEBHOOK_URL 設定あり）。' : '未設定（RSS方式なら不要）。'}
+          </p>
+          <ol className="mt-1 list-decimal space-y-1 pl-5 text-sm text-slate-600">
+            <li>Zapierで「Webhooks by Zapier → Catch Hook」（Premium）のURLを取得。</li>
+            <li>Vercel環境変数 <span className="font-mono">ZAPIER_COLUMN_WEBHOOK_URL</span> に設定 → 再デプロイ。</li>
+            <li>Action側で <span className="font-mono">image_url</span> / <span className="font-mono">caption_full</span> / <span className="font-mono">brand</span> をマッピング。</li>
+          </ol>
+        </details>
       </div>
 
       <div className="card p-5">

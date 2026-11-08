@@ -15,7 +15,10 @@ type Card = { slug: string; title: string; meta: string; cat: string; thumb: str
 export const metadata: Metadata = {
   title: 'コラム｜車の買取・売却のお役立ち記事',
   description: '車買取相場の調べ方、事故車・不動車の売り方、名義変更、必要書類、高く売るタイミングなど、車の売却に役立つ記事をBUYMOが解説。',
-  alternates: { canonical: `${BASE}/column` },
+  alternates: {
+    canonical: `${BASE}/column`,
+    types: { 'application/rss+xml': `${BASE}/feed.xml` },
+  },
 };
 
 export default async function ColumnHubPage() {
