@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Loader2, Sparkles, ExternalLink } from 'lucide-react';
 
 type Result =
-  | { ok: true; slug: string; title: string; hadImage: boolean; imageError?: string; imageModel?: string }
+  | { ok: true; slug: string; title: string; hadImage: boolean; imageError?: string; imageModel?: string; posted?: boolean }
   | { ok: false; reason: string }
   | { ok: true; skipped: true; reason: string };
 
@@ -53,6 +53,7 @@ export function AdminColumnGenerate({ aiOn }: { aiOn: boolean }) {
             <div className="rounded-lg bg-emerald-50 px-3 py-2 text-emerald-700">
               <p className="font-bold">生成しました：{result.title}</p>
               <p className="mt-0.5 text-xs">画像：{result.hadImage ? 'あり' : 'なし（記事は公開済み／固定画像を表示）'}</p>
+              <p className="mt-0.5 text-xs">SNS投稿（Zapier）：{result.posted ? '送信しました' : '未送信（ZAPIER_COLUMN_WEBHOOK_URL 未設定）'}</p>
               {!result.hadImage && result.imageError && (
                 <p className="mt-1 rounded bg-amber-50 px-2 py-1 text-[11px] text-amber-800">
                   画像が出ない理由：{result.imageError}

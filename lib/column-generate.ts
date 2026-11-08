@@ -7,7 +7,10 @@ import { anthropicClient, aiChatModel } from '@/lib/ai';
 import { generateImageOpenRouter } from '@/lib/openrouter-image';
 import { createServiceClient } from '@/lib/supabase/service';
 import { loadDbColumns } from '@/lib/columns-db';
-import { COLUMNS } from '@/lib/columns';
+import { COLUMNS, columnThumb } from '@/lib/columns';
+import { postColumnToZapier } from '@/lib/social-webhook';
+
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://buymo.me';
 
 export const COLUMN_CATS = ['相場', '事故車', '書類', 'タイミング', '名義変更', '買取の流れ', 'ダイレクト販売', 'メンテナンス', '税金・制度', 'その他'] as const;
 
@@ -17,6 +20,8 @@ export type GeneratedColumn = {
   cat: string;
   html: string;
   imagePrompt: string;
+  caption: string;       // SNS投稿用キャプション（Instagram等）
+  hashtags: string[];    // ハッシュタグ（#なしの語でも可）
   sources: { title?: string; url?: string }[];
 };
 
@@ -39,6 +44,10 @@ function parseJsonObject(text: string): GeneratedColumn | null {
       cat: String(obj.cat ?? 'その他').slice(0, 24),
       html: sanitizeHtml(String(obj.html)),
       imagePrompt: String(obj.imagePrompt ?? '').slice(0, 600),
+      caption: String(obj.caption ?? '').slice(0, 600),
+      hashtags: Array.isArray(obj.hashtags)
+        ? obj.hashtags.map((x: unknown) => String(x).replace(/^#/, '').trim()).filter(Boolean).slice(0, 12)
+        : [],
       sources: Array.isArray(obj.sources)
         ? obj.sources.slice(0, 8).map((x: Record<string, unknown>) => ({ title: String(x?.title ?? '').slice(0, 160), url: String(x?.url ?? '').slice(0, 400) }))
         : [],
@@ -94,6 +103,8 @@ async function writeArticle(client: Anthropic): Promise<GeneratedColumn | null> 
     '  "cat": "上のカテゴリから1つ",',
     '  "html": "本文HTML。<p>,<h2>,<h3>,<ul>,<li>,<table>,<tr>,<th>,<td>,<strong> のみ使用。先頭に要点の<div class=\\"answer\\">結論：...</div> を置く",',
     '  "imagePrompt": "記事に合うサムネ画像の英語プロンプト（写実的でクリーン、車/書類/日本の街など。画像内に文字は入れない）",',
+    '  "caption": "Instagram等のSNS投稿用キャプション。記事の要点を2〜3文で、親しみやすく。最後に「詳しくはプロフィールのリンク/サイトで」等の誘導。絵文字は控えめに1〜2個まで",',
+    '  "hashtags": ["中古車", "車買取", "車売却"],',
     '  "sources": [{"title":"参考にしたページ名","url":"URL"}]',
     '}',
   ].join('\n');
@@ -129,7 +140,7 @@ async function writeArticle(client: Anthropic): Promise<GeneratedColumn | null> 
 }
 
 export type GenerateResult =
-  | { ok: true; slug: string; title: string; hadImage: boolean; imageError?: string; imageModel?: string }
+  | { ok: true; slug: string; title: string; hadImage: boolean; imageError?: string; imageModel?: string; posted?: boolean }
   | { ok: false; reason: string };
 
 /** コラムを1本生成して保存・公開する。 */
@@ -187,5 +198,24 @@ export async function generateAndSaveColumn(): Promise<GenerateResult> {
   });
   if (error) return { ok: false, reason: `保存に失敗: ${error.message}（columns テーブル未作成の可能性）` };
 
-  return { ok: true, slug, title: article.title, hadImage: !!thumbUrl, imageError: thumbUrl ? undefined : imageError, imageModel };
+  // SNS自動投稿（Zapier）。画像は生成分、無ければカテゴリ固定画像の公開URL。
+  let posted = false;
+  try {
+    const imageUrl = thumbUrl || `${SITE}${columnThumb(cat)}`;
+    const res = await postColumnToZapier({
+      brand: 'BUYMO',
+      slug,
+      title: article.title,
+      url: `${SITE}/column/${slug}`,
+      image_url: imageUrl,
+      caption: article.caption,
+      hashtags: article.hashtags,
+      category: cat,
+    });
+    posted = res.sent;
+  } catch {
+    /* SNS投稿失敗は記事公開に影響させない */
+  }
+
+  return { ok: true, slug, title: article.title, hadImage: !!thumbUrl, imageError: thumbUrl ? undefined : imageError, imageModel, posted };
 }

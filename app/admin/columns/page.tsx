@@ -11,6 +11,7 @@ export default async function AdminColumnsPage() {
   await requireAdmin();
   const aiOn = isAiEnabled();
   const cols = await loadDbColumns(100);
+  const zapierOn = !!process.env.ZAPIER_COLUMN_WEBHOOK_URL;
 
   return (
     <div className="space-y-5">
@@ -24,6 +25,24 @@ export default async function AdminColumnsPage() {
       </div>
 
       <AdminColumnGenerate aiOn={aiOn} />
+
+      {/* SNS自動投稿（Zapier）の設定案内 */}
+      <div className="card p-5">
+        <h2 className="mb-2 font-bold">SNS自動投稿（Instagram等・Zapier連携）</h2>
+        <p className="text-sm text-slate-600">
+          新着記事を Zapier に通知し、Instagram／X／Facebook などへ自動投稿できます（画像・キャプション・ハッシュタグ付き）。
+        </p>
+        <p className={`mt-2 text-sm font-bold ${zapierOn ? 'text-emerald-600' : 'text-amber-600'}`}>
+          {zapierOn ? '✅ 連携済み（ZAPIER_COLUMN_WEBHOOK_URL 設定あり）。新着記事は自動でZapierへ送信されます。' : '⏳ 未連携。下記の手順で有効化してください。'}
+        </p>
+        <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-slate-600">
+          <li>Zapierで Zap を作成：Trigger =「Webhooks by Zapier → Catch Hook」。表示されるURLをコピー。</li>
+          <li>Vercelの環境変数に <span className="font-mono">ZAPIER_COLUMN_WEBHOOK_URL</span> としてそのURLを設定 → 再デプロイ。</li>
+          <li>Zapier の Action に「Instagram（や X / Facebook）へ投稿」を追加し、受け取ったフィールドをマッピング：
+            <span className="font-mono"> caption_full</span>（本文＋タグ＋URL）、<span className="font-mono">image_url</span>（画像）、<span className="font-mono">title</span>、<span className="font-mono">url</span>、<span className="font-mono">brand</span>。</li>
+          <li>※ ブランド横展開は <span className="font-mono">brand</span> で判別（Zapier側でフィルタ）。別ブランドも同じ仕組みで追加できます。</li>
+        </ol>
+      </div>
 
       <div className="card p-5">
         <h2 className="mb-3 font-bold">生成済みコラム（{cols.length}件）</h2>
