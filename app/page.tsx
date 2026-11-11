@@ -262,14 +262,14 @@ export default async function HomePage() {
             </div>
 
             {/* 人物＋車の写真 */}
-            <div className="relative order-1 min-h-[260px] sm:min-h-[360px] lg:order-2 lg:min-h-full">
+            <div className="relative order-1 min-h-[260px] overflow-hidden sm:min-h-[360px] lg:order-2 lg:min-h-full">
               <Image
                 src="/hero-photo.jpg"
                 alt="スマホで愛車を撮影して査定を申し込む様子（写真査定・全国オンライン完結）"
                 fill
                 priority
                 sizes="(max-width: 1024px) 100vw, 50vw"
-                className="object-cover object-center lg:object-[85%_center]"
+                className="kenburns object-cover object-center lg:object-[85%_center]"
               />
               {/* パネルへ自然になじませる（lg以上は左端、モバイルは下端をぼかす） */}
               <div className="absolute inset-0 bg-gradient-to-t from-navy-900/40 to-transparent lg:bg-gradient-to-r lg:from-navy-900/70 lg:via-navy-900/10 lg:to-transparent" />
@@ -296,7 +296,7 @@ export default async function HomePage() {
 
         {/* ── 2. 価値訴求バー ── */}
         <section className="bg-navy-500 py-6 text-white">
-          <div className="mx-auto grid max-w-5xl grid-cols-2 gap-y-5 px-4 text-center sm:grid-cols-4 sm:divide-x sm:divide-white/20">
+          <div data-reveal className="mx-auto grid max-w-5xl grid-cols-2 gap-y-5 px-4 text-center sm:grid-cols-4 sm:divide-x sm:divide-white/20">
             <div className="px-4">
               <p className="text-lg font-black sm:text-xl">買取保証つき</p>
               <p className="mt-0.5 text-xs opacity-70">売れなくても安心</p>
@@ -324,7 +324,7 @@ export default async function HomePage() {
           <div className="mx-auto max-w-5xl">
             <p className="mb-2 text-center text-xs font-bold uppercase tracking-widest text-accent-600">Choice</p>
             <h2 className="mb-8 text-center text-2xl font-black sm:text-3xl">2つの売り方から選べる</h2>
-            <div className="grid gap-5 md:grid-cols-2">
+            <div data-reveal className="grid gap-5 md:grid-cols-2">
               {/* 買取 */}
               <div className="card flex flex-col p-7">
                 <span className="self-start rounded-full bg-navy-50 px-3 py-1 text-xs font-black text-navy-600">買取</span>
@@ -375,7 +375,7 @@ export default async function HomePage() {
 
         {/* ── 2.6 車のプロに依頼する ── */}
         <section className="bg-white px-4 pb-12">
-          <div className="mx-auto max-w-5xl rounded-2xl border border-slate-200 bg-navy-50 p-6">
+          <div data-reveal className="mx-auto max-w-5xl rounded-2xl border border-slate-200 bg-navy-50 p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-xl font-black text-navy-800">車のプロに依頼する</h2>
@@ -409,7 +409,7 @@ export default async function HomePage() {
         <section className="bg-white px-4 py-12">
           <div className="mx-auto max-w-5xl">
             <h2 className="mb-5 text-xl font-black">車種から探す</h2>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            <div data-reveal className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {BODY_TYPES.slice(0, 6).map((body) => (
                 <Link
                   key={body}
@@ -454,7 +454,7 @@ export default async function HomePage() {
               </div>
               <Link href="/genre" className="hidden shrink-0 text-sm font-bold text-accent-600 hover:underline sm:block">すべてのジャンル →</Link>
             </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            <div data-reveal className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {['kei', 'suv', 'minivan', 'alphard', 'hiace', 'prius', 'jimny', 'jiko', 'haisha', 'ev', 'import', 'truck']
                 .map((s) => GENRES.find((g) => g.slug === s))
                 .filter((g): g is NonNullable<typeof g> => Boolean(g))
@@ -477,7 +477,7 @@ export default async function HomePage() {
           <div className="mx-auto max-w-5xl">
             <h2 className="mb-1 text-xl font-black">エリアから探す</h2>
             <p className="mb-5 text-sm text-slate-500">全国47都道府県対応。お住まいの地域の出品車・買取査定を。</p>
-            <div className="flex flex-wrap gap-2.5">
+            <div data-reveal className="flex flex-wrap gap-2.5">
               {['hokkaido', 'miyagi', 'tokyo', 'kanagawa', 'saitama', 'chiba', 'aichi', 'shizuoka', 'osaka', 'hyogo', 'hiroshima', 'fukuoka']
                 .map((s) => AREAS.find((a) => a.slug === s))
                 .filter((a): a is NonNullable<typeof a> => Boolean(a))
@@ -515,7 +515,7 @@ export default async function HomePage() {
             </p>
             <h2 className="mb-2 text-center text-2xl font-black">BUYMOダイレクトが選ばれる理由</h2>
             <p className="mb-8 text-center text-sm text-slate-500">買取保証つき・エスクロー決済で、はじめての個人間売買でも安心。</p>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div data-reveal className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {SAFETY_POINTS.map(({ icon: Icon, title, desc }) => (
                 <div key={title} className="card flex flex-col items-center gap-3 p-6 text-center">
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-50">
@@ -537,7 +537,7 @@ export default async function HomePage() {
               For Dealers
             </p>
             <h2 className="mb-10 text-center text-2xl font-black text-navy-500">加盟店として出品する</h2>
-            <div className="grid gap-10 lg:grid-cols-2 lg:gap-14">
+            <div data-reveal className="grid gap-10 lg:grid-cols-2 lg:gap-14">
               {/* Left: pitch */}
               <div className="flex flex-col justify-center">
                 <h3 className="mb-5 text-xl font-black leading-snug text-navy-500">
@@ -617,7 +617,7 @@ export default async function HomePage() {
               <h2 className="flex items-center gap-1.5 text-xl font-black"><BookOpen className="h-5 w-5 text-accent-600" />お役立ちコラム</h2>
               <Link href="/column" className="shrink-0 text-sm font-bold text-accent-600 hover:underline">すべて見る →</Link>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div data-reveal className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {COLUMNS.slice(0, 4).map((c) => (
                 <Link key={c.slug} href={`/column/${c.slug}`} className="card group flex flex-col p-5 transition hover:shadow-md">
                   <span className="mb-2 inline-flex w-fit items-center rounded-full bg-accent-50 px-2.5 py-0.5 text-xs font-bold text-accent-600">{c.cat}</span>
@@ -631,7 +631,7 @@ export default async function HomePage() {
 
         {/* ── 9. 出品CTA ── */}
         <section className="bg-navy-500 px-4 py-16 text-center text-white">
-          <h2 className="text-2xl font-black sm:text-3xl">あなたの車を今すぐ売りませんか？</h2>
+          <h2 data-reveal className="text-2xl font-black sm:text-3xl">あなたの車を今すぐ売りませんか？</h2>
           <p className="mx-auto mt-3 max-w-md text-sm text-navy-200">
             出品は無料。業者より高く売れる可能性があります。
           </p>

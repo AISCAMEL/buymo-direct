@@ -8,6 +8,7 @@ import { NotificationRefresher } from '@/components/NotificationRefresher';
 import { BottomNav } from '@/components/BottomNav';
 import { AiChatWidget } from '@/components/AiChatWidget';
 import { CompareBar } from '@/components/CompareBar';
+import { ScrollReveal } from '@/components/ScrollReveal';
 import { createClient } from '@/lib/supabase/server';
 import type { Announcement } from '@/lib/types';
 import { validateEnv } from '@/lib/env';
@@ -124,6 +125,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Header />
         {navUser && <NotificationRefresher userId={navUser.id} />}
         <main className="mx-auto min-h-[calc(100vh-4rem)] max-w-6xl px-4 py-6">{children}</main>
+        <ScrollReveal />
         <BottomNav />
         <CompareBar />
         <AiChatWidget />
