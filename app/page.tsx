@@ -177,8 +177,8 @@ export default async function HomePage() {
               <p className="mb-3 inline-block rounded-full bg-white/12 px-4 py-1 text-xs font-bold text-white ring-1 ring-white/25">
                 💰 買取も、ダイレクト販売も
               </p>
-              <h1 className="text-3xl font-black leading-tight text-white sm:text-4xl xl:text-5xl">
-                愛車は、<span className="text-accent-200">もっと高く</span>売れる。
+              <h1 className="text-4xl font-black leading-[1.14] text-white sm:text-5xl xl:text-6xl">
+                愛車は、<span className="serif font-bold text-accent-200">もっと高く</span>売れる。
               </h1>
               <p className="mx-auto mt-4 max-w-xl text-sm text-white/85 sm:text-base lg:mx-0">
                 すぐ現金化なら「買取」、じっくり高値なら「ダイレクト販売」。売れなくてもBUYMOが買い取るから、いちばん高い売り方を選べます。
@@ -320,7 +320,7 @@ export default async function HomePage() {
         <SaleResultsSlider items={saleItems} />
 
         {/* ── 2.5 2つの売り方（買取／ダイレクト販売） ── */}
-        <section className="bg-white px-4 py-14">
+        <section className="bg-white px-4 py-16 sm:py-20">
           <div className="mx-auto max-w-5xl">
             <p className="mb-2 text-center text-xs font-bold uppercase tracking-widest text-accent-600">Choice</p>
             <h2 className="mb-8 text-center text-2xl font-black sm:text-3xl">2つの売り方から選べる</h2>
@@ -508,7 +508,7 @@ export default async function HomePage() {
         </section>
 
         {/* ── 5. BUYMOダイレクトが選ばれる理由（買取保証・安心の仕組み）── */}
-        <section className="bg-white px-4 py-14">
+        <section className="bg-white px-4 py-16 sm:py-20">
           <div className="mx-auto max-w-5xl">
             <p className="mb-2 text-center text-xs font-bold uppercase tracking-widest text-accent-600">
               Why BUYMO

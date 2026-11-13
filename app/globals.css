@@ -59,6 +59,10 @@ img, svg, video, canvas, iframe { max-width: 100%; }
   .badge {
     @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold;
   }
+  /* 上質化：見出しアクセント用の明朝 */
+  .serif {
+    font-family: var(--font-serif), 'Noto Serif JP', serif;
+  }
 }
 
 /* コラム記事本文 */

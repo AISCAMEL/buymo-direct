@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Noto_Sans_JP } from 'next/font/google';
+import { Noto_Sans_JP, Noto_Serif_JP } from 'next/font/google';
 import './globals.css';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -23,6 +23,14 @@ const noto = Noto_Sans_JP({
   subsets: ['latin'],
   weight: ['400', '500', '700', '900'],
   variable: '--font-noto',
+  display: 'swap',
+});
+
+// 上質化：見出しのアクセントに使う明朝（ディスプレイ）
+const notoSerif = Noto_Serif_JP({
+  subsets: ['latin'],
+  weight: ['600', '700', '900'],
+  variable: '--font-serif',
   display: 'swap',
 });
 
@@ -77,7 +85,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   } = await supabase.auth.getUser();
 
   return (
-    <html lang="ja" className={noto.variable}>
+    <html lang="ja" className={`${noto.variable} ${notoSerif.variable}`}>
       <body className="pb-16 sm:pb-0">
         <script
           type="application/ld+json"
