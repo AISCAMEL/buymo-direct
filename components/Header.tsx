@@ -43,7 +43,7 @@ export async function Header() {
   const skillTrack = businessTrack && !buybackOpen;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
+    <header className="site-header sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="flex shrink-0 items-center gap-1.5 text-navy-500">
           <Image src="/buymo-logo-mark.png" alt="BUYMO" width={32} height={32} className="h-7 w-7 object-contain sm:h-8 sm:w-8" priority />

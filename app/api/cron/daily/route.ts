@@ -22,6 +22,7 @@ const TASKS = [
   '/api/parts-auction-close',
   '/api/parts-watch-remind',
   '/api/cron/generate-column', // AIコラムを1日1本自動生成・公開
+  '/api/cron/monitor', // AI監視：キューを点検し最新結果を記録
 ];
 
 export async function GET(req: NextRequest) {

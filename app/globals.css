@@ -109,3 +109,12 @@ html.has-reveal [data-reveal].reveal-in {
 @media (prefers-reduced-motion: reduce) {
   .kenburns { animation: none; }
 }
+
+/* ヘッダー：スクロールでやわらかい影が付く（今風の定番） */
+.site-header {
+  transition: box-shadow 0.25s ease, background-color 0.25s ease;
+}
+html.scrolled .site-header {
+  box-shadow: 0 6px 22px -10px rgba(12, 58, 68, 0.28);
+  background-color: rgba(255, 255, 255, 0.98);
+}
