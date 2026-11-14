@@ -57,6 +57,7 @@ const GROUPS: Group[] = [
     items: [
       { href: '/admin/announcements', label: 'お知らせ' },
       { href: '/admin/columns', label: 'コラム自動生成' },
+      { href: '/admin/results', label: 'ご利用実績 生成' },
       { href: '/admin/coupons', label: 'クーポン管理' },
       { href: '/admin/dealers', label: '加盟店管理' },
       { href: '/admin/leads', label: '加盟店・プロ希望' },

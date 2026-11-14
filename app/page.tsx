@@ -23,6 +23,7 @@ import { BODY_TYPES } from '@/lib/constants';
 import { GENRES, AREAS } from '@/lib/catalog';
 import { COLUMNS } from '@/lib/columns';
 import { HowItWorksTabs } from '@/components/HowItWorksTabs';
+import { CustomerResults } from '@/components/CustomerResults';
 import { getCachedFeaturedListings } from '@/lib/cache';
 import type { ListingWithImages } from '@/lib/types';
 
@@ -318,6 +319,9 @@ export default async function HomePage() {
 
         {/* ── 2.2 売却実績スライダー（横スクロール・実成約があれば実データ） ── */}
         <SaleResultsSlider items={saleItems} />
+
+        {/* ── 2.3 ご利用実績ギャラリー（AI生成画像。3枚以上で表示） ── */}
+        <CustomerResults />
 
         {/* ── 2.5 2つの売り方（買取／ダイレクト販売） ── */}
         <section className="bg-white px-4 py-16 sm:py-20">
