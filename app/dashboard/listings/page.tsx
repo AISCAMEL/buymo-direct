@@ -1,14 +1,14 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { redirect } from 'next/navigation';
-import { PlusCircle, ShieldCheck, BarChart2, Upload, Smartphone, Zap, Bell, ArrowRight } from 'lucide-react';
+import type { ComponentType } from 'react';
+import { PlusCircle, ShieldCheck, BarChart2, Upload, Smartphone, Zap, Bell, ArrowRight, Download, Star, Bookmark, CreditCard, Settings, Tag } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { formatYen, formatDate } from '@/lib/format';
 import { ESCROW_STEPS } from '@/lib/constants';
 import { ESCROW_NEXT_ACTION, isMyTurn } from '@/lib/escrow';
 import type { EscrowStatus } from '@/lib/types';
 import { OwnerListingControls } from '@/components/OwnerListingControls';
-import { ExportButton } from '@/components/ExportButton';
 import { UpgradeNudge } from '@/components/UpgradeNudge';
 import { getViewerAccess } from '@/lib/viewer';
 
@@ -28,6 +28,21 @@ const STATUS_CLASS: Record<string, string> = {
   draft: 'bg-slate-100 text-slate-500',
   closed: 'bg-slate-100 text-slate-500',
 };
+
+// 出品管理のツール（アイコンタイルのグリッドで整理）
+type Tool = { href: string; label: string; icon: ComponentType<{ className?: string }>; download?: boolean };
+const TOOLS: Tool[] = [
+  { href: '/dashboard/stats', label: 'アナリティクス', icon: BarChart2 },
+  { href: '/dashboard/listings/import', label: '一括出品', icon: Upload },
+  { href: '/api/export/transactions', label: '取引CSV', icon: Download, download: true },
+  { href: '/dashboard/phone', label: '電話認証', icon: Smartphone },
+  { href: '/dashboard/reviews', label: '評価・レビュー', icon: Star },
+  { href: '/dashboard/searches', label: '保存した検索', icon: Bookmark },
+  { href: '/dashboard/loans', label: 'ローン申込', icon: CreditCard },
+  { href: '/dashboard/offers', label: 'オファー管理', icon: Tag },
+  { href: '/dashboard/kyc', label: '本人確認', icon: ShieldCheck },
+  { href: '/dashboard/profile', label: 'プロフィール設定', icon: Settings },
+];
 
 export default async function DashboardListingsPage() {
   const supabase = await createClient();
@@ -101,21 +116,29 @@ export default async function DashboardListingsPage() {
 
       {/* 出品 */}
       <section>
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4 flex items-center justify-between gap-3">
           <h1 className="text-2xl font-black">出品管理</h1>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link href="/dashboard/stats" className="btn-outline flex items-center gap-1"><BarChart2 className="h-4 w-4" />アナリティクス</Link>
-            <Link href="/dashboard/listings/import" className="btn-outline flex items-center gap-1"><Upload className="h-4 w-4" />一括出品</Link>
-            <ExportButton href="/api/export/transactions" label="取引CSV" />
-            <Link href="/dashboard/phone" className="btn-outline flex items-center gap-1"><Smartphone className="h-4 w-4" />電話認証</Link>
-            <Link href="/dashboard/reviews" className="btn-outline">評価・レビュー</Link>
-            <Link href="/dashboard/searches" className="btn-outline">保存した検索</Link>
-            <Link href="/dashboard/loans" className="btn-outline">ローン申込</Link>
-            <Link href="/dashboard/offers" className="btn-outline">オファー管理</Link>
-            <Link href="/dashboard/kyc" className="btn-outline">本人確認</Link>
-            <Link href="/dashboard/profile" className="btn-outline">プロフィール設定</Link>
-            <Link href="/sell" className="btn-accent"><PlusCircle className="h-4 w-4" /> 新規出品</Link>
-          </div>
+          <Link href="/sell" className="btn-accent shrink-0"><PlusCircle className="h-4 w-4" /> 新規出品</Link>
+        </div>
+
+        {/* ツール：アイコンタイルのグリッドで整理（折り返しの密集を解消） */}
+        <div className="mb-6 grid grid-cols-4 gap-2 sm:grid-cols-5 lg:grid-cols-10">
+          {TOOLS.map((t) => {
+            const Icon = t.icon;
+            const cls =
+              'flex flex-col items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-1 py-3 text-center transition hover:-translate-y-0.5 hover:border-accent-400 hover:bg-accent-50 hover:shadow-sm';
+            const inner = (
+              <>
+                <Icon className="h-5 w-5 text-accent-600" />
+                <span className="text-[11px] font-bold leading-tight text-slate-600">{t.label}</span>
+              </>
+            );
+            return t.download ? (
+              <a key={t.href} href={t.href} download className={cls}>{inner}</a>
+            ) : (
+              <Link key={t.href} href={t.href} className={cls}>{inner}</Link>
+            );
+          })}
         </div>
 
         {myListings.length === 0 ? (
