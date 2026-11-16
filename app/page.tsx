@@ -330,7 +330,7 @@ export default async function HomePage() {
             <h2 className="mb-8 text-center text-2xl font-black sm:text-3xl">2つの売り方から選べる</h2>
             <div data-reveal className="grid gap-5 md:grid-cols-2">
               {/* 買取 */}
-              <div className="card flex flex-col p-7">
+              <div className="card flex flex-col p-7 transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
                 <span className="self-start rounded-full bg-navy-50 px-3 py-1 text-xs font-black text-navy-600">買取</span>
                 <h3 className="mt-3 text-xl font-black text-navy-800">BUYMOが直接買い取り</h3>
                 <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
@@ -344,8 +344,11 @@ export default async function HomePage() {
                 <Link href="/listings/valuation" className="btn-outline mt-6 w-full py-3">無料査定を申し込む</Link>
               </div>
               {/* ダイレクト販売 */}
-              <div className="card flex flex-col p-7 ring-1 ring-gold-500/40">
-                <span className="self-start rounded-full bg-gold-100 px-3 py-1 text-xs font-black text-gold-600">ダイレクト販売</span>
+              <div className="card relative flex flex-col p-7 ring-1 ring-gold-500/40 transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
+                <div className="flex items-center gap-2 self-start">
+                  <span className="rounded-full bg-gold-100 px-3 py-1 text-xs font-black text-gold-600">ダイレクト販売</span>
+                  <span className="rounded-full bg-gold-500 px-2.5 py-1 text-[11px] font-black text-navy-900">おすすめ</span>
+                </div>
                 <h3 className="mt-3 text-xl font-black text-navy-800">買取保証つきで、高く売る</h3>
                 <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
                   時間をかけても高く売りたい方に。出品して直接販売、売れなければBUYMOが買取保証。
@@ -521,9 +524,9 @@ export default async function HomePage() {
             <p className="mb-8 text-center text-sm text-slate-500">買取保証つき・エスクロー決済で、はじめての個人間売買でも安心。</p>
             <div data-reveal className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {SAFETY_POINTS.map(({ icon: Icon, title, desc }) => (
-                <div key={title} className="card flex flex-col items-center gap-3 p-6 text-center">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-50">
-                    <Icon className="h-6 w-6 text-accent-600" />
+                <div key={title} className="card group flex flex-col items-center gap-3 p-6 text-center transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-50 transition group-hover:bg-accent-600">
+                    <Icon className="h-6 w-6 text-accent-600 transition group-hover:text-white" />
                   </div>
                   <h3 className="font-bold text-navy-700">{title}</h3>
                   <p className="text-sm leading-relaxed text-slate-500">{desc}</p>
@@ -623,7 +626,7 @@ export default async function HomePage() {
             </div>
             <div data-reveal className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {COLUMNS.slice(0, 4).map((c) => (
-                <Link key={c.slug} href={`/column/${c.slug}`} className="card group flex flex-col p-5 transition hover:shadow-md">
+                <Link key={c.slug} href={`/column/${c.slug}`} className="card group flex flex-col p-5 transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
                   <span className="mb-2 inline-flex w-fit items-center rounded-full bg-accent-50 px-2.5 py-0.5 text-xs font-bold text-accent-600">{c.cat}</span>
                   <h3 className="line-clamp-3 text-sm font-bold text-navy-800 group-hover:text-accent-600">{c.title}</h3>
                   <span className="mt-3 text-xs font-bold text-accent-600">続きを読む →</span>
