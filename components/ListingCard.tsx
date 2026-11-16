@@ -115,7 +115,7 @@ export function ListingCard({
 
   if (variant === 'list') {
     return (
-      <Link href={`/listings/${listing.id}`} className="card group relative flex gap-3 overflow-hidden p-3 transition hover:shadow-md">
+      <Link href={`/listings/${listing.id}`} className="card group relative flex gap-3 overflow-hidden p-3 transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
         <FavoriteButton listingId={listing.id} initialFavorited={favorited} loggedIn={loggedIn} />
         <div className="relative aspect-[4/3] w-32 shrink-0 overflow-hidden rounded-lg bg-slate-100 sm:w-48">
           {cover_el}
@@ -124,7 +124,7 @@ export function ListingCard({
         <div className="min-w-0 flex-1">
           <p className="text-xs font-bold text-navy-400">{listing.maker} {listing.model}</p>
           <h3 className="mt-0.5 line-clamp-2 font-bold">{listing.title}</h3>
-          <p className="mt-1 text-xl font-black text-navy-600">{formatYen(listing.price)}</p>
+          <p className="mt-1 text-2xl font-black tabular-nums text-navy-700">{formatYen(listing.price)}</p>
           <p className="text-[11px] font-bold text-slate-500">
             ローン月々 {formatYen(monthlyPayment(listing.price, LOAN_APR_FROM, 60))}〜
           </p>
@@ -136,7 +136,7 @@ export function ListingCard({
   }
 
   return (
-    <Link href={`/listings/${listing.id}`} className="card group relative overflow-hidden transition hover:shadow-md">
+    <Link href={`/listings/${listing.id}`} className="card group relative overflow-hidden transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
       <FavoriteButton listingId={listing.id} initialFavorited={favorited} loggedIn={loggedIn} />
       <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
         {cover_el}
@@ -147,7 +147,7 @@ export function ListingCard({
           {listing.maker} {listing.model}
         </p>
         <h3 className="mt-0.5 line-clamp-1 font-bold">{listing.title}</h3>
-        <p className="mt-2 text-xl font-black text-navy-600">{formatYen(listing.price)}</p>
+        <p className="mt-2 text-2xl font-black tabular-nums text-navy-700">{formatYen(listing.price)}</p>
         <p className="text-[11px] font-bold text-slate-500">
           ローン月々 {formatYen(monthlyPayment(listing.price, LOAN_APR_FROM, 60))}〜
         </p>
