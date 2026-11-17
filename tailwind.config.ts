@@ -44,6 +44,22 @@ const config: Config = {
           500: '#D4AF65',
           600: '#C5A04E',
         },
+        // 支え色（用途の色分け用）。白地で上品に見えるよう彩度は控えめ。
+        // 買取・急ぎ＝コーラル／廃車・エコ＝リーフ（sky/violet/amberはTailwind標準色を使用）
+        coral: {
+          50: '#FDECE8',
+          100: '#FBD9D0',
+          500: '#EC6A52',
+          600: '#D65038',
+          700: '#B23B28',
+        },
+        leaf: {
+          50: '#E7F3EC',
+          100: '#CDE7D6',
+          500: '#4E9A6B',
+          600: '#3F8056',
+          700: '#357050',
+        },
       },
       fontFamily: {
         sans: ['var(--font-noto)', 'system-ui', 'sans-serif'],

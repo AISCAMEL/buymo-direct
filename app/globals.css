@@ -7,7 +7,7 @@
 }
 
 body {
-  @apply bg-[#F5F9F8] text-slate-800 antialiased;
+  @apply bg-white text-slate-800 antialiased;
 }
 
 /* スマホ最適化：iOSの自動テキスト拡大を抑止し、横はみ出しを防ぐ */

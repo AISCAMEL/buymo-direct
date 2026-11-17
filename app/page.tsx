@@ -63,21 +63,29 @@ const SAFETY_POINTS = [
     icon: ShieldCheck,
     title: '買取保証つき',
     desc: '万一売れなくても、BUYMOが買い取り。売り手も安心して出品できます。',
+    box: 'bg-accent-50 group-hover:bg-accent-600',
+    ic: 'text-accent-600',
   },
   {
     icon: Banknote,
     title: 'エスクロー決済',
     desc: '代金は第三者が一時お預かり。車と代金の受け渡しを安全に行えます。',
+    box: 'bg-sky-50 group-hover:bg-sky-600',
+    ic: 'text-sky-600',
   },
   {
     icon: FileCheck2,
     title: '本人確認・名義変更',
     desc: '出品者・購入者の本人確認を実施。面倒な名義変更手続きも代行します。',
+    box: 'bg-violet-50 group-hover:bg-violet-600',
+    ic: 'text-violet-600',
   },
   {
     icon: MessageSquare,
     title: 'チャット＆取引監視',
     desc: 'サイト内チャットで直接やりとり。不審な取引は運営が監視・対応します。',
+    box: 'bg-coral-50 group-hover:bg-coral-600',
+    ic: 'text-coral-600',
   },
 ];
 
@@ -331,7 +339,7 @@ export default async function HomePage() {
             <div data-reveal className="grid gap-5 md:grid-cols-2">
               {/* 買取 */}
               <div className="card flex flex-col p-7 transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
-                <span className="self-start rounded-full bg-navy-50 px-3 py-1 text-xs font-black text-navy-600">買取</span>
+                <span className="self-start rounded-full bg-coral-50 px-3 py-1 text-xs font-black text-coral-700">買取</span>
                 <h3 className="mt-3 text-xl font-black text-navy-800">BUYMOが直接買い取り</h3>
                 <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
                   とにかく早く・確実に現金化したい方に。写真を送るだけで査定、最短で入金します。
@@ -523,10 +531,10 @@ export default async function HomePage() {
             <h2 className="mb-2 text-center text-2xl font-black">BUYMOダイレクトが選ばれる理由</h2>
             <p className="mb-8 text-center text-sm text-slate-500">買取保証つき・エスクロー決済で、はじめての個人間売買でも安心。</p>
             <div data-reveal className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {SAFETY_POINTS.map(({ icon: Icon, title, desc }) => (
+              {SAFETY_POINTS.map(({ icon: Icon, title, desc, box, ic }) => (
                 <div key={title} className="card group flex flex-col items-center gap-3 p-6 text-center transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-50 transition group-hover:bg-accent-600">
-                    <Icon className="h-6 w-6 text-accent-600 transition group-hover:text-white" />
+                  <div className={`flex h-12 w-12 items-center justify-center rounded-xl transition ${box}`}>
+                    <Icon className={`h-6 w-6 transition group-hover:text-white ${ic}`} />
                   </div>
                   <h3 className="font-bold text-navy-700">{title}</h3>
                   <p className="text-sm leading-relaxed text-slate-500">{desc}</p>
