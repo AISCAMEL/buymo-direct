@@ -35,6 +35,7 @@ const FOOTER_LINKS: { heading: string; links: FooterLink[] }[] = [
       { label: '写真の撮り方', href: '/documents/pictures' },
       { label: '陸送手配', href: '/transport' },
       { label: '廃車買取（その場提示）', href: '/haisha' },
+      { label: '故障・修理の相談', href: '/contact?topic=repair' },
       { label: '車のプロを探す', href: '/dealers' },
       { label: 'サービス一覧（スキル）', href: '/skills' },
       { label: '車のプロ募集（加盟）', href: '/recruit', biz: true },

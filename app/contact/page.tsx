@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Mail, MessageCircle, Phone, CheckCircle2, Banknote, Tag, Loader2 } from 'lucide-react';
 import { submitContact } from './actions';
 import { OPERATOR } from '@/lib/operator';
-type Category = 'general' | 'buyback' | 'listing' | 'payment' | 'account' | 'dealer' | 'other';
+type Category = 'general' | 'buyback' | 'listing' | 'payment' | 'account' | 'dealer' | 'repair' | 'other';
 
 const CATEGORIES: { value: Category; label: string }[] = [
   { value: 'general', label: '一般的なお問い合わせ' },
@@ -14,6 +14,7 @@ const CATEGORIES: { value: Category; label: string }[] = [
   { value: 'payment', label: '決済・エスクローについて' },
   { value: 'account', label: 'アカウント・ログインについて' },
   { value: 'dealer', label: '加盟店申請について' },
+  { value: 'repair', label: '故障・修理について' },
   { value: 'other', label: 'その他' },
 ];
 
@@ -63,6 +64,7 @@ export default function ContactPage() {
         escrow: 'payment',
         account: 'account',
         dealer: 'dealer',
+        repair: 'repair',
       };
       if (topic && map[topic]) setCategory(map[topic]);
     } catch {

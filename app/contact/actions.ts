@@ -11,6 +11,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   payment: '決済・エスクローについて',
   account: 'アカウント・ログインについて',
   dealer: '加盟店申請について',
+  repair: '故障・修理について',
   other: 'その他',
 };
 

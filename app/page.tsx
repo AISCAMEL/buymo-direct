@@ -14,6 +14,10 @@ import {
   BookOpen,
   Car,
   Recycle,
+  Wrench,
+  CreditCard,
+  Mail,
+  LifeBuoy,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getViewerAccess } from '@/lib/viewer';
@@ -639,6 +643,36 @@ export default async function HomePage() {
                   <span className="mb-2 inline-flex w-fit items-center rounded-full bg-accent-50 px-2.5 py-0.5 text-xs font-bold text-accent-600">{c.cat}</span>
                   <h3 className="line-clamp-3 text-sm font-bold text-navy-800 group-hover:text-accent-600">{c.title}</h3>
                   <span className="mt-3 text-xs font-bold text-accent-600">続きを読む →</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── 8.7 お困りごと相談窓口（故障・修理など） ── */}
+        <section className="bg-[#F5F9F8] px-4 py-14">
+          <div className="mx-auto max-w-5xl">
+            <p className="mb-2 flex items-center justify-center gap-1.5 text-center text-xs font-bold uppercase tracking-widest text-accent-600">
+              <LifeBuoy className="h-4 w-4" />Support
+            </p>
+            <h2 className="mb-2 text-center text-2xl font-black">故障・修理など、お困りごと相談窓口</h2>
+            <p className="mb-8 text-center text-sm text-slate-500">車のトラブルから各種手続きまで。最適な窓口へご案内します。</p>
+            <div data-reveal className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                { icon: Wrench, tint: 'bg-coral-50', fg: 'text-coral-600', title: '故障・修理', desc: '認定整備プロに相談・依頼。車検・板金・電装まで対応。', href: '/dealers?category=整備・修理', cta: 'プロを探す' },
+                { icon: Recycle, tint: 'bg-leaf-50', fg: 'text-leaf-600', title: '廃車・事故車・不動車', desc: 'その場提示で買取。無料引取り・還付金もご案内。', href: '/haisha', cta: '買取額を見る' },
+                { icon: CreditCard, tint: 'bg-sky-50', fg: 'text-sky-600', title: 'ローン・お支払い', desc: '分割・お支払いのご相談や審査のお申し込み。', href: '/loan/apply', cta: '相談・申込' },
+                { icon: Mail, tint: 'bg-violet-50', fg: 'text-violet-600', title: 'その他のご相談', desc: 'どこに相談するか迷ったら、まずはこちらへ。', href: '/contact', cta: '問い合わせる' },
+              ].map(({ icon: Icon, tint, fg, title, desc, href, cta }) => (
+                <Link key={title} href={href} className="card group flex flex-col gap-3 p-5 transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
+                  <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${tint}`}>
+                    <Icon className={`h-5 w-5 ${fg}`} />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-navy-800 group-hover:text-accent-700">{title}</h3>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-500">{desc}</p>
+                  </div>
+                  <span className="mt-auto text-xs font-bold text-accent-600">{cta} →</span>
                 </Link>
               ))}
             </div>
