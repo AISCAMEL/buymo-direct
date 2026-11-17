@@ -80,7 +80,7 @@ export function SaleResultsSlider({ items }: { items?: SaleItem[] }) {
       <div className="mx-auto max-w-6xl">
         <div className="mb-4 flex items-end justify-between gap-3">
           <div>
-            <h2 className="text-xl font-black text-navy-800 sm:text-2xl">{real ? '最近の成約実績' : 'ご利用実績'}</h2>
+            <h2 className="text-xl font-black text-navy-800 sm:text-2xl">{real ? '最近の成約実績' : 'お客様の成約事例'}</h2>
             <p className="mt-1 text-sm text-slate-500">
               {real
                 ? <>BUYMOで成約した車両の実績です。全国からご利用いただいています。</>
