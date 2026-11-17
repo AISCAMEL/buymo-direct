@@ -402,17 +402,18 @@ export default async function HomePage() {
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               {[
-                ['整備・修理', '整備・車検・板金'],
-                ['美装', 'コーティング・洗車'],
-                ['電装・取付', 'ナビ・ドラレコ'],
-                ['物流・手続き', '陸送・名義変更'],
-                ['査定・買取', '査定・買取'],
-              ].map(([cat, label]) => (
+                ['整備・修理', '整備・車検・板金', 'bg-navy-500', 'hover:border-navy-500 hover:text-navy-600'],
+                ['美装', 'コーティング・洗車', 'bg-sky-500', 'hover:border-sky-500 hover:text-sky-600'],
+                ['電装・取付', 'ナビ・ドラレコ', 'bg-violet-500', 'hover:border-violet-500 hover:text-violet-600'],
+                ['物流・手続き', '陸送・名義変更', 'bg-amber-500', 'hover:border-amber-500 hover:text-amber-600'],
+                ['査定・買取', '査定・買取', 'bg-coral-500', 'hover:border-coral-500 hover:text-coral-700'],
+              ].map(([cat, label, dot, hov]) => (
                 <Link
                   key={cat}
                   href={`/dealers?category=${encodeURIComponent(cat)}`}
-                  className="rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-sm font-bold text-slate-600 transition hover:border-accent-500 hover:text-accent-600"
+                  className={`inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-sm font-bold text-slate-600 transition ${hov}`}
                 >
+                  <span className={`h-2 w-2 rounded-full ${dot}`} />
                   {label}
                 </Link>
               ))}
