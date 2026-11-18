@@ -466,7 +466,7 @@ export default async function HomePage() {
                         alt={body}
                         fill
                         sizes="(max-width:640px) 50vw, 16vw"
-                        className="object-contain p-4 transition duration-300 group-hover:scale-105"
+                        className="object-contain p-1 transition duration-300 group-hover:scale-105"
                       />
                     ) : (
                       <Image
