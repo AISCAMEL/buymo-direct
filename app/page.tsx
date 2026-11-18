@@ -83,6 +83,22 @@ const GENRE_ICON: Record<string, ComponentType<{ className?: string }>> = {
   truck: Truck,
 };
 
+// 自作SVGアイコン（public/genre-icons/<slug>.svg）。あれば画像、無ければlucideにフォールバック。
+const GENRE_IMG: Record<string, string> = {
+  kei: '/genre-icons/kei.svg',
+  suv: '/genre-icons/suv.svg',
+  minivan: '/genre-icons/minivan.svg',
+  alphard: '/genre-icons/alphard.svg',
+  hiace: '/genre-icons/hiace.svg',
+  prius: '/genre-icons/prius.svg',
+  jimny: '/genre-icons/jimny.svg',
+  jiko: '/genre-icons/jiko.svg',
+  haisha: '/genre-icons/haisha.svg',
+  ev: '/genre-icons/ev.svg',
+  import: '/genre-icons/import.svg',
+  truck: '/genre-icons/truck.svg',
+};
+
 const TRUST_BADGES = [
   { icon: ShieldCheck, label: 'エスクロー決済' },
   { icon: FileCheck2, label: '名義変更代行' },
@@ -508,13 +524,17 @@ export default async function HomePage() {
                 .filter((g): g is NonNullable<typeof g> => Boolean(g))
                 .map((g) => {
                   const Icon = GENRE_ICON[g.slug] ?? Car;
-                  const iconImg = genreIconMap[g.slug];
+                  const localSvg = GENRE_IMG[g.slug];
+                  const genUrl = genreIconMap[g.slug];
                   return (
                     <Link key={g.slug} href={`/genre/${g.slug}`}
                       className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-accent-400 hover:shadow-md">
                       <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-gradient-to-br from-accent-50 to-[#F5F9F8]">
-                        {iconImg ? (
-                          <Image src={iconImg} alt={g.label} fill sizes="(max-width:640px) 50vw, 16vw" className="object-cover transition duration-300 group-hover:scale-105" />
+                        {localSvg ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={localSvg} alt={g.label} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                        ) : genUrl ? (
+                          <Image src={genUrl} alt={g.label} fill sizes="(max-width:640px) 50vw, 16vw" className="object-cover transition duration-300 group-hover:scale-105" />
                         ) : (
                           <Icon className="h-8 w-8 text-accent-600 transition duration-300 group-hover:scale-110" />
                         )}
