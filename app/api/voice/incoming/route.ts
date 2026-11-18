@@ -6,7 +6,7 @@
 import type { NextRequest } from 'next/server';
 import { isTwilioConfigured, validateTwilioRequest } from '@/lib/twilio';
 import { twimlResponse, say, gatherSpeech, hangup } from '@/lib/twiml';
-import { voiceGreeting } from '@/lib/voice-ai';
+import { getVoiceSettings } from '@/lib/voice-settings';
 import { recordVoiceCall } from '@/lib/voice-data';
 
 export const runtime = 'nodejs';
@@ -35,9 +35,17 @@ export async function POST(req: NextRequest) {
     return new Response('Forbidden', { status: 403 });
   }
 
+  // 管理画面の設定（受付ON/OFF・挨拶文）を反映
+  const settings = await getVoiceSettings();
+  if (!settings.enabled) {
+    return twimlResponse(
+      say('お電話ありがとうございます。ただいまAIの電話受付を一時停止しております。恐れ入りますが、ウェブサイトのお問い合わせをご利用ください。') + hangup(),
+    );
+  }
+
   const callSid = params.CallSid ?? '';
   void recordVoiceCall(callSid, { direction: 'inbound', from: params.From, to: params.To });
 
-  // 第一声 → 発話を音声認識して /api/voice/respond へ
-  return twimlResponse(gatherSpeech('/api/voice/respond', voiceGreeting()));
+  // 第一声（管理画面で編集可能）→ 発話を音声認識して /api/voice/respond へ
+  return twimlResponse(gatherSpeech('/api/voice/respond', settings.greeting));
 }

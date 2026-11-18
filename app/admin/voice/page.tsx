@@ -2,6 +2,8 @@ import { requireAdmin } from '@/lib/admin';
 import { isAiEnabled } from '@/lib/ai';
 import { twilioConfigStatus, isTwilioRestConfigured } from '@/lib/twilio';
 import { AdminVoicePanel } from '@/components/AdminVoicePanel';
+import { AdminVoiceSettings } from '@/components/AdminVoiceSettings';
+import { getVoiceSettings } from '@/lib/voice-settings';
 import { createServiceClient } from '@/lib/supabase/service';
 import { CATEGORY_LABEL, type BookingCategory } from '@/lib/voice-booking';
 import { formatDateTime } from '@/lib/format';
@@ -50,6 +52,7 @@ export default async function AdminVoicePage() {
   const inboundReady = cfg.authToken; // 着信は AUTH_TOKEN（署名検証）で有効化
   const restReady = isTwilioRestConfigured();
   const webhook = `${SITE}/api/voice/incoming`;
+  const voiceSettings = await getVoiceSettings();
 
   // 電話で受けた折り返し予約（voice_bookings）。テーブル未作成でも画面は出す。
   let bookings: VoiceBooking[] = [];
@@ -77,6 +80,9 @@ export default async function AdminVoicePage() {
           お客様の電話にAIが音声で応答（着信）し、AIからお客様へ架電（発信）もできます。音声認識・読み上げはTwilio、会話はClaudeです。
         </p>
       </div>
+
+      {/* 管理画面から編集できるAI電話設定（受付ON/OFF・挨拶文・AI指示・営業時間） */}
+      <AdminVoiceSettings initial={voiceSettings} />
 
       <div className="card p-5">
         <h2 className="mb-2 font-bold">設定状況</h2>

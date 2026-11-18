@@ -5,6 +5,7 @@
  */
 import { generateWithClaude, isAiEnabled } from '@/lib/ai';
 import { loadVoiceTurns, saveVoiceTurn } from '@/lib/voice-data';
+import { getVoiceSettings } from '@/lib/voice-settings';
 import { createServiceClient } from '@/lib/supabase/service';
 
 export type BookingCategory = 'appraisal' | 'repair' | 'purchase' | 'other';
@@ -138,11 +139,17 @@ export async function operatorTurn(
     };
   }
   try {
+    // 管理画面の設定（追加指示・営業時間）をシステムプロンプトに反映
+    const vs = await getVoiceSettings();
+    const sys =
+      OPERATOR_SYSTEM +
+      (vs.instructions ? `\n【運営からの追加指示（最優先で従う）】\n${vs.instructions}` : '') +
+      (vs.hours ? `\n【営業時間】お客様に営業時間や受付時間を聞かれたら、次の内容で案内する：${vs.hours}` : '');
     const turns = await loadVoiceTurns(callSid, 20);
     const lines = turns.map((t) => `${t.role === 'assistant' ? '案内' : 'お客様'}: ${t.content}`);
     lines.push(`お客様: ${userText}`);
     const prompt = `通話ログ:\n${lines.join('\n')}\n\nJSONのみを出力してください。`;
-    const raw = await withTimeout(generateWithClaude(prompt, OPERATOR_SYSTEM, undefined, 320), 9000);
+    const raw = await withTimeout(generateWithClaude(prompt, sys, undefined, 320), 9000);
     const m = raw.match(/\{[\s\S]*\}/);
     const j = (m ? JSON.parse(m[0]) : {}) as Record<string, unknown>;
     const line = sliceStr(j.say, 400) ?? REPROMPT;
