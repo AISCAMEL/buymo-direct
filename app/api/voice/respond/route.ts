@@ -5,7 +5,7 @@
  * /api/voice/incoming の <Gather action> から呼ばれる。
  */
 import type { NextRequest } from 'next/server';
-import { isTwilioConfigured, validateTwilioSignature } from '@/lib/twilio';
+import { isTwilioConfigured, validateTwilioRequest } from '@/lib/twilio';
 import { twimlResponse, say, gatherSpeech, hangup, pause } from '@/lib/twiml';
 import { voiceReply, voiceReprompt, isGoodbye } from '@/lib/voice-ai';
 import { saveVoiceTurn } from '@/lib/voice-data';
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 
   const form = await req.formData();
   const params = formToObj(form);
-  if (!validateTwilioSignature(`${SITE}/api/voice/respond`, params, req.headers.get('x-twilio-signature'))) {
+  if (!validateTwilioRequest(req, '/api/voice/respond', params, `${SITE}/api/voice/respond`)) {
     return new Response('Forbidden', { status: 403 });
   }
 

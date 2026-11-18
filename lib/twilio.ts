@@ -48,6 +48,31 @@ export function validateTwilioSignature(
   }
 }
 
+/** Twilioが実際に叩いた公開URLを、リクエストヘッダ（x-forwarded-*）から復元する。 */
+export function twilioPublicUrl(req: Request, path: string): string {
+  const h = req.headers;
+  const host = h.get('x-forwarded-host') ?? h.get('host') ?? '';
+  const proto = h.get('x-forwarded-proto') ?? 'https';
+  return `${proto}://${host}${path}`;
+}
+
+/**
+ * 署名検証（推奨）。Twilioは「実際に叩いたURL」で署名するため、まずリクエストから
+ * 復元した公開URLで検証し、ダメなら SITE 基準URL（siteFallbackUrl）で再検証する。
+ * これにより NEXT_PUBLIC_SITE_URL とWebhookホストのズレで着信が403になる事故を防ぐ。
+ */
+export function validateTwilioRequest(
+  req: Request,
+  path: string,
+  params: Record<string, string>,
+  siteFallbackUrl?: string,
+): boolean {
+  const sig = req.headers.get('x-twilio-signature');
+  if (validateTwilioSignature(twilioPublicUrl(req, path), params, sig)) return true;
+  if (siteFallbackUrl && validateTwilioSignature(siteFallbackUrl, params, sig)) return true;
+  return false;
+}
+
 /** Twilio REST API で発信する。body は Url か Twiml のどちらかを含む。 */
 async function createCall(to: string, extra: Record<string, string>): Promise<{ ok: boolean; sid?: string; error?: string }> {
   const sid = process.env.TWILIO_ACCOUNT_SID;

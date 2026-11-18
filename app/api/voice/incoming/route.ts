@@ -4,7 +4,7 @@
  * Twilio未設定（AUTH_TOKEN無し）の間は「準備中」案内で安全に無効化。
  */
 import type { NextRequest } from 'next/server';
-import { isTwilioConfigured, validateTwilioSignature } from '@/lib/twilio';
+import { isTwilioConfigured, validateTwilioRequest } from '@/lib/twilio';
 import { twimlResponse, say, gatherSpeech, hangup } from '@/lib/twiml';
 import { voiceGreeting } from '@/lib/voice-ai';
 import { recordVoiceCall } from '@/lib/voice-data';
@@ -30,8 +30,7 @@ export async function POST(req: NextRequest) {
 
   const form = await req.formData();
   const params = formToObj(form);
-  const signature = req.headers.get('x-twilio-signature');
-  if (!validateTwilioSignature(`${SITE}/api/voice/incoming`, params, signature)) {
+  if (!validateTwilioRequest(req, '/api/voice/incoming', params, `${SITE}/api/voice/incoming`)) {
     console.error('[voice/incoming] 署名検証に失敗（URL不一致/不正アクセスの可能性）');
     return new Response('Forbidden', { status: 403 });
   }
