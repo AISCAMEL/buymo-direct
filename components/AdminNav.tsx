@@ -45,6 +45,7 @@ const GROUPS: Group[] = [
     items: [
       { href: '/admin/messages', label: 'チャット監視' },
       { href: '/admin/assistant', label: 'AI運用アシスタント' },
+      { href: '/admin/dealer-ai', label: '加盟店ヘルプAI' },
       { href: '/admin/voice', label: 'AI電話（Twilio）' },
       { href: '/admin/risk', label: 'AIリスクセンター' },
       { href: '/admin/community', label: 'コミュニティ管理' },

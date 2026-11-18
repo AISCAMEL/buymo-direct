@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { Building2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getDealerForUser } from '@/lib/dealer';
+import { DealerHelpAI } from '@/components/DealerHelpAI';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,6 +69,9 @@ export default async function DealerLayout({ children }: { children: React.React
       </nav>
 
       {children}
+
+      {/* わからないことをその場で聞けるヘルプAI（全加盟店ページ常設） */}
+      <DealerHelpAI dealerName={dealer?.name ?? undefined} role={ctx.role} />
     </div>
   );
 }
