@@ -3,7 +3,7 @@ import { loadVoiceTurns, saveVoiceTurn } from '@/lib/voice-data';
 
 /** 電話の最初の挨拶（AIが話す第一声）。 */
 export function voiceGreeting(): string {
-  return 'お電話ありがとうございます。中古車のバイモダイレクト、AI音声案内です。買取や販売、査定、お手続きなど、ご用件をお話しください。';
+  return 'お電話ありがとうございます。中古車のバイモダイレクト、AI音声案内です。査定・買取、故障や修理、ご購入のご相談など、折り返しのご予約も承ります。ご用件をお話しください。';
 }
 
 /** 聞き取れなかったときの再プロンプト。 */
