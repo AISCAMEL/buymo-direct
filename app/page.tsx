@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import type { ComponentType } from 'react';
 import { SaleResultsSlider } from '@/components/SaleResultsSlider';
 import {
   Search,
@@ -19,6 +20,14 @@ import {
   Mail,
   LifeBuoy,
   MapPin,
+  Truck,
+  Bus,
+  Caravan,
+  Mountain,
+  Sparkles,
+  Leaf,
+  Compass,
+  Globe,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getViewerAccess } from '@/lib/viewer';
@@ -55,6 +64,22 @@ const BODY_ICON: Record<string, string> = {
   'ワゴン': '/body/wagon.png',
   'クーペ': '/body/coupe.png',
   'オープン': '/body/open.png',
+};
+
+// ジャンルのアイコン（lucide）— ジャンルタイルを統一感のあるアイコン表示に
+const GENRE_ICON: Record<string, ComponentType<{ className?: string }>> = {
+  kei: Car,
+  suv: Mountain,
+  minivan: Bus,
+  alphard: Sparkles,
+  hiace: Caravan,
+  prius: Leaf,
+  jimny: Compass,
+  jiko: Wrench,
+  haisha: Recycle,
+  ev: Zap,
+  import: Globe,
+  truck: Truck,
 };
 
 const TRUST_BADGES = [
@@ -477,15 +502,18 @@ export default async function HomePage() {
               {['kei', 'suv', 'minivan', 'alphard', 'hiace', 'prius', 'jimny', 'jiko', 'haisha', 'ev', 'import', 'truck']
                 .map((s) => GENRES.find((g) => g.slug === s))
                 .filter((g): g is NonNullable<typeof g> => Boolean(g))
-                .map((g) => (
-                  <Link key={g.slug} href={`/genre/${g.slug}`}
-                    className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-accent-400 hover:shadow-md">
-                    <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
-                      <Image src={`/genre/${g.slug}.jpg`} alt={g.label} fill sizes="(max-width:640px) 50vw, 16vw" className="object-cover transition duration-300 group-hover:scale-105" />
-                    </div>
-                    <div className="py-2.5 text-center text-sm font-bold text-slate-700 group-hover:text-accent-600">{g.label}</div>
-                  </Link>
-                ))}
+                .map((g) => {
+                  const Icon = GENRE_ICON[g.slug] ?? Car;
+                  return (
+                    <Link key={g.slug} href={`/genre/${g.slug}`}
+                      className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-accent-400 hover:shadow-md">
+                      <div className="flex aspect-[4/3] items-center justify-center bg-gradient-to-br from-accent-50 to-[#F5F9F8]">
+                        <Icon className="h-8 w-8 text-accent-600 transition duration-300 group-hover:scale-110" />
+                      </div>
+                      <div className="py-2.5 text-center text-sm font-bold text-slate-700 group-hover:text-accent-600">{g.label}</div>
+                    </Link>
+                  );
+                })}
             </div>
             <Link href="/genre" className="mt-4 block text-center text-sm font-bold text-accent-600 hover:underline sm:hidden">すべてのジャンルを見る →</Link>
           </div>
