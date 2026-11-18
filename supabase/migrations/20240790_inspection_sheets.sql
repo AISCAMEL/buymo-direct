@@ -24,6 +24,10 @@ create table if not exists public.inspection_sheets (
   cost_estimate int,                       -- 整備概算(保管用のみ)
   internal_note text,                      -- 内部メモ(保管用のみ)
 
+  damages jsonb not null default '[]'::jsonb,   -- 展開図のキズ/へこみ等 [{id,view,x,y,type,size,note,photos}]
+  repair_history boolean not null default false, -- 修復歴あり
+  ai_eval jsonb,                           -- AI最終評価 {score,grade,auction,priceLow,priceHigh,summary,computedAt}
+
   status text not null default 'draft',    -- 'draft' | 'done'
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

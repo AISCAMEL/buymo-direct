@@ -3,12 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
-  ChevronDown, Camera, Loader2, Check, FileText, CheckCircle2, X, Sparkles,
+  ChevronDown, Camera, Loader2, Check, FileText, CheckCircle2, X, Sparkles, Wand2, CarFront,
 } from 'lucide-react';
 import {
   INSPECTION_SPEC, RATINGS, OVERALL_GRADES, ALL_ITEM_COUNT, ratedCount, suggestOverall,
-  type InspectionData, type RatingCode,
+  computeEvaluation,
+  type InspectionData, type RatingCode, type DamageMark, type AiEval,
 } from '@/lib/inspection-spec';
+import { BodyMap } from '@/components/inspection/BodyMap';
 import type { InspectionSheet } from '@/lib/inspection';
 
 const TONE: Record<string, { on: string; off: string }> = {
@@ -35,6 +37,10 @@ export function InspectionEditor({ sheet, basePath }: { sheet: InspectionSheet; 
   const [cost, setCost] = useState(sheet.cost_estimate?.toString() ?? '');
   const [note, setNote] = useState(sheet.internal_note ?? '');
   const [status, setStatus] = useState<'draft' | 'done'>(sheet.status);
+  const [damages, setDamages] = useState<DamageMark[]>(sheet.damages ?? []);
+  const [repair, setRepair] = useState<boolean>(!!sheet.repair_history);
+  const [aiEval, setAiEval] = useState<AiEval | null>(sheet.ai_eval ?? null);
+  const [evaluating, setEvaluating] = useState(false);
   const [openSec, setOpenSec] = useState<string | null>(INSPECTION_SPEC[0].key);
   const [save, setSave] = useState<Save>('idle');
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -48,12 +54,30 @@ export function InspectionEditor({ sheet, basePath }: { sheet: InspectionSheet; 
     customer_name: customer.trim() || null,
     vehicle,
     inspection: data,
+    damages,
+    repair_history: repair,
     overall_rating: overall || null,
     appraised_price: price ? Number(price) : null,
     cost_estimate: cost ? Number(cost) : null,
     internal_note: note.trim() || null,
     status,
-  }), [maker, model, year, mileage, plate, customer, vehicle, data, overall, price, cost, note, status]);
+  }), [maker, model, year, mileage, plate, customer, vehicle, data, damages, repair, overall, price, cost, note, status]);
+
+  const liveEval = computeEvaluation(damages, { repairHistory: repair });
+
+  async function runEval() {
+    setEvaluating(true);
+    try {
+      const res = await fetch(`/api/inspection/${sheet.id}/evaluate`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ damages, repairHistory: repair }),
+      });
+      const j = await res.json();
+      if (j.ai_eval) { setAiEval(j.ai_eval as AiEval); if (!overall) setOverall(j.ai_eval.grade); }
+    } finally {
+      setEvaluating(false);
+    }
+  }
 
   const doSave = useCallback(async () => {
     setSave('saving');
@@ -130,6 +154,66 @@ export function InspectionEditor({ sheet, basePath }: { sheet: InspectionSheet; 
           <Field label="車検満了" value={vehicle.shaken_until ?? ''} onChange={(v) => setVehicle({ ...vehicle, shaken_until: v })} placeholder="2026-08" />
           <Field label="ナンバー" value={plate} onChange={setPlate} />
           <Field label="所有者/提示先" value={customer} onChange={setCustomer} />
+        </div>
+      </section>
+
+      {/* 展開図（ボディマップ）＋修復歴 */}
+      <section className="card space-y-3 p-4">
+        <div className="flex items-center justify-between">
+          <h2 className="flex items-center gap-1.5 font-black text-navy-800"><CarFront className="h-5 w-5 text-accent-600" />展開図（キズ・へこみ）</h2>
+          <span className="text-xs text-slate-400">図をタップして記録</span>
+        </div>
+        <BodyMap value={damages} onChange={setDamages} sid={sheet.id} />
+
+        <label className="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-4 py-3">
+          <span className="text-sm font-bold text-navy-800">修復歴あり（骨格の修正・交換歴）</span>
+          <button
+            type="button"
+            onClick={() => setRepair((r) => !r)}
+            className={`relative h-6 w-11 rounded-full transition ${repair ? 'bg-red-500' : 'bg-slate-300'}`}
+            aria-pressed={repair}
+          >
+            <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition ${repair ? 'left-[22px]' : 'left-0.5'}`} />
+          </button>
+        </label>
+
+        {/* 計算式による評価点（リアルタイム）＋ AI最終評価 */}
+        <div className="rounded-xl border border-accent-200 bg-accent-50/50 p-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="text-center">
+              <p className="text-[11px] font-bold text-slate-500">評価点（計算）</p>
+              <p className="text-3xl font-black text-navy-800">{liveEval.score}<span className="text-sm">点</span></p>
+            </div>
+            <div className="text-center">
+              <p className="text-[11px] font-bold text-slate-500">相当グレード</p>
+              <p className="text-2xl font-black text-navy-800">{liveEval.grade}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[11px] font-bold text-slate-500">AA相当</p>
+              <p className="text-2xl font-black text-navy-800">{liveEval.auction}</p>
+            </div>
+            <div className="min-w-[8rem] flex-1 text-xs text-slate-500">
+              減点合計 {liveEval.total}（ダメージ{liveEval.damagePoints}・修復歴{liveEval.repairPoints}）／ ダメージ {damages.length}件
+            </div>
+            <button onClick={runEval} disabled={evaluating} className="btn-accent inline-flex items-center gap-1.5 disabled:opacity-50">
+              {evaluating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />} AIで最終評価
+            </button>
+          </div>
+
+          {aiEval && (
+            <div className="mt-3 rounded-lg bg-white p-3 ring-1 ring-accent-200">
+              <p className="flex items-center gap-1.5 text-sm font-bold text-navy-800"><Sparkles className="h-4 w-4 text-accent-600" />AI最終評価</p>
+              <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                <span>評価点 <b className="text-lg">{aiEval.score}</b> 点</span>
+                <span>グレード <b>{aiEval.grade}</b></span>
+                <span>AA相当 <b>{aiEval.auction}</b></span>
+                {aiEval.priceLow != null && (
+                  <span className="font-bold text-accent-700">推奨買取額 ¥{aiEval.priceLow.toLocaleString()}{aiEval.priceHigh != null ? `〜¥${aiEval.priceHigh.toLocaleString()}` : ''}</span>
+                )}
+              </div>
+              {aiEval.summary && <p className="mt-1.5 whitespace-pre-wrap text-sm text-slate-700">{aiEval.summary}</p>}
+            </div>
+          )}
         </div>
       </section>
 

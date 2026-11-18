@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
 import { isAdminUser } from '@/lib/admin';
 import { getDealerForUser } from '@/lib/dealer';
-import type { InspectionData } from '@/lib/inspection-spec';
+import type { InspectionData, DamageMark, AiEval } from '@/lib/inspection-spec';
 
 export type Actor = {
   userId: string;
@@ -26,6 +26,9 @@ export type InspectionSheet = {
   customer_name: string | null;
   vehicle: Record<string, unknown>;
   inspection: InspectionData;
+  damages: DamageMark[];
+  repair_history: boolean;
+  ai_eval: AiEval | null;
   photos: { url: string; caption?: string }[];
   overall_rating: string | null;
   appraised_price: number | null;
@@ -87,6 +90,8 @@ export async function createSheet(actor: Actor, init: Partial<InspectionSheet>):
     customer_name: init.customer_name ?? null,
     vehicle: init.vehicle ?? {},
     inspection: init.inspection ?? {},
+    damages: init.damages ?? [],
+    repair_history: init.repair_history ?? false,
     photos: init.photos ?? [],
     status: 'draft' as const,
   };
@@ -97,8 +102,8 @@ export async function createSheet(actor: Actor, init: Partial<InspectionSheet>):
 
 const UPDATABLE = new Set([
   'listing_id', 'maker', 'model', 'model_year', 'mileage_km', 'plate', 'customer_name',
-  'vehicle', 'inspection', 'photos', 'overall_rating', 'appraised_price', 'cost_estimate',
-  'internal_note', 'status',
+  'vehicle', 'inspection', 'damages', 'repair_history', 'ai_eval', 'photos', 'overall_rating',
+  'appraised_price', 'cost_estimate', 'internal_note', 'status',
 ]);
 
 export async function updateSheet(id: string, patch: Record<string, unknown>): Promise<{ ok: boolean; error?: string }> {

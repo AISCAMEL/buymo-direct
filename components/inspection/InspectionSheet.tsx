@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Printer, ArrowLeft, Archive, Presentation, ShieldCheck } from 'lucide-react';
-import { INSPECTION_SPEC, OVERALL_GRADES, ratingMeta } from '@/lib/inspection-spec';
+import { Printer, ArrowLeft, Archive, Presentation, ShieldCheck, Sparkles, CarFront } from 'lucide-react';
+import { INSPECTION_SPEC, OVERALL_GRADES, ratingMeta, damageTypeMeta, sizeLabel, viewLabel } from '@/lib/inspection-spec';
+import { BodyMapView } from '@/components/inspection/BodyMap';
 import type { InspectionSheet as Sheet } from '@/lib/inspection';
 
 type Mode = 'archive' | 'proposal';
@@ -141,6 +142,23 @@ function Proposal({ sheet, v, photos }: { sheet: Sheet; v: Record<string, string
       </section>
 
       {/* 写真 */}
+      {/* 展開図（お客様にも状態を可視化） */}
+      {sheet.damages?.length > 0 && (
+        <section>
+          <h2 className="mb-2 flex items-center gap-1.5 text-base font-black text-navy-800"><CarFront className="h-5 w-5 text-accent-600" />キズ・へこみの箇所</h2>
+          <BodyMapView damages={sheet.damages} />
+        </section>
+      )}
+
+      {/* AI査定評価（評価点＋所見） */}
+      {sheet.ai_eval && (
+        <section className="rounded-2xl border border-accent-200 bg-accent-50/60 p-4">
+          <p className="flex items-center gap-1.5 text-sm font-black text-navy-800"><Sparkles className="h-4 w-4 text-accent-600" />AI査定評価</p>
+          <p className="mt-1 text-sm">評価点 <b className="text-2xl text-navy-800">{sheet.ai_eval.score}</b> 点（グレード {sheet.ai_eval.grade}）</p>
+          {sheet.ai_eval.summary && <p className="mt-1.5 whitespace-pre-wrap text-sm text-slate-700">{sheet.ai_eval.summary}</p>}
+        </section>
+      )}
+
       {photos.length > 0 && (
         <section>
           <h2 className="mb-2 text-base font-black text-navy-800">車両写真</h2>
@@ -153,11 +171,15 @@ function Proposal({ sheet, v, photos }: { sheet: Sheet; v: Record<string, string
         </section>
       )}
 
-      {/* ご提示金額（査定額のみ） */}
+      {/* ご提示金額 */}
       <section className="rounded-2xl bg-navy-700 p-5 text-center text-white">
         <p className="text-sm text-navy-200">ご提示金額（査定額）</p>
         <p className="mt-1 text-4xl font-black">
-          {sheet.appraised_price != null ? `¥${sheet.appraised_price.toLocaleString()}` : '別途ご提示'}
+          {sheet.appraised_price != null
+            ? `¥${sheet.appraised_price.toLocaleString()}`
+            : sheet.ai_eval?.priceLow != null
+              ? `¥${sheet.ai_eval.priceLow.toLocaleString()}${sheet.ai_eval.priceHigh != null ? `〜¥${sheet.ai_eval.priceHigh.toLocaleString()}` : ''}`
+              : '別途ご提示'}
         </p>
         <p className="mt-2 text-xs text-navy-200">※ 本査定は検査時点の車両状態に基づきます。相場・装備により変動する場合があります。</p>
       </section>
@@ -199,6 +221,35 @@ function ArchiveView({ sheet, v, photos }: { sheet: Sheet; v: Record<string, str
         <Info label="ナンバー" value={sheet.plate || '—'} />
         <Info label="所有者/提示先" value={sheet.customer_name || '—'} />
       </section>
+
+      {/* 展開図・ダメージ */}
+      {(sheet.damages?.length > 0 || sheet.repair_history) && (
+        <section className="break-inside-avoid border-t border-slate-300 pt-4">
+          <h2 className="mb-2 flex items-center gap-1.5 font-black text-navy-800"><CarFront className="h-5 w-5 text-accent-600" />展開図・ダメージ{sheet.repair_history && <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700">修復歴あり</span>}</h2>
+          <BodyMapView damages={sheet.damages ?? []} />
+          {sheet.damages?.length > 0 && (
+            <ul className="mt-2 grid gap-0.5 sm:grid-cols-2">
+              {sheet.damages.map((d) => (
+                <li key={d.id} className="flex items-start gap-1.5 text-xs text-slate-600">
+                  <span className="font-bold text-slate-500">{viewLabel(d.view)}</span>
+                  <span>{damageTypeMeta(d.type)?.label}・{sizeLabel(d.size)}{d.note ? `（${d.note}）` : ''}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
+      {/* AI最終評価 */}
+      {sheet.ai_eval && (
+        <section className="break-inside-avoid rounded-xl border border-accent-200 bg-accent-50/50 p-3">
+          <p className="flex items-center gap-1.5 font-black text-navy-800"><Sparkles className="h-4 w-4 text-accent-600" />AI最終評価</p>
+          <p className="mt-1">評価点 <b className="text-xl">{sheet.ai_eval.score}</b> 点 / グレード <b>{sheet.ai_eval.grade}</b> / AA相当 <b>{sheet.ai_eval.auction}</b>
+            {sheet.ai_eval.priceLow != null && <> / 推奨買取額 <b className="text-accent-700">¥{sheet.ai_eval.priceLow.toLocaleString()}{sheet.ai_eval.priceHigh != null ? `〜¥${sheet.ai_eval.priceHigh.toLocaleString()}` : ''}</b></>}
+          </p>
+          {sheet.ai_eval.summary && <p className="mt-1 whitespace-pre-wrap text-slate-700">{sheet.ai_eval.summary}</p>}
+        </section>
+      )}
 
       {/* 全項目 */}
       <section className="space-y-3">
