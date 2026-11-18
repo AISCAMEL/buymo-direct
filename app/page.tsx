@@ -330,8 +330,8 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ── 2.2 売却実績スライダー（横スクロール・実成約があれば実データ） ── */}
-        <SaleResultsSlider items={saleItems} />
+        {/* ── 2.2 最近の成約実績（実データが3件以上あるときだけ表示。「ご利用実績」との重複を避ける） ── */}
+        {saleItems.length >= 3 && <SaleResultsSlider items={saleItems} />}
 
         {/* ── 2.3 ご利用実績ギャラリー（AI生成画像。3枚以上で表示） ── */}
         <CustomerResults />
@@ -426,11 +426,19 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ── 3. 車種から探す ── */}
-        <section className="bg-white px-4 py-12">
+        {/* ── 3. 車種・ジャンルから探す（車種＋ジャンルを1セクションに統合） ── */}
+        <section className="bg-[#F5F9F8] px-4 py-12">
           <div className="mx-auto max-w-5xl">
-            <p className="text-xs font-bold uppercase tracking-widest text-accent-600">Body type</p>
-            <h2 className="mb-5 mt-1 text-xl font-black">車種から探す</h2>
+            <div className="mb-5 flex items-end justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-accent-600">Browse</p>
+                <h2 className="mt-1 flex items-center gap-1.5 text-xl font-black"><Tag className="h-5 w-5 text-accent-600" />車種・ジャンルから探す</h2>
+                <p className="mt-1 text-sm text-slate-500">ボディタイプから、人気車種・事故車/廃車・輸入車・パーツまで。買取もダイレクト販売も。</p>
+              </div>
+              <Link href="/genre" className="hidden shrink-0 text-sm font-bold text-accent-600 hover:underline sm:block">すべてのジャンル →</Link>
+            </div>
+
+            {/* 車種（ボディタイプ） */}
             <div data-reveal className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {BODY_TYPES.slice(0, 6).map((body) => (
                 <Link
@@ -463,20 +471,9 @@ export default async function HomePage() {
                 </Link>
               ))}
             </div>
-          </div>
-        </section>
 
-        {/* ── 3.2 ジャンルから探す ── */}
-        <section className="bg-[#F5F9F8] px-4 py-12">
-          <div className="mx-auto max-w-5xl">
-            <div className="mb-5 flex items-end justify-between">
-              <div>
-                <h2 className="flex items-center gap-1.5 text-xl font-black"><Tag className="h-5 w-5 text-accent-600" />ジャンルから探す</h2>
-                <p className="mt-1 text-sm text-slate-500">人気車種・事故車/廃車・輸入車・パーツまで。買取もダイレクト販売も。</p>
-              </div>
-              <Link href="/genre" className="hidden shrink-0 text-sm font-bold text-accent-600 hover:underline sm:block">すべてのジャンル →</Link>
-            </div>
-            <div data-reveal className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {/* ジャンル */}
+            <div data-reveal className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {['kei', 'suv', 'minivan', 'alphard', 'hiace', 'prius', 'jimny', 'jiko', 'haisha', 'ev', 'import', 'truck']
                 .map((s) => GENRES.find((g) => g.slug === s))
                 .filter((g): g is NonNullable<typeof g> => Boolean(g))
