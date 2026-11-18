@@ -5,7 +5,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { isAdminUser } from '@/lib/admin';
-import { isTwilioRestConfigured, placeOutboundCallTwiml } from '@/lib/twilio';
+import { isTwilioRestConfigured, placeOutboundCallTwiml, normalizeJpPhone } from '@/lib/twilio';
 import { say, gatherSpeech } from '@/lib/twiml';
 
 export const runtime = 'nodejs';
@@ -30,9 +30,13 @@ export async function POST(req: NextRequest) {
   }
 
   const body = (await req.json().catch(() => ({}))) as { to?: string; message?: string };
-  const to = (body.to ?? '').trim();
-  if (!/^\+?[0-9]{10,15}$/.test(to.replace(/[-\s]/g, ''))) {
-    return NextResponse.json({ error: '発信先の電話番号が不正です（例: +8190xxxxxxxx）' }, { status: 400 });
+  // 国内表記（080…/090…/03…）も自動で E.164（+81…）へ変換してから検証
+  const to = normalizeJpPhone(body.to ?? '');
+  if (!/^\+[0-9]{10,15}$/.test(to)) {
+    return NextResponse.json(
+      { error: '発信先の電話番号が不正です（例: 09012345678 または +819012345678）' },
+      { status: 400 },
+    );
   }
 
   const opening =
@@ -46,7 +50,7 @@ export async function POST(req: NextRequest) {
     gatherSpeech('/api/voice/respond', '本日はどのようなご用件でしょうか。ご質問をどうぞ。') +
     `</Response>`;
 
-  const result = await placeOutboundCallTwiml(to.replace(/[-\s]/g, ''), twiml);
+  const result = await placeOutboundCallTwiml(to, twiml);
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: 500 });
   return NextResponse.json({ ok: true, sid: result.sid });
 }

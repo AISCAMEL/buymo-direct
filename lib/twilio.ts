@@ -16,6 +16,20 @@ export function isTwilioRestConfigured(): boolean {
   return !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER);
 }
 
+/**
+ * 電話番号を E.164（+81…）へ正規化する。
+ * 日本の国内表記「080…」「090…」「03…」等は先頭0を取り +81 を付ける。
+ * 既に + 始まりならそのまま。ハイフン・空白・括弧は除去。
+ */
+export function normalizeJpPhone(input: string): string {
+  const d = (input || '').replace(/[\s\-()]/g, '');
+  if (!d) return '';
+  if (d.startsWith('+')) return d;
+  if (d.startsWith('0')) return '+81' + d.slice(1);
+  if (d.startsWith('81')) return '+' + d;
+  return '+' + d;
+}
+
 /** 設定状況（値は返さず有無のみ）。管理画面表示用。 */
 export function twilioConfigStatus() {
   return {
