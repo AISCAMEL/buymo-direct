@@ -18,6 +18,7 @@ import {
   CreditCard,
   Mail,
   LifeBuoy,
+  MapPin,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getViewerAccess } from '@/lib/viewer';
@@ -428,7 +429,8 @@ export default async function HomePage() {
         {/* ── 3. 車種から探す ── */}
         <section className="bg-white px-4 py-12">
           <div className="mx-auto max-w-5xl">
-            <h2 className="mb-5 text-xl font-black">車種から探す</h2>
+            <p className="text-xs font-bold uppercase tracking-widest text-accent-600">Body type</p>
+            <h2 className="mb-5 mt-1 text-xl font-black">車種から探す</h2>
             <div data-reveal className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
               {BODY_TYPES.slice(0, 6).map((body) => (
                 <Link
@@ -436,7 +438,7 @@ export default async function HomePage() {
                   href={`/listings?body=${encodeURIComponent(body)}`}
                   className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-accent-400 hover:shadow-md"
                 >
-                  <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100">
+                  <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-accent-50 to-[#F5F9F8]">
                     {BODY_ICON[body] ? (
                       <Image
                         src={BODY_ICON[body]}
@@ -495,7 +497,8 @@ export default async function HomePage() {
         {/* ── 3.5 エリアから探す ── */}
         <section className="bg-white px-4 py-12">
           <div className="mx-auto max-w-5xl">
-            <h2 className="mb-1 text-xl font-black">エリアから探す</h2>
+            <p className="text-xs font-bold uppercase tracking-widest text-accent-600">Area</p>
+            <h2 className="mb-1 mt-1 text-xl font-black">エリアから探す</h2>
             <p className="mb-5 text-sm text-slate-500">全国47都道府県対応。お住まいの地域の出品車・買取査定を。</p>
             <div data-reveal className="flex flex-wrap gap-2.5">
               {['hokkaido', 'miyagi', 'tokyo', 'kanagawa', 'saitama', 'chiba', 'aichi', 'shizuoka', 'osaka', 'hyogo', 'hiroshima', 'fukuoka']
@@ -503,8 +506,8 @@ export default async function HomePage() {
                 .filter((a): a is NonNullable<typeof a> => Boolean(a))
                 .map((a) => (
                   <Link key={a.slug} href={`/area/${a.slug}`}
-                    className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-accent-400 hover:text-accent-600">
-                    {a.name}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-accent-400 hover:text-accent-600">
+                    <MapPin className="h-3.5 w-3.5 text-accent-500" />{a.name}
                   </Link>
                 ))}
               <Link href="/area" className="rounded-full border border-dashed border-slate-300 px-4 py-2 text-sm font-bold text-slate-400 transition hover:border-accent-400 hover:text-accent-600">
