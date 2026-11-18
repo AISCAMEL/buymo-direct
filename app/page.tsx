@@ -438,38 +438,6 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ── 2.6 車のプロに依頼する ── */}
-        <section className="bg-white px-4 pb-12">
-          <div data-reveal className="mx-auto max-w-5xl rounded-2xl border border-slate-200 bg-navy-50 p-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="text-xl font-black text-navy-800">車のプロに依頼する</h2>
-                <p className="mt-1 text-sm text-slate-600">
-                  整備・車検・板金・コーティング・電装まで、認定プロに直接依頼できます。
-                </p>
-              </div>
-              <Link href="/dealers" className="btn-primary px-5 py-2.5 text-sm">プロを探す →</Link>
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {[
-                ['整備・修理', '整備・車検・板金', 'bg-navy-500', 'hover:border-navy-500 hover:text-navy-600'],
-                ['美装', 'コーティング・洗車', 'bg-sky-500', 'hover:border-sky-500 hover:text-sky-600'],
-                ['電装・取付', 'ナビ・ドラレコ', 'bg-violet-500', 'hover:border-violet-500 hover:text-violet-600'],
-                ['物流・手続き', '陸送・名義変更', 'bg-amber-500', 'hover:border-amber-500 hover:text-amber-600'],
-                ['査定・買取', '査定・買取', 'bg-coral-500', 'hover:border-coral-500 hover:text-coral-700'],
-              ].map(([cat, label, dot, hov]) => (
-                <Link
-                  key={cat}
-                  href={`/dealers?category=${encodeURIComponent(cat)}`}
-                  className={`inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-sm font-bold text-slate-600 transition ${hov}`}
-                >
-                  <span className={`h-2 w-2 rounded-full ${dot}`} />
-                  {label}
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
 
         {/* ── 3. 車種・ジャンルから探す（車種＋ジャンルを1セクションに統合） ── */}
         <section className="bg-[#F5F9F8] px-4 py-12">
@@ -732,6 +700,35 @@ export default async function HomePage() {
                   <span className="mt-auto text-xs font-bold text-accent-600">{cta} →</span>
                 </Link>
               ))}
+            </div>
+
+            {/* 専門の「車のプロ」に直接依頼（旧「車のプロに依頼する」を統合） */}
+            <div data-reveal className="mt-6 rounded-2xl border border-slate-200 bg-white p-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="font-black text-navy-800">専門の「車のプロ」に直接依頼</h3>
+                  <p className="mt-1 text-sm text-slate-600">整備・車検・板金・コーティング・電装・陸送まで、認定プロに直接依頼できます。</p>
+                </div>
+                <Link href="/dealers" className="btn-primary px-5 py-2.5 text-sm">プロを探す →</Link>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {[
+                  ['整備・修理', '整備・車検・板金', 'bg-navy-500', 'hover:border-navy-500 hover:text-navy-600'],
+                  ['美装', 'コーティング・洗車', 'bg-sky-500', 'hover:border-sky-500 hover:text-sky-600'],
+                  ['電装・取付', 'ナビ・ドラレコ', 'bg-violet-500', 'hover:border-violet-500 hover:text-violet-600'],
+                  ['物流・手続き', '陸送・名義変更', 'bg-amber-500', 'hover:border-amber-500 hover:text-amber-600'],
+                  ['査定・買取', '査定・買取', 'bg-coral-500', 'hover:border-coral-500 hover:text-coral-700'],
+                ].map(([cat, label, dot, hov]) => (
+                  <Link
+                    key={cat}
+                    href={`/dealers?category=${encodeURIComponent(cat)}`}
+                    className={`inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-sm font-bold text-slate-600 transition ${hov}`}
+                  >
+                    <span className={`h-2 w-2 rounded-full ${dot}`} />
+                    {label}
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         </section>
