@@ -38,6 +38,7 @@ import { GENRES, AREAS } from '@/lib/catalog';
 import { COLUMNS } from '@/lib/columns';
 import { HowItWorksTabs } from '@/components/HowItWorksTabs';
 import { CustomerResults } from '@/components/CustomerResults';
+import { getGenreIconMap } from '@/lib/genre-icons';
 import { getCachedFeaturedListings } from '@/lib/cache';
 import type { ListingWithImages } from '@/lib/types';
 
@@ -134,6 +135,9 @@ export default async function HomePage() {
   // ログイン済みの一般会員には、業販・加盟・募集系のカテゴリを出さない。
   const access = await getViewerAccess();
   const hideBiz = access.loggedIn && !access.businessTrack;
+
+  // ジャンルアイコン（AI生成があれば画像、無ければlucideアイコンにフォールバック）
+  const genreIconMap = await getGenreIconMap();
 
   // 実データのみ表示（出品が無いときは「入荷待ち」を表示する）
   const listings: ListingWithImages[] = await getCachedFeaturedListings();
@@ -504,11 +508,16 @@ export default async function HomePage() {
                 .filter((g): g is NonNullable<typeof g> => Boolean(g))
                 .map((g) => {
                   const Icon = GENRE_ICON[g.slug] ?? Car;
+                  const iconImg = genreIconMap[g.slug];
                   return (
                     <Link key={g.slug} href={`/genre/${g.slug}`}
                       className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-accent-400 hover:shadow-md">
-                      <div className="flex aspect-[4/3] items-center justify-center bg-gradient-to-br from-accent-50 to-[#F5F9F8]">
-                        <Icon className="h-8 w-8 text-accent-600 transition duration-300 group-hover:scale-110" />
+                      <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-gradient-to-br from-accent-50 to-[#F5F9F8]">
+                        {iconImg ? (
+                          <Image src={iconImg} alt={g.label} fill sizes="(max-width:640px) 50vw, 16vw" className="object-cover transition duration-300 group-hover:scale-105" />
+                        ) : (
+                          <Icon className="h-8 w-8 text-accent-600 transition duration-300 group-hover:scale-110" />
+                        )}
                       </div>
                       <div className="py-2.5 text-center text-sm font-bold text-slate-700 group-hover:text-accent-600">{g.label}</div>
                     </Link>
