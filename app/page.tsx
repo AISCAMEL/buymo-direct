@@ -459,14 +459,14 @@ export default async function HomePage() {
                   href={`/listings?body=${encodeURIComponent(body)}`}
                   className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-accent-400 hover:shadow-md"
                 >
-                  <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-accent-50 to-[#F5F9F8]">
+                  <div className="relative aspect-[4/3] overflow-hidden bg-[#EBFAF6]">
                     {BODY_ICON[body] ? (
                       <Image
                         src={BODY_ICON[body]}
                         alt={body}
                         fill
                         sizes="(max-width:640px) 50vw, 16vw"
-                        className="object-contain p-3 transition duration-300 group-hover:scale-105"
+                        className="object-contain p-4 transition duration-300 group-hover:scale-105"
                       />
                     ) : (
                       <Image
