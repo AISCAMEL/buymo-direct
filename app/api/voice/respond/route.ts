@@ -1,27 +1,20 @@
 /**
  * POST /api/voice/respond — 発話（音声認識結果）を受けて会話を進める。
- * 予約フロー優先：用件・お名前・希望時間をうかがい、同意が取れたら折り返し予約を確定・保存。
- * 予約以外（一般質問）は従来どおりAIが短く応答して会話を続ける。
- * /api/voice/incoming の <Gather action> から呼ばれる。
+ * 高機能オペレーター：1ターン＝AI1回で「話す言葉」と「予約状態」を同時に得る（高速＝切断されにくい）。
+ * 用件・お名前・希望時間が揃い同意が取れたら折り返し予約を確定・保存して終話。
+ * 無言が続いても行き止まりにせず聞き直し、一定回数で丁寧に終話する。
  */
 import type { NextRequest } from 'next/server';
 import { isTwilioConfigured, validateTwilioRequest } from '@/lib/twilio';
-import { twimlResponse, say, gatherSpeech, hangup, pause } from '@/lib/twiml';
-import { voiceReply, voiceReprompt, isGoodbye } from '@/lib/voice-ai';
-import { saveVoiceTurn } from '@/lib/voice-data';
-import {
-  extractBooking,
-  nextBookingPrompt,
-  bookingComplete,
-  bookingConfirmation,
-  saveVoiceBooking,
-} from '@/lib/voice-booking';
+import { twimlResponse, say, gatherSpeech, hangup } from '@/lib/twiml';
+import { voiceReprompt } from '@/lib/voice-ai';
+import { operatorTurn } from '@/lib/voice-booking';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const maxDuration = 20;
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://buymo.me';
-const GOODBYE = 'お電話ありがとうございました。バイモ ダイレクトをどうぞよろしくお願いいたします。失礼いたします。';
 
 function formToObj(form: FormData): Record<string, string> {
   const o: Record<string, string> = {};
@@ -44,40 +37,21 @@ export async function POST(req: NextRequest) {
   const from = params.From;
   const speech = (params.SpeechResult ?? '').trim();
 
-  // 聞き取れなかった → 再度うかがう
+  // 無言：2回までは聞き直し、それ以上は丁寧に終話（無限ループ・無駄な課金を防止）
   if (!speech) {
-    return twimlResponse(gatherSpeech('/api/voice/respond', voiceReprompt()));
-  }
-
-  // ── 予約フロー（最優先）──
-  const state = await extractBooking(callSid, speech);
-
-  if (state && state.intent === 'end') {
-    return twimlResponse(say(GOODBYE) + hangup());
-  }
-
-  if (state && state.intent === 'booking') {
-    // 同意が取れて必要情報が揃った → 予約を確定・保存して締める
-    if (state.confirmed && bookingComplete(state)) {
-      await saveVoiceBooking(callSid, from, state);
-      await saveVoiceTurn(callSid, 'user', speech);
-      await saveVoiceTurn(callSid, 'assistant', '（折り返し予約を確定）');
-      return twimlResponse(say(bookingConfirmation(state)) + hangup());
+    const tries = Number(req.nextUrl.searchParams.get('e') ?? '0') || 0;
+    if (tries >= 2) {
+      return twimlResponse(
+        say('お声が届かないようです。恐れ入りますが、改めてお電話いただくか、ウェブのお問い合わせをご利用ください。失礼いたします。') + hangup(),
+      );
     }
-    // 不足を聞く／揃っていれば復唱して確認
-    const prompt = nextBookingPrompt(state);
-    // 次ターンの「同意」判定のため、発話と案内を会話メモリへ保存
-    await saveVoiceTurn(callSid, 'user', speech);
-    await saveVoiceTurn(callSid, 'assistant', prompt);
-    return twimlResponse(gatherSpeech('/api/voice/respond', prompt));
+    return twimlResponse(gatherSpeech(`/api/voice/respond?e=${tries + 1}`, voiceReprompt()));
   }
 
-  // ── 予約以外（一般質問）→ 従来のAI応答ループ ──
-  if (isGoodbye(speech)) {
-    return twimlResponse(say(GOODBYE) + hangup());
+  // AI 1回で応答文＋予約判定
+  const { say: line, finished } = await operatorTurn(callSid, speech, from);
+  if (finished) {
+    return twimlResponse(say(line) + hangup());
   }
-  const reply = await voiceReply(callSid, speech);
-  return twimlResponse(
-    say(reply) + pause(1) + gatherSpeech('/api/voice/respond', '他にご質問や、折り返しのご予約などございますか？'),
-  );
+  return twimlResponse(gatherSpeech('/api/voice/respond', line));
 }

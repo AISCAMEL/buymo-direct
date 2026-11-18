@@ -4,7 +4,7 @@
  * 不足はTS側で決定的に聞き返す。全部揃って同意が取れたら voice_bookings に保存。
  */
 import { generateWithClaude, isAiEnabled } from '@/lib/ai';
-import { loadVoiceTurns } from '@/lib/voice-data';
+import { loadVoiceTurns, saveVoiceTurn } from '@/lib/voice-data';
 import { createServiceClient } from '@/lib/supabase/service';
 
 export type BookingCategory = 'appraisal' | 'repair' | 'purchase' | 'other';
@@ -86,6 +86,89 @@ export function bookingConfirmation(s: BookingState): string {
   const cat = s.category ? CATEGORY_LABEL[s.category] : 'ご相談';
   const when = s.preferred ? `${s.preferred}ごろに` : '追って';
   return `ありがとうございます。${s.name ?? 'お客'}様、${cat}の件で、${when}担当者よりお電話を差し上げます。ご予約を承りました。お電話ありがとうございました。`;
+}
+
+// ───────────────────────────────────────────────────────────────
+// 高機能オペレーター：1ターン＝AI1回で「話す言葉」と「予約状態」を同時に返す。
+// 2回呼び出し（抽出＋返答）をやめることで応答を高速化し、Twilioのタイムアウト切断を防ぐ。
+// ───────────────────────────────────────────────────────────────
+
+const OPERATOR_SYSTEM = [
+  'あなたは中古車「バイモ ダイレクト」（合同会社アイズ）の電話AIオペレーターです。相手は電話をかけてきたお客様です。',
+  'バイモは中古車の「買取」と「ダイレクト販売（買取保証つき）」を扱い、エスクロー決済・名義変更代行・全国対応・明朗な手数料が特徴です。',
+  '最大の目的は、ご用件をうかがって「折り返しのご予約」を取ること。必要情報は ①ご用件(category) ②お名前(name) ③折り返し希望の時間(preferred) の3つ。',
+  '進め方：不足している項目を1つずつ、自然な会話で尋ねる（目安は 用件→お名前→希望時間）。一度に全部聞かない。',
+  '3項目が揃ったら、sayで内容を短く復唱し「よろしければ、はい とおっしゃってください」と確認する。このとき readyToBook は false のまま。',
+  'お客様が「はい」「お願いします」等で同意したら readyToBook を true にし、sayはお礼と「担当者より折り返します」の一言にする。',
+  '質問だけされたら、sayで1〜2文で簡潔に答え、続けて予約に必要な次の項目を1つだけ尋ねる。',
+  'お客様がお礼や「以上です」「大丈夫です」等で終わりたい様子なら end を true にし、sayは丁寧な締めの挨拶にする。',
+  '電話の音声なので say は必ず1〜2文・短く・話し言葉。箇条書き・記号・URL・長い説明は使わない。数字や金額は聞き取りやすく。',
+  '住所やカード番号など詳しい個人情報は電話で聞き出さない。手続きはウェブの無料査定やお問い合わせへご案内する。',
+  '出力は必ず次のJSONオブジェクトのみ。前後に説明・記号・コードブロックを付けない。',
+  '{"say":"お客様へ読み上げる1〜2文","category":"appraisal|repair|purchase|other|null","name":"文字列|null","preferred":"文字列|null","vehicle":"文字列|null","readyToBook":true|false,"end":true|false}',
+  'category: 査定や買取=appraisal、故障や修理=repair、購入の相談=purchase、それ以外=other、不明は null。',
+].join('\n');
+
+/** Promiseにタイムアウトを付ける（遅延で通話が切れる前に打ち切って聞き直す）。 */
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error('timeout')), ms)),
+  ]);
+}
+
+const sliceStr = (v: unknown, max: number): string | null =>
+  typeof v === 'string' && v.trim() && v.trim().toLowerCase() !== 'null' ? v.trim().slice(0, max) : null;
+
+/**
+ * 1発話に対する応答を返す。AIが「読み上げる言葉(say)」と予約スロットを同時に出力。
+ * finished=true のときは say を読み上げて通話を終了する（予約確定 or 締め）。
+ * 失敗・遅延時も通話は切らず、聞き直して継続する。
+ */
+export async function operatorTurn(
+  callSid: string,
+  userText: string,
+  from: string | undefined,
+): Promise<{ say: string; finished: boolean }> {
+  const REPROMPT = 'すみません、お電話が少し遠いようです。もう一度、ゆっくりお願いできますか。';
+  if (!isAiEnabled()) {
+    return {
+      say: 'ただいまAIの準備中です。恐れ入りますが、ウェブサイトのお問い合わせか、無料査定をご利用ください。失礼いたします。',
+      finished: true,
+    };
+  }
+  try {
+    const turns = await loadVoiceTurns(callSid, 20);
+    const lines = turns.map((t) => `${t.role === 'assistant' ? '案内' : 'お客様'}: ${t.content}`);
+    lines.push(`お客様: ${userText}`);
+    const prompt = `通話ログ:\n${lines.join('\n')}\n\nJSONのみを出力してください。`;
+    const raw = await withTimeout(generateWithClaude(prompt, OPERATOR_SYSTEM, undefined, 320), 9000);
+    const m = raw.match(/\{[\s\S]*\}/);
+    const j = (m ? JSON.parse(m[0]) : {}) as Record<string, unknown>;
+    const line = sliceStr(j.say, 400) ?? REPROMPT;
+    const category = (['appraisal', 'repair', 'purchase', 'other'] as const).find((c) => c === j.category) ?? null;
+    const state: BookingState = {
+      intent: 'booking',
+      category,
+      name: sliceStr(j.name, 40),
+      preferred: sliceStr(j.preferred, 80),
+      vehicle: sliceStr(j.vehicle, 80),
+      confirmed: j.readyToBook === true,
+    };
+    // 会話メモリへ保存（文脈維持と「はい」の同意判定のため）
+    await saveVoiceTurn(callSid, 'user', userText);
+    await saveVoiceTurn(callSid, 'assistant', line);
+
+    if (j.end === true) return { say: line, finished: true };
+    if (state.confirmed && state.category && state.name && state.preferred) {
+      await saveVoiceBooking(callSid, from, state);
+      return { say: line, finished: true };
+    }
+    return { say: line, finished: false };
+  } catch {
+    // タイムアウト/生成失敗でも通話は切らず、聞き直して継続する
+    return { say: REPROMPT, finished: false };
+  }
 }
 
 /** 予約を1件保存（ベストエフォート。テーブル未作成でも通話は継続）。 */

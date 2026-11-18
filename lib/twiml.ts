@@ -13,9 +13,13 @@ export function say(text: string): string {
   return `<Say voice="${esc(voice())}" language="ja-JP">${esc(text)}</Say>`;
 }
 
-/** <Gather input="speech">：発話を音声認識して action へPOST。中に読み上げプロンプトを含む。 */
+/**
+ * <Gather input="speech">：発話を音声認識して action へPOST。中に読み上げプロンプトを含む。
+ * - actionOnEmptyResult="true"：無言でも必ず action にPOST（行き止まりで突然切れるのを防ぐ）
+ * - speechTimeout="auto"：話し終わりを自動検出 ／ timeout：最初の発話を待つ秒数
+ */
 export function gatherSpeech(actionPath: string, prompt: string): string {
-  return `<Gather input="speech" language="ja-JP" speechTimeout="auto" action="${esc(actionPath)}" method="POST">${say(prompt)}</Gather>`;
+  return `<Gather input="speech" language="ja-JP" speechTimeout="auto" timeout="6" actionOnEmptyResult="true" action="${esc(actionPath)}" method="POST">${say(prompt)}</Gather>`;
 }
 
 export function hangup(): string {

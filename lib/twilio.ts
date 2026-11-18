@@ -68,9 +68,23 @@ export function validateTwilioRequest(
   siteFallbackUrl?: string,
 ): boolean {
   const sig = req.headers.get('x-twilio-signature');
-  if (validateTwilioSignature(twilioPublicUrl(req, path), params, sig)) return true;
-  if (siteFallbackUrl && validateTwilioSignature(siteFallbackUrl, params, sig)) return true;
-  return false;
+  // Twilioは「実際に叩いたURL（クエリ文字列込み）」で署名する。リクエストURLから query を復元して付与する。
+  let search = '';
+  try {
+    search = new URL(req.url).search;
+  } catch {
+    /* noop */
+  }
+  const h = req.headers;
+  const host = h.get('x-forwarded-host') ?? h.get('host') ?? '';
+  const proto = h.get('x-forwarded-proto') ?? 'https';
+  const candidates = [
+    `${proto}://${host}${path}${search}`, // 実ホスト＋クエリ（推奨）
+    siteFallbackUrl ? `${siteFallbackUrl}${search}` : '', // SITE基準＋クエリ
+    `${proto}://${host}${path}`, // 後方互換（クエリ無し）
+    siteFallbackUrl || '',
+  ].filter(Boolean);
+  return candidates.some((u) => validateTwilioSignature(u, params, sig));
 }
 
 /** Twilio REST API で発信する。body は Url か Twiml のどちらかを含む。 */
