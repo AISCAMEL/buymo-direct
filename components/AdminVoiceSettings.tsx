@@ -8,6 +8,7 @@ type VoiceSettings = {
   greeting: string;
   instructions: string;
   hours: string;
+  knowledge: string;
 };
 
 const DEFAULT_GREETING =
@@ -117,6 +118,18 @@ export function AdminVoiceSettings({ initial }: { initial: VoiceSettings }) {
           placeholder="例）査定はオンラインで24時間受付。お電話の折り返しは平日10時〜18時。"
         />
         <p className="mt-1 text-[11px] text-slate-400">お客様に営業時間を聞かれたときの案内に使われます。</p>
+      </div>
+
+      {/* 会社・サービスの豆知識 */}
+      <div className="mt-4">
+        <label className="label">会社・サービスの豆知識（よくある質問・事実）</label>
+        <textarea
+          className="input min-h-[110px]"
+          value={s.knowledge}
+          onChange={(e) => up('knowledge', e.target.value)}
+          placeholder={'例）\n・買取保証つき。売れ残ってもバイモが買い取る。\n・名義変更は無料で代行。全国対応。\n・出張査定は〇〇エリアまで無料。\n・キャンセル料は〇〇。'}
+        />
+        <p className="mt-1 text-[11px] text-slate-400">AIが電話で正確に答えるための事実を箇条書きで。具体的な査定額や審査結果は電話で断定せず、折り返し・ウェブへ案内します。</p>
       </div>
 
       {/* 状態 */}
