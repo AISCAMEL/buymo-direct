@@ -277,37 +277,52 @@ export function ListingForm({
 
       // ガイド順（フロント→リア→…→その他）に並べて保存。
       // 既存は sort_order / caption を更新、新規はアップロード後に INSERT。
+      // 出品本体はこの時点で作成済み。画像の保存で個別に失敗しても、
+      // 出品そのものを「失敗」にしない（査定からの引き継ぎ画像など）。失敗は件数だけ記録。
       const ordered = [...images].sort((a, b) => guideIndex(a.caption) - guideIndex(b.caption));
+      let imageErrors = 0;
       for (let sortOrder = 0; sortOrder < ordered.length; sortOrder++) {
         const img = ordered[sortOrder];
-        if (img.dbId) {
-          await supabase
-            .from('listing_images')
-            .update({ sort_order: sortOrder, caption: img.caption ?? null })
-            .eq('id', img.dbId);
-        } else if (img.file) {
-          const file = await compressImage(img.file);
-          const path = `${userId}/${listingId}/${Date.now()}-${sortOrder}.jpg`;
-          const { error: stErr } = await supabase.storage
-            .from('listing-images')
-            .upload(path, file, { cacheControl: '3600', upsert: false, contentType: 'image/jpeg' });
-          if (stErr) throw stErr;
-          const { data: pub } = supabase.storage.from('listing-images').getPublicUrl(path);
-          await supabase.from('listing_images').insert({
-            listing_id: listingId,
-            url: pub.publicUrl,
-            sort_order: sortOrder,
-            caption: img.caption ?? null,
-          });
-        } else if (img.carried && img.url) {
-          // 査定から引き継いだ既存URLはそのまま登録（再アップロード不要）
-          await supabase.from('listing_images').insert({
-            listing_id: listingId,
-            url: img.url,
-            sort_order: sortOrder,
-            caption: img.caption ?? null,
-          });
+        try {
+          if (img.dbId) {
+            await supabase
+              .from('listing_images')
+              .update({ sort_order: sortOrder, caption: img.caption ?? null })
+              .eq('id', img.dbId);
+          } else if (img.file) {
+            const file = await compressImage(img.file);
+            const path = `${userId}/${listingId}/${Date.now()}-${sortOrder}.jpg`;
+            const { error: stErr } = await supabase.storage
+              .from('listing-images')
+              .upload(path, file, { cacheControl: '3600', upsert: false, contentType: 'image/jpeg' });
+            if (stErr) throw stErr;
+            const { data: pub } = supabase.storage.from('listing-images').getPublicUrl(path);
+            const { error: imgErr } = await supabase.from('listing_images').insert({
+              listing_id: listingId,
+              url: pub.publicUrl,
+              sort_order: sortOrder,
+              caption: img.caption ?? null,
+            });
+            if (imgErr) throw imgErr;
+          } else if (img.carried && img.url) {
+            // 査定から引き継いだ既存URLはそのまま登録（再アップロード不要）
+            const { error: imgErr } = await supabase.from('listing_images').insert({
+              listing_id: listingId,
+              url: img.url,
+              sort_order: sortOrder,
+              caption: img.caption ?? null,
+            });
+            if (imgErr) throw imgErr;
+          }
+        } catch (imgErr) {
+          imageErrors += 1;
+          // eslint-disable-next-line no-console
+          console.error('[listing image save failed]', imgErr);
         }
+      }
+      if (imageErrors > 0) {
+        // eslint-disable-next-line no-console
+        console.warn(`[listing] ${imageErrors} image(s) failed to save; listing was created`);
       }
 
       // 査定から作成した場合は、その査定を「出品済み」に紐付け（ベストエフォート）
@@ -322,7 +337,14 @@ export function ListingForm({
       router.push(`/listings/${listingId}`);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : '保存に失敗しました');
+      // Supabase の PostgrestError は Error インスタンスではないため、
+      // message/details/hint/code を拾って原因が分かるように表示する。
+      const e = (err ?? {}) as { message?: string; details?: string; hint?: string; code?: string };
+      const msg = e.message || (err instanceof Error ? err.message : '');
+      const extra = [e.details, e.hint, e.code].filter(Boolean).join(' / ');
+      setError(msg ? `保存に失敗しました：${msg}${extra ? `（${extra}）` : ''}` : '保存に失敗しました（原因不明）');
+      // eslint-disable-next-line no-console
+      console.error('[listing save failed]', err);
       setSubmitting(false);
     }
   }
