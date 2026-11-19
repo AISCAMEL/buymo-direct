@@ -74,6 +74,12 @@ export async function saveHearing(input: HearingInput): Promise<{ ok: boolean; i
   }
 }
 
+export async function getHearing(id: string): Promise<HearingSheet | null> {
+  const svc = createServiceClient();
+  const { data } = await svc.from('hearing_sheets').select('*').eq('id', id).maybeSingle();
+  return (data as HearingSheet | null) ?? null;
+}
+
 export async function listHearing(dealerId: string | null, limit = 100): Promise<HearingSheet[]> {
   const svc = createServiceClient();
   let q = svc.from('hearing_sheets').select('*').order('created_at', { ascending: false }).limit(limit);

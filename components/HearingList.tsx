@@ -1,5 +1,6 @@
 import { Phone, Car } from 'lucide-react';
 import type { HearingSheet } from '@/lib/hearing';
+import { ProposalButton } from '@/components/ProposalButton';
 
 export function HearingList({ sheets }: { sheets: HearingSheet[] }) {
   if (sheets.length === 0) {
@@ -32,6 +33,7 @@ export function HearingList({ sheets }: { sheets: HearingSheet[] }) {
             {h.situation && <p className="mt-1 text-xs text-slate-500">状況：{h.situation}</p>}
             {h.conditionNote && <p className="mt-1 text-xs text-slate-500">状態：{h.conditionNote}</p>}
             {h.requests && <p className="mt-1 text-xs text-slate-500">要望：{h.requests}</p>}
+            <ProposalButton hearingId={s.id} />
           </div>
         );
       })}
