@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
 import { getPricingConfig } from '@/lib/settings';
 import { computeFranchiseFee, type FranchisePaymentMethod } from '@/lib/franchise';
+import { readAttribution, attributionColumns } from '@/lib/attribution';
 
 /** 買取加盟の申込。加盟金を支払い方法に応じて算出して記録。 */
 export async function submitFranchise(formData: FormData): Promise<{ ok: boolean; error?: string } | void> {
@@ -29,7 +30,10 @@ export async function submitFranchise(formData: FormData): Promise<{ ok: boolean
   const cfg = await getPricingConfig();
   const fee = computeFranchiseFee(cfg.joiningFee, cfg.squareSurchargeRate, method);
 
-  const { error } = await supabase.from('franchise_applications').insert({
+  // 流入元（動線）を申込に焼き付ける。未適用の環境でも壊れないよう try で保護。
+  const attrCols = attributionColumns(await readAttribution());
+
+  const baseRow = {
     user_id: user.id,
     company_name: String(formData.get('company_name') || '').trim() || null,
     contact_name: contactName,
@@ -41,7 +45,13 @@ export async function submitFranchise(formData: FormData): Promise<{ ok: boolean
     total: fee.total,
     note: String(formData.get('note') || '').trim() || null,
     status: 'pending',
-  });
+  };
+
+  let { error } = await supabase.from('franchise_applications').insert({ ...baseRow, ...attrCols });
+  // 動線カラム未適用（マイグレーション前）でも申込は成立させる
+  if (error && /column .* does not exist|utm_|referrer|landing_path/i.test(error.message)) {
+    ({ error } = await supabase.from('franchise_applications').insert(baseRow));
+  }
   if (error) return { ok: false, error: error.message };
 
   // 業者トラック（買取加盟）として明示
