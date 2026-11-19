@@ -13,6 +13,8 @@ export type VoiceSettings = {
   instructions: string;
   /** 営業時間の案内文（任意・聞かれたら使う） */
   hours: string;
+  /** 会社・サービスの豆知識（料金・流れ・よくある質問など。AIが正確に答えるための事実） */
+  knowledge: string;
 };
 
 export const DEFAULT_GREETING =
@@ -23,6 +25,7 @@ export const DEFAULT_VOICE_SETTINGS: VoiceSettings = {
   greeting: DEFAULT_GREETING,
   instructions: '',
   hours: '',
+  knowledge: '',
 };
 
 const KEY = 'voice_settings';
@@ -38,6 +41,7 @@ export async function getVoiceSettings(): Promise<VoiceSettings> {
       greeting: typeof j.greeting === 'string' && j.greeting.trim() ? j.greeting : DEFAULT_GREETING,
       instructions: typeof j.instructions === 'string' ? j.instructions : '',
       hours: typeof j.hours === 'string' ? j.hours : '',
+      knowledge: typeof j.knowledge === 'string' ? j.knowledge : '',
     };
   } catch {
     return DEFAULT_VOICE_SETTINGS;
@@ -51,6 +55,7 @@ export async function setVoiceSettings(s: Partial<VoiceSettings>): Promise<{ ok:
     greeting: (typeof s.greeting === 'string' && s.greeting.trim() ? s.greeting : DEFAULT_GREETING).slice(0, 600),
     instructions: (typeof s.instructions === 'string' ? s.instructions : '').slice(0, 2000),
     hours: (typeof s.hours === 'string' ? s.hours : '').slice(0, 300),
+    knowledge: (typeof s.knowledge === 'string' ? s.knowledge : '').slice(0, 3000),
   };
   return setAppSetting(KEY, JSON.stringify(payload));
 }

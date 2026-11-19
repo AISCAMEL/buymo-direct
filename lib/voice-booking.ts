@@ -110,6 +110,42 @@ const OPERATOR_SYSTEM = [
   'category: 査定や買取=appraisal、故障や修理=repair、購入の相談=purchase、それ以外=other、不明は null。',
 ].join('\n');
 
+// AIが電話口でよくある質問に正確に答えるための、BUYMOの基本事実（組み込みの豆知識）。
+// 具体の金額・在庫・審査結果などは電話で断定せず、ウェブや折り返しへ案内する。
+const BUILTIN_KNOWLEDGE = [
+  '【バイモ ダイレクトの基本】',
+  '・中古車の「買取」と「ダイレクト販売（買取保証つきの個人間売買）」を提供。',
+  '・買取保証つき：ダイレクト販売で売れ残っても、最後はバイモが買い取るので安心。',
+  '・エスクロー（代金お預かり）決済で、売り手・買い手の双方が安全に取引できる。',
+  '・名義変更（移転登録）はバイモが代行。全国対応で、出張査定や陸送も相談可能。',
+  '・出品手数料は無料。手数料は明朗で、販売価格から一定の手数料のみ。',
+  '・ウェブの「無料査定」は、写真を撮るだけでAIが査定額の目安をすぐ提示（24時間受付）。',
+  '・廃車・事故車・不動車は「その場提示」の買取にも対応。',
+  '・ローンや故障保証のご相談も可能（審査・金額の確定は担当者がご案内）。',
+  '【電話での答え方】質問にはこの事実の範囲で1〜2文で答える。具体的な査定額・在庫・審査可否・個別料金は電話で断定せず、ウェブの無料査定か折り返しへご案内する。',
+].join('\n');
+
+/** 折り返しの再来・常連判定：同じ電話番号の直近予約があれば、短い文脈メモを返す。 */
+async function recentCallerContext(from: string | undefined): Promise<string> {
+  if (!from) return '';
+  try {
+    const svc = createServiceClient();
+    const { data } = await svc
+      .from('voice_bookings')
+      .select('name, category, created_at')
+      .eq('phone', from)
+      .order('created_at', { ascending: false })
+      .limit(1);
+    const r = (data ?? [])[0] as { name?: string | null; category?: string | null } | undefined;
+    if (!r) return '';
+    const cat = r.category ? (CATEGORY_LABEL as Record<string, string>)[r.category] : '';
+    const who = r.name ? `${r.name}様` : 'このお客様';
+    return `\n【発信者メモ】この電話番号には過去のご予約履歴があります（${who}${cat ? '／' + cat : ''}）。分かっている情報は聞き直さず自然に対応し、「いつもありがとうございます」等を一言添える。ただし本人確認が曖昧なら丁寧に確認する。`;
+  } catch {
+    return '';
+  }
+}
+
 /** Promiseにタイムアウトを付ける（遅延で通話が切れる前に打ち切って聞き直す）。 */
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   return Promise.race([
@@ -139,12 +175,15 @@ export async function operatorTurn(
     };
   }
   try {
-    // 管理画面の設定（追加指示・営業時間）をシステムプロンプトに反映
-    const vs = await getVoiceSettings();
+    // 管理画面の設定（追加指示・営業時間・豆知識）＋発信者メモをシステムプロンプトに反映
+    const [vs, callerNote] = await Promise.all([getVoiceSettings(), recentCallerContext(from)]);
     const sys =
       OPERATOR_SYSTEM +
+      '\n\n' + BUILTIN_KNOWLEDGE +
+      (vs.knowledge ? `\n【運営が登録した豆知識（事実として優先的に使う）】\n${vs.knowledge}` : '') +
       (vs.instructions ? `\n【運営からの追加指示（最優先で従う）】\n${vs.instructions}` : '') +
-      (vs.hours ? `\n【営業時間】お客様に営業時間や受付時間を聞かれたら、次の内容で案内する：${vs.hours}` : '');
+      (vs.hours ? `\n【営業時間】お客様に営業時間や受付時間を聞かれたら、次の内容で案内する：${vs.hours}` : '') +
+      callerNote;
     const turns = await loadVoiceTurns(callSid, 20);
     const lines = turns.map((t) => `${t.role === 'assistant' ? '案内' : 'お客様'}: ${t.content}`);
     lines.push(`お客様: ${userText}`);
