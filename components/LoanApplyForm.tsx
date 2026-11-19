@@ -95,12 +95,15 @@ export function LoanApplyForm({
     const fd = new FormData(e.currentTarget);
     const userNote = String(fd.get('note') || '').trim();
     const note = [userNote, breakdownText()].filter(Boolean).join('\n\n');
+    // 生年：数字のみ取り出し、先頭4桁を「年」として採用（生年月日を入れても年だけ使う）
+    const birthDigits = String(fd.get('birth_year') || '').replace(/[^0-9]/g, '');
+    const birthYear = birthDigits ? Number(birthDigits.slice(0, 4)) : undefined;
     const res = await submitLoanApplication({
       listingId,
       fullName: String(fd.get('full_name')),
       phone: String(fd.get('phone')),
       email: String(fd.get('email')),
-      birthYear: fd.get('birth_year') ? Number(fd.get('birth_year')) : undefined,
+      birthYear,
       annualIncome: fd.get('annual_income') ? Number(fd.get('annual_income')) : undefined,
       employment: String(fd.get('employment')) || undefined,
       vehiclePrice: price,
@@ -293,8 +296,18 @@ export function LoanApplyForm({
             <input name="email" required type="email" className="input" defaultValue={defaultEmail} />
           </div>
           <div>
-            <label className="label">生年（西暦）</label>
-            <input name="birth_year" type="number" min={1940} max={2010} className="input" placeholder="1990" />
+            <label className="label">生年（西暦・4桁）</label>
+            <input
+              name="birth_year"
+              type="text"
+              inputMode="numeric"
+              maxLength={4}
+              pattern="[0-9]{4}"
+              className="input"
+              placeholder="例：1981"
+              onInput={(e) => { e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, '').slice(0, 4); }}
+            />
+            <p className="mt-0.5 text-xs text-slate-400">西暦の「年」を4桁で（例：1981）。月日は不要です。</p>
           </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
