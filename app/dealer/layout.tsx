@@ -12,6 +12,7 @@ const NAV = [
   { href: '/dealer/cases', label: '案件' },
   { href: '/dealer/inspections', label: '査定表' },
   { href: '/dealer/hearing', label: 'ヒアリング' },
+  { href: '/dealer/qr', label: '店舗QR' },
   { href: '/community', label: 'コミュニティ' },
   { href: '/dealer/quotes', label: '見積書' },
   { href: '/dealer/invoices', label: '請求書' },
