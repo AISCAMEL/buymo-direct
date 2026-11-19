@@ -1,5 +1,6 @@
-import { Database } from 'lucide-react';
+import { Database, KeyRound } from 'lucide-react';
 import { SeedDemoPanel } from '@/components/SeedDemoPanel';
+import { DEMO_PASSWORD, DEMO_PRO, DEMO_BUYER } from '@/lib/demo';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +29,29 @@ export default function AdminSeedPage() {
       </div>
 
       <SeedDemoPanel />
+
+      <div className="card p-5">
+        <p className="flex items-center gap-1.5 font-bold text-navy-800">
+          <KeyRound className="h-4 w-4 text-accent-600" /> デモ用のログイン情報（投入後に使えます）
+        </p>
+        <div className="mt-2 grid gap-2 sm:grid-cols-2">
+          <div className="rounded-xl border border-accent-200 bg-accent-50/50 p-3 text-sm">
+            <p className="font-bold text-navy-800">加盟店（佐藤オートサービス）</p>
+            <p className="mt-1 text-slate-600">ID：<code className="rounded bg-white px-1.5 py-0.5 font-mono">{DEMO_PRO.email}</code></p>
+            <p className="text-slate-600">PW：<code className="rounded bg-white px-1.5 py-0.5 font-mono">{DEMO_PASSWORD}</code></p>
+            <p className="mt-1 text-xs text-slate-400">ログイン後 /dealer/dashboard が開きます</p>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
+            <p className="font-bold text-navy-800">買い手（お客様）</p>
+            <p className="mt-1 text-slate-600">ID：<code className="rounded bg-white px-1.5 py-0.5 font-mono">{DEMO_BUYER.email}</code></p>
+            <p className="text-slate-600">PW：<code className="rounded bg-white px-1.5 py-0.5 font-mono">{DEMO_PASSWORD}</code></p>
+            <p className="mt-1 text-xs text-slate-400">ログイン後 /dashboard（マイページ）</p>
+          </div>
+        </div>
+        <p className="mt-2 rounded-lg bg-amber-50 p-2 text-xs text-amber-700">
+          このパスワードはデモ専用アカウント（@buymo-demo.jp・隔離データのみ）用です。再投入のたびにこのパスワードへ戻ります。
+        </p>
+      </div>
 
       <div className="card p-5 text-sm text-slate-600">
         <p className="font-bold text-slate-800">確認のしかた</p>

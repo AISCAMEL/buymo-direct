@@ -5,13 +5,7 @@ import { adminContext } from '@/lib/admin';
 import { createServiceClient } from '@/lib/supabase/service';
 import { getPricingConfig } from '@/lib/settings';
 import { computeMatchingFee } from '@/lib/matching-fee';
-
-// デモ用アカウント（本番の実ユーザーとは別のダミードメイン）
-// パスワードは環境変数 DEMO_SEED_PASSWORD から取得。未設定ならデモ投入を無効化（既知のパスワードをコードに残さない）。
-const DEMO_PASSWORD = process.env.DEMO_SEED_PASSWORD ?? '';
-const DEMO_BUYER = { email: 'demo.buyer@buymo-demo.jp', name: '山田 太郎（デモ）' };
-const DEMO_PRO = { email: 'demo.pro@buymo-demo.jp', name: '佐藤オート（デモ担当）' };
-const DEMO_SKILL = { email: 'demo.skill@buymo-demo.jp', name: '田中 一郎（スキル登録デモ）' };
+import { DEMO_PASSWORD, DEMO_BUYER, DEMO_PRO, DEMO_SKILL } from '@/lib/demo';
 
 type Svc = ReturnType<typeof createServiceClient>;
 
