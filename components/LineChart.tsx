@@ -1,5 +1,7 @@
 'use client';
 
+import { formatChartValue, type ChartFormat } from '@/lib/chart-format';
+
 interface DataPoint {
   label: string;
   value: number;
@@ -9,7 +11,8 @@ interface LineChartProps {
   data: DataPoint[];
   height?: number;
   color?: string;
-  formatValue?: (v: number) => string;
+  // 関数はServer→Clientへ渡せないため、シリアライズ可能な format 文字列で指定する。
+  format?: ChartFormat;
 }
 
 const PADDING = { top: 32, right: 24, bottom: 44, left: 16 };
@@ -34,8 +37,9 @@ export default function LineChart({
   data,
   height = 220,
   color = '#0F766E',
-  formatValue = (v) => v.toLocaleString('ja-JP'),
+  format = 'number',
 }: LineChartProps) {
+  const formatValue = (v: number) => formatChartValue(v, format);
   if (!data.length) return null;
 
   const max = Math.max(...data.map((d) => d.value));

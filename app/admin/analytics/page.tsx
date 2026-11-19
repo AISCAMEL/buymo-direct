@@ -5,14 +5,9 @@ import LineChart from '@/components/LineChart';
 import RevenueTable, { type RevenueRow } from '@/components/RevenueTable';
 import { requireAdmin } from '@/lib/admin';
 import { createServiceClient } from '@/lib/supabase/service';
+import { formatYenShort } from '@/lib/chart-format';
 
 export const dynamic = 'force-dynamic';
-
-function formatYenShort(v: number) {
-  if (v >= 100_000_000) return `¥${(v / 100_000_000).toFixed(1)}億`;
-  if (v >= 10_000) return `¥${(v / 10_000).toFixed(0)}万`;
-  return `¥${v.toLocaleString('ja-JP')}`;
-}
 
 type Month = { y: number; m: number; label: string; end: Date };
 function lastMonths(n: number): Month[] {
@@ -148,11 +143,11 @@ export default async function AdminAnalyticsPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="card p-5">
           <h2 className="mb-4 font-bold text-slate-700">月次成約GMV（直近6ヶ月）</h2>
-          <BarChart data={gmvMonthly} height={220} color="#0F766E" formatValue={formatYenShort} />
+          <BarChart data={gmvMonthly} height={220} color="#0F766E" format="yenShort" />
         </div>
         <div className="card p-5">
           <h2 className="mb-4 font-bold text-slate-700">会員数推移</h2>
-          <LineChart data={memberGrowth} height={220} color="#D4AF65" formatValue={(v) => `${v.toLocaleString('ja-JP')}名`} />
+          <LineChart data={memberGrowth} height={220} color="#D4AF65" format="mei" />
         </div>
       </div>
 
@@ -170,7 +165,7 @@ export default async function AdminAnalyticsPage() {
         </div>
         <div className="card p-5">
           <h3 className="mb-4 font-bold text-slate-700">月次 買取GMV（直近6ヶ月）</h3>
-          <BarChart data={buybackMonthly} height={200} color="#D4AF65" formatValue={formatYenShort} />
+          <BarChart data={buybackMonthly} height={200} color="#D4AF65" format="yenShort" />
         </div>
       </div>
 
