@@ -323,12 +323,12 @@ export default async function HomePage() {
             {/* 人物＋車の写真 */}
             <div className="relative order-1 min-h-[260px] overflow-hidden sm:min-h-[360px] lg:order-2 lg:min-h-full">
               <Image
-                src="/hero-photo.jpg"
-                alt="スマホで愛車を撮影して査定を申し込む様子（写真査定・全国オンライン完結）"
+                src="/images/buymo/hero-premium.webp"
+                alt="ディーラー前に佇むプレミアムSUV（BUYMO ダイレクトのイメージ）"
                 fill
                 priority
                 sizes="(max-width: 1024px) 100vw, 50vw"
-                className="kenburns object-cover object-center lg:object-[85%_center]"
+                className="kenburns object-cover object-center lg:object-[60%_center]"
               />
               {/* パネルへ自然になじませる（lg以上は左端、モバイルは下端をぼかす） */}
               <div className="absolute inset-0 bg-gradient-to-t from-navy-900/40 to-transparent lg:bg-gradient-to-r lg:from-navy-900/70 lg:via-navy-900/10 lg:to-transparent" />
@@ -350,6 +350,45 @@ export default async function HomePage() {
               愛車の売却も、次のクルマ探しも。<br className="hidden sm:block" />
               BUYMO がまるごとサポートします。
             </p>
+          </div>
+        </section>
+
+        {/* ── 1.7 サービス4導線（売る／買う／整備・保証／加盟店を探す）── */}
+        <section className="bg-white px-4 pb-4 pt-8 sm:pt-12">
+          <div className="mx-auto max-w-6xl">
+            <div data-reveal className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+              {[
+                { href: '/listings/valuation', img: '/images/buymo/sell-card.webp', title: '車を売りたい', sub: 'プロの買取で高価売却を目指す' },
+                { href: '/listings', img: '/images/buymo/buy-card.webp', title: '車を買いたい', sub: '厳選された中古車から理想の一台を' },
+                { href: '/dealers?category=整備・修理', img: '/images/buymo/inspection-card.webp', title: '整備・保証', sub: '購入後も安心のサポート体制' },
+                { href: '/dealers', img: '/images/buymo/dealer-atmosphere.webp', title: '加盟店を探す', sub: '信頼できる車のプロに相談' },
+              ].map(({ href, img, title, sub }) => (
+                <Link
+                  key={title}
+                  href={href}
+                  className="group relative block aspect-[4/3] overflow-hidden rounded-2xl shadow-sm ring-1 ring-black/5 transition hover:-translate-y-0.5 hover:shadow-md sm:aspect-[5/4]"
+                >
+                  <Image
+                    src={img}
+                    alt={title}
+                    fill
+                    sizes="(max-width:1024px) 50vw, 25vw"
+                    className="object-cover transition duration-500 group-hover:scale-105"
+                  />
+                  {/* テキストは画像に焼き込まず、HTML/CSSでオーバーレイ */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-navy-900/85 via-navy-900/25 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-3 sm:p-4">
+                    <div className="min-w-0">
+                      <h3 className="text-base font-black leading-tight text-white sm:text-lg">{title}</h3>
+                      <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-white/80 sm:text-xs">{sub}</p>
+                    </div>
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/90 text-navy-800 transition group-hover:bg-accent-500 group-hover:text-white sm:h-8 sm:w-8">
+                      <ChevronRight className="h-4 w-4" />
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         </section>
 
