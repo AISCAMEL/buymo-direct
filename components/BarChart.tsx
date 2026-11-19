@@ -1,6 +1,7 @@
 'use client';
 
 import { useId } from 'react';
+import { formatChartValue, type ChartFormat } from '@/lib/chart-format';
 
 interface DataPoint {
   label: string;
@@ -11,7 +12,8 @@ interface BarChartProps {
   data: DataPoint[];
   height?: number;
   color?: string;
-  formatValue?: (v: number) => string;
+  // 関数はServer→Clientへ渡せないため、シリアライズ可能な format 文字列で指定する。
+  format?: ChartFormat;
 }
 
 const PADDING = { top: 36, right: 16, bottom: 48, left: 16 };
@@ -21,8 +23,9 @@ export default function BarChart({
   data,
   height = 220,
   color = '#0F766E',
-  formatValue = (v) => v.toLocaleString('ja-JP'),
+  format = 'number',
 }: BarChartProps) {
+  const formatValue = (v: number) => formatChartValue(v, format);
   const uid = useId();
   const clipId = `bar-clip-${uid}`;
 

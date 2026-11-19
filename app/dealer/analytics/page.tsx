@@ -6,12 +6,6 @@ import BarChart from '@/components/BarChart';
 
 export const dynamic = 'force-dynamic';
 
-function formatYenShort(v: number) {
-  if (v >= 100_000_000) return `¥${(v / 100_000_000).toFixed(1)}億`;
-  if (v >= 10_000) return `¥${(v / 10_000).toFixed(0)}万`;
-  return `¥${v.toLocaleString('ja-JP')}`;
-}
-
 export default async function DealerAnalyticsPage() {
   const { supabase, dealer } = await requireDealer() as any;
   const s = supabase as any;
@@ -110,7 +104,7 @@ export default async function DealerAnalyticsPage() {
             data={monthlyData}
             height={220}
             color="#0F766E"
-            formatValue={formatYenShort}
+            format="yenShort"
           />
         ) : (
           <div className="flex h-40 items-center justify-center text-slate-400">
