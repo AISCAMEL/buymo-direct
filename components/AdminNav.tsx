@@ -33,6 +33,7 @@ const GROUPS: Group[] = [
       { href: '/admin/buyback', label: '買取保証審査' },
       { href: '/admin/appraisals', label: '査定依頼' },
       { href: '/admin/inspections', label: '査定表（現車検査）' },
+      { href: '/admin/hearing', label: 'ヒアリング（出張・来店）' },
       { href: '/admin/valuations', label: '査定履歴' },
       { href: '/admin/loans', label: 'ローン審査' },
       { href: '/admin/warranty', label: '保証見積り' },
