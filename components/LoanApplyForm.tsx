@@ -8,6 +8,7 @@ import { LOAN_APR_FROM } from '@/lib/constants';
 import { LOAN_TERMS } from '@/lib/loan';
 import { computeQuote } from '@/lib/fees';
 import { WarrantyPicker } from '@/components/WarrantyPicker';
+import { WarrantySizeEstimate } from '@/components/WarrantySizeEstimate';
 import { PRICING_DEFAULTS, type PricingConfig } from '@/lib/pricing-config';
 import { formatYen } from '@/lib/format';
 
@@ -213,6 +214,9 @@ export function LoanApplyForm({
               </div>
               <span className="shrink-0 text-sm font-bold text-accent-600">{warrantyFee > 0 ? formatYen(warrantyFee) : '—'}</span>
             </div>
+          ) : (!vehicle.maker && !vehicle.bodyType) ? (
+            // 車が未確定（手動入力）のとき：車両サイズから故障保証を概算
+            <WarrantySizeEstimate onChange={onWarranty} defaultYear={vehicle.year} defaultMileageKm={vehicle.mileageKm} />
           ) : (
             <WarrantyPicker vehicle={vehicle} onChange={onWarranty} adjustPercent={pricing.warrantyAdjustPercent} />
           )}
