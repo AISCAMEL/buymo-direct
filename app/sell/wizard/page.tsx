@@ -165,6 +165,19 @@ export default function SellWizardPage() {
         ))}
       </div>
 
+      {/* 初心者ガイド（各ステップの説明） */}
+      <div className="mb-4 flex items-start gap-2 rounded-xl border border-accent-200 bg-accent-50/60 p-3 text-sm text-slate-600">
+        <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-accent-600" />
+        <span>
+          {{
+            info: 'メーカー・年式・走行を選ぶだけ。分からない項目は空欄でもOK、あとから変更できます。',
+            analyzing: 'AIが相場を計算しています。少しだけお待ちください。',
+            result: '査定額の目安が出ました。次で売り方（買取／ダイレクト販売）を選べます。',
+            type: '「買取」は即現金化、「ダイレクト販売」はより高く売れる可能性。迷ったら買取保証つきが安心です。',
+          }[step]}
+        </span>
+      </div>
+
       {/* STEP 1: 車両情報入力 */}
       {step === 'info' && (
         <div className="card p-6 space-y-5">

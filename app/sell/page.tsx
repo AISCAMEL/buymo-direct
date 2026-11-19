@@ -107,6 +107,23 @@ export default async function SellPage({
         </div>
       )}
 
+      {/* はじめての方向け：ステップで進むガイド付き査定を前面に */}
+      {!dealerId && !carriedFrom && (
+        <Link
+          href="/listings/sell-wizard"
+          className="group mb-4 flex items-center gap-3 rounded-2xl border-2 border-accent-500 bg-gradient-to-r from-accent-50 to-white p-4 transition hover:shadow-md"
+        >
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent-600 text-white">
+            <Bot className="h-6 w-6" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="font-black text-navy-800">はじめての方はこちら：査定スタート（ステップでかんたん）</p>
+            <p className="mt-0.5 text-sm text-slate-500">メーカー・年式を選ぶだけ。1つずつ進むので迷いません。AIが査定額の目安をすぐ表示します。</p>
+          </div>
+          <span className="shrink-0 text-accent-600 transition group-hover:translate-x-0.5">→</span>
+        </Link>
+      )}
+
       {/* はじめての出品ガイド（初心者向け） */}
       <div className="mb-4 rounded-2xl border border-slate-200 bg-white p-4">
         <p className="text-sm font-black text-navy-800">はじめての出品 — 3ステップ</p>
