@@ -36,3 +36,27 @@ export function estimateWarranty(
   const raw = base * ageFactor * mileageFactor * pf;
   return Math.round(Math.min(raw, cfg.warrantyCap) / 1000) * 1000;
 }
+
+/* ── 車が未確定（手動入力）のときの「ざっくり概算」用：車両サイズから概算 ── */
+export type VehicleSize = 'kei' | 'compact' | 'standard' | 'large' | 'import';
+export const VEHICLE_SIZES: { code: VehicleSize; label: string; hint: string }[] = [
+  { code: 'kei', label: '軽自動車', hint: '〜660cc' },
+  { code: 'compact', label: 'コンパクト', hint: '小型・ハッチバック' },
+  { code: 'standard', label: '普通車', hint: 'セダン・ミニバン・SUV' },
+  { code: 'large', label: '大型・高級', hint: '大型SUV・高級車' },
+  { code: 'import', label: '輸入車', hint: '外車全般' },
+];
+const SIZE_FACTOR: Record<VehicleSize, number> = { kei: 1, compact: 0.9, standard: 1, large: 1.25, import: 1 };
+
+/** 車両サイズからおおよその故障保証料（税抜・1,000円丸め）を概算する。年式・走行は任意（無ければ標準扱い）。 */
+export function estimateWarrantyBySize(
+  size: VehicleSize,
+  opts: { year?: number | null; mileageKm?: number | null; months: number },
+  cfg: PricingConfig = PRICING_DEFAULTS,
+): number | null {
+  const bodyType = size === 'kei' ? '軽' : null;
+  const maker = size === 'import' ? '輸入車（その他）' : null;
+  const q = estimateWarranty({ year: opts.year ?? null, mileageKm: opts.mileageKm ?? null, maker, bodyType, months: opts.months }, cfg);
+  if (q == null) return null;
+  return Math.round((q * (SIZE_FACTOR[size] ?? 1)) / 1000) * 1000;
+}
