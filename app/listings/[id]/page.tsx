@@ -7,6 +7,7 @@ import { formatYen, formatMileage, formatDate } from '@/lib/format';
 import { startConversation } from './actions';
 import { requestVehicleQuote } from '@/app/cases/actions';
 import { OwnerListingControls } from '@/components/OwnerListingControls';
+import { ListingMarketCompare } from '@/components/ListingMarketCompare';
 import { FavoriteButton } from '@/components/FavoriteButton';
 import { ReportDialog } from '@/components/ReportDialog';
 import { RatingStars } from '@/components/RatingStars';
@@ -432,6 +433,17 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
           records={maintenanceRecords}
           isOwner={isOwner}
         />
+
+        {/* 市場価格とくらべる（この車の相場アピール） */}
+        {listing.maker && listing.model && (
+          <ListingMarketCompare
+            maker={listing.maker}
+            model={listing.model}
+            year={listing.year}
+            mileageKm={listing.mileage_km}
+            price={listing.price}
+          />
+        )}
       </div>
 
       {/* 右：価格・アクション・売主 */}
