@@ -1,33 +1,11 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Building2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getDealerForUser } from '@/lib/dealer';
 import { DealerHelpAI } from '@/components/DealerHelpAI';
+import { DealerNav } from '@/components/DealerNav';
 
 export const dynamic = 'force-dynamic';
-
-const NAV = [
-  { href: '/dealer/dashboard', label: 'ダッシュボード' },
-  { href: '/dealer/onboarding', label: 'はじめに・研修' },
-  { href: '/dealer/cases', label: '案件' },
-  { href: '/dealer/inspections', label: '査定表' },
-  { href: '/dealer/hearing', label: 'ヒアリング' },
-  { href: '/dealer/qr', label: '店舗QR' },
-  { href: '/community', label: 'コミュニティ' },
-  { href: '/dealer/quotes', label: '見積書' },
-  { href: '/dealer/invoices', label: '請求書' },
-  { href: '/dealer/billing', label: '手数料・請求' },
-  { href: '/dealer/auctions', label: 'オークション' },
-  { href: '/premium', label: '会員コンテンツ' },
-  { href: '/dealer/skills', label: 'スキル・サービス' },
-  { href: '/dealer/works', label: '作業事例' },
-  { href: '/dealer/listings', label: '在庫管理' },
-  { href: '/dealer/staff', label: 'スタッフ管理' },
-  { href: '/dealer/analytics', label: 'アナリティクス' },
-  { href: '/dealer/api-keys', label: 'API・Webhook' },
-  { href: '/dealer/settings', label: '店舗設定' },
-];
 
 export default async function DealerLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -63,14 +41,7 @@ export default async function DealerLayout({ children }: { children: React.React
         )}
       </div>
 
-      <nav className="flex flex-wrap gap-2">
-        {NAV.map((n) => (
-          <Link key={n.href} href={n.href}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50">
-            {n.label}
-          </Link>
-        ))}
-      </nav>
+      <DealerNav />
 
       {children}
 

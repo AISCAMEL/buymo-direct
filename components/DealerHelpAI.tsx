@@ -59,6 +59,17 @@ export function DealerHelpAI({ dealerName, role }: { dealerName?: string; role?:
     if (open) scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages, busy, open]);
 
+  // 「やることナビ」等からの呼び出しでパネルを開き、質問を自動送信する。
+  useEffect(() => {
+    function onHelp(e: Event) {
+      setOpen(true);
+      const seed = (e as CustomEvent).detail?.seed as string | undefined;
+      if (seed) setInput(seed);
+    }
+    window.addEventListener('buymo:dealer-help', onHelp as EventListener);
+    return () => window.removeEventListener('buymo:dealer-help', onHelp as EventListener);
+  }, []);
+
   async function send(text: string) {
     const q = text.trim();
     if (!q || busy) return;

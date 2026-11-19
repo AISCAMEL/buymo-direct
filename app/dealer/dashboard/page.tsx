@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Package, Users, TrendingUp, ShieldCheck, Clock, FileText, Receipt, Sparkles } from 'lucide-react';
 import { requireDealer } from '@/lib/dealer';
 import { formatYen } from '@/lib/format';
+import { DealerFlowGuide } from '@/components/DealerFlowGuide';
 
 export const dynamic = 'force-dynamic';
 
@@ -81,6 +82,8 @@ export default async function DealerDashboardPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-black">ダッシュボード</h1>
+
+      <DealerFlowGuide />
 
       {skillCount === 0 && (
         <div className="flex flex-col gap-3 rounded-2xl border-2 border-gold-300 bg-gold-50 p-4 sm:flex-row sm:items-center">
