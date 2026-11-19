@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 
 const NAV = [
   { href: '/dealer/dashboard', label: 'ダッシュボード' },
+  { href: '/dealer/onboarding', label: 'はじめに・研修' },
   { href: '/dealer/cases', label: '案件' },
   { href: '/dealer/inspections', label: '査定表' },
   { href: '/dealer/hearing', label: 'ヒアリング' },

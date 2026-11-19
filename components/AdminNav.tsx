@@ -68,6 +68,7 @@ const GROUPS: Group[] = [
       { href: '/admin/members', label: '有料会員管理' },
       { href: '/admin/premium', label: '有料コンテンツ' },
       { href: '/admin/learn', label: '学習コンテンツ' },
+      { href: '/admin/onboarding', label: '加盟店研修の動画' },
       { href: '/admin/audit', label: '監査ログ' },
       { href: '/admin/settings', label: '料金設定' },
       { href: '/admin/seed', label: 'デモデータ' },
