@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { AttributionCapture } from '@/components/AttributionCapture';
 import { ArrowRight, Wrench, SprayCan, Cable, Truck, BadgeJapaneseYen, Stamp, Car, Recycle, LifeBuoy, PaintBucket, Sparkles } from 'lucide-react';
 import { RECRUIT_GENRES } from '@/lib/recruit-genres';
 import { RecruitSalesLetter } from '@/components/RecruitSalesLetter';
@@ -25,6 +26,7 @@ const ICON: Record<string, typeof Wrench> = {
 export default function RecruitIndexPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-10 py-4">
+      <AttributionCapture />
       {/* ヒーロー */}
       <section className="rounded-3xl bg-navy-700 px-6 py-12 text-center text-white">
         <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-xs font-bold">

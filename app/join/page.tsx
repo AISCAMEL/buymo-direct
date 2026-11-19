@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { AttributionCapture } from '@/components/AttributionCapture';
 import { Check, Sparkles, Wrench, SprayCan, Cable, Truck, UserPlus, ClipboardCheck, Megaphone, Handshake } from 'lucide-react';
 import { JoinLeadForm } from '@/components/JoinLeadForm';
 import { getPricingConfig } from '@/lib/settings';
@@ -57,6 +58,7 @@ export default async function JoinPage({ searchParams }: { searchParams: Promise
 
   return (
     <div className="mx-auto max-w-2xl space-y-10 py-6">
+      <AttributionCapture />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqPageJsonLd(faqs)) }} />
 
       <div className="text-center">

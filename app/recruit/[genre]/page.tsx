@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { AttributionCapture } from '@/components/AttributionCapture';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { ArrowLeft, Check, Users, BadgeJapaneseYen, UserPlus, ClipboardCheck, Handshake, Wallet, HelpCircle } from 'lucide-react';
@@ -40,6 +41,7 @@ export default async function RecruitGenrePage({ params }: { params: Params }) {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 py-2">
+      <AttributionCapture />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqPageJsonLd(g.faqs)) }} />
 
       <Link href="/recruit" className="inline-flex items-center gap-1 text-sm font-bold text-slate-500 hover:text-slate-700">

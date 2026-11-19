@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { AttributionCapture } from '@/components/AttributionCapture';
 import Image from 'next/image';
 import { redirect } from 'next/navigation';
 import { CheckCircle2, Clock, ShieldCheck, TrendingUp, Users } from 'lucide-react';
@@ -52,6 +53,7 @@ export default async function FranchisePage() {
 
   return (
     <div className="mx-auto max-w-xl space-y-6 py-6">
+      <AttributionCapture />
       <div className="relative overflow-hidden rounded-2xl">
         <Image src="/hero-franchise.jpg" alt="" width={1200} height={480} className="h-40 w-full object-cover sm:h-48" priority />
         <div className="absolute inset-0 bg-gradient-to-t from-navy-900/80 to-navy-700/30" />
