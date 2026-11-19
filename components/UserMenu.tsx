@@ -3,8 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  ChevronDown, LayoutDashboard, Heart, MessageSquare, Star, Building2, Store,
-  ShieldAlert, LogOut, UserRound, ClipboardList, FileText, Receipt, Crown, GraduationCap, Users, Sparkles, Bell, CalendarClock, Gavel,
+  ChevronDown, LayoutDashboard, MessageSquare, Store, ShieldAlert, LogOut,
+  UserRound, Crown, Sparkles, Bell,
 } from 'lucide-react';
 
 type Props = {
@@ -65,6 +65,7 @@ export function UserMenu({ unreadCount, pendingReviews, pendingEscrows, isAdmin,
 
       {open && (
         <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl">
+          {/* 各機能はマイページ左のサイドバーに集約。ここはアカウント操作だけに絞る。 */}
           <Link href="/dashboard/listings" className={item} onClick={() => setOpen(false)}>
             <LayoutDashboard className="h-4 w-4 text-slate-400" /> マイページ
             <Badge n={pendingEscrows} color="bg-amber-500" />
@@ -73,45 +74,21 @@ export function UserMenu({ unreadCount, pendingReviews, pendingEscrows, isAdmin,
             <MessageSquare className="h-4 w-4 text-slate-400" /> メッセージ
             <Badge n={unreadCount} color="bg-red-500" />
           </Link>
-          <Link href="/dashboard/appointments" className={item} onClick={() => setOpen(false)}>
-            <CalendarClock className="h-4 w-4 text-slate-400" /> 見学・試乗の予定
-          </Link>
-          <Link href="/dashboard/parts" className={item} onClick={() => setOpen(false)}>
-            <Gavel className="h-4 w-4 text-slate-400" /> パーツ出品・入札
-          </Link>
-          <Link href="/dashboard/cases" className={item} onClick={() => setOpen(false)}>
-            <ClipboardList className="h-4 w-4 text-slate-400" /> 依頼中案件
-          </Link>
-          <Link href="/dashboard/quotes" className={item} onClick={() => setOpen(false)}>
-            <FileText className="h-4 w-4 text-slate-400" /> 見積書
-          </Link>
-          <Link href="/dashboard/invoices" className={item} onClick={() => setOpen(false)}>
-            <Receipt className="h-4 w-4 text-slate-400" /> 請求書・支払い
-          </Link>
-          <Link href="/dashboard/favorites" className={item} onClick={() => setOpen(false)}>
-            <Heart className="h-4 w-4 text-slate-400" /> お気に入り
-          </Link>
-          <Link href="/dashboard/reviews" className={item} onClick={() => setOpen(false)}>
-            <Star className="h-4 w-4 text-slate-400" /> 評価
-            <Badge n={pendingReviews} color="bg-accent-500" />
+          <Link href="/dashboard/profile" className={item} onClick={() => setOpen(false)}>
+            <UserRound className="h-4 w-4 text-slate-400" /> プロフィール
           </Link>
           <Link href="/dashboard/settings" className={item} onClick={() => setOpen(false)}>
             <Bell className="h-4 w-4 text-slate-400" /> 通知・メール設定
           </Link>
+
           {businessTrack && (
             <>
-              <Link href="/learn" className={item} onClick={() => setOpen(false)}>
-                <GraduationCap className="h-4 w-4 text-slate-400" /> 買取を学ぶ
-              </Link>
-              <Link href="/community" className={item} onClick={() => setOpen(false)}>
-                <Users className="h-4 w-4 text-slate-400" /> コミュニティ
-              </Link>
+              <div className="my-1 border-t border-slate-100" />
               {buybackOpen && (
                 <Link href="/premium" className={item} onClick={() => setOpen(false)}>
                   <Sparkles className="h-4 w-4 text-gold-500" /> 会員コンテンツ
                 </Link>
               )}
-              {/* 買取加盟は有料会員を開放。スキル登録は「ご案内」(後出し→LP)。 */}
               {buybackOpen ? (
                 <Link href="/membership" className={item} onClick={() => setOpen(false)}>
                   <Crown className="h-4 w-4 text-gold-500" /> 有料会員
@@ -126,11 +103,10 @@ export function UserMenu({ unreadCount, pendingReviews, pendingEscrows, isAdmin,
                   <Store className="h-4 w-4 text-gold-500" /> 買取加盟の申込
                 </Link>
               )}
-              <Link href="/dealers" className={item} onClick={() => setOpen(false)}>
-                <Building2 className="h-4 w-4 text-slate-400" /> 加盟店を探す
-              </Link>
             </>
           )}
+
+          {(isDealer || isAdmin) && <div className="my-1 border-t border-slate-100" />}
           {isDealer && (
             <Link href="/dealer/dashboard" className={`${item} text-navy-700`} onClick={() => setOpen(false)}>
               <Store className="h-4 w-4 text-navy-500" /> 加盟店管理
@@ -141,6 +117,7 @@ export function UserMenu({ unreadCount, pendingReviews, pendingEscrows, isAdmin,
               <ShieldAlert className="h-4 w-4 text-accent-500" /> 管理（本部）
             </Link>
           )}
+
           <div className="my-1 border-t border-slate-100" />
           <form action="/auth/signout" method="post">
             <button className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-bold text-slate-500 hover:bg-slate-100">
