@@ -8,10 +8,11 @@ import { QUICK_REPLIES, DEALER_QUICK_REPLIES, type Audience } from '@/lib/faq';
 
 type Message = { role: 'user' | 'assistant'; content: string };
 
-/** パスからデフォルトの対象（会員/加盟店）を判定。 */
+/** パスから対象（会員/加盟店）を判定。加盟店サイト(/dealer配下・/hq・/admin)だけ加盟店、それ以外は会員。
+ *  ※公開の「加盟店を探す」(/dealers) は一般ページなので会員扱い。 */
 function pathAudience(path: string): Audience {
   const p = path || '/';
-  if (p.startsWith('/dealer') || p.startsWith('/hq') || p.startsWith('/admin')) return 'dealer';
+  if (p === '/dealer' || p.startsWith('/dealer/') || p.startsWith('/hq') || p.startsWith('/admin')) return 'dealer';
   return 'member';
 }
 
@@ -47,7 +48,8 @@ function pageContext(path: string): { label: string; greeting: string; quick: st
 export function AiChatWidget() {
   const pathname = usePathname() || '/';
   const pageCtx = useMemo(() => pageContext(pathname), [pathname]);
-  const [audience, setAudience] = useState<Audience>(() => pathAudience(pathname));
+  // 対象（会員/加盟店）はパス文脈で自動判定。一般サイト＝会員、加盟店サイト(/dealer・/hq・/admin)＝加盟店。手動切替は行わない。
+  const audience = useMemo<Audience>(() => pathAudience(pathname), [pathname]);
   // 会員＝ページ文脈、加盟店＝加盟店サポート文脈
   const ctx = audience === 'dealer' ? DEALER_CTX : pageCtx;
   const [open, setOpen] = useState(false);
@@ -93,26 +95,10 @@ export function AiChatWidget() {
     return () => clearTimeout(t);
   }, [nudge]);
 
-  // パスが変わったら既定の対象も追従（まだ会話していないときのみ）
-  useEffect(() => {
-    setMessages((prev) => {
-      if (prev.length === 1 && prev[0].role === 'assistant') {
-        setAudience(pathAudience(pathname));
-      }
-      return prev;
-    });
-  }, [pathname]);
-
   // まだ会話していなければ、文脈に合わせてあいさつ・質問例を更新
   useEffect(() => {
     setMessages((prev) => (prev.length === 1 && prev[0].role === 'assistant' ? [{ role: 'assistant', content: ctx.greeting }] : prev));
   }, [ctx.greeting]);
-
-  // 対象（会員/加盟店）を切り替え。会話前なら挨拶も切り替える。
-  function switchAudience(next: Audience) {
-    if (next === audience) return;
-    setAudience(next);
-  }
 
   async function send(text?: string) {
     const msg = (text ?? input).trim();
@@ -177,21 +163,6 @@ export function AiChatWidget() {
               </div>
               <button onClick={() => setOpen(false)} className="text-white/80 hover:text-white" aria-label="チャットを閉じる">
                 <X className="h-4 w-4" />
-              </button>
-            </div>
-            {/* 対象の切り替え（会員 / 加盟店） */}
-            <div className="mt-2.5 flex gap-1 rounded-lg bg-white/10 p-0.5">
-              <button
-                onClick={() => switchAudience('member')}
-                className={`flex-1 rounded-md py-1 text-[11px] font-bold transition ${audience === 'member' ? 'bg-white text-navy-700' : 'text-white/80 hover:text-white'}`}
-              >
-                会員の方
-              </button>
-              <button
-                onClick={() => switchAudience('dealer')}
-                className={`flex-1 rounded-md py-1 text-[11px] font-bold transition ${audience === 'dealer' ? 'bg-white text-navy-700' : 'text-white/80 hover:text-white'}`}
-              >
-                加盟店の方
               </button>
             </div>
           </div>
