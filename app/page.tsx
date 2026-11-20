@@ -3,7 +3,6 @@ import Image from 'next/image';
 import type { ComponentType } from 'react';
 import { SaleResultsSlider } from '@/components/SaleResultsSlider';
 import {
-  Search,
   ShieldCheck,
   MessageSquare,
   FileCheck2,
@@ -37,6 +36,7 @@ import { BODY_TYPES } from '@/lib/constants';
 import { GENRES, AREAS } from '@/lib/catalog';
 import { COLUMNS } from '@/lib/columns';
 import { HowItWorksTabs } from '@/components/HowItWorksTabs';
+import { HeroSearchTabs } from '@/components/HeroSearchTabs';
 import { CustomerResults } from '@/components/CustomerResults';
 import { getGenreIconMap } from '@/lib/genre-icons';
 import { getCachedFeaturedListings } from '@/lib/cache';
@@ -98,12 +98,6 @@ const GENRE_IMG: Record<string, string> = {
   import: '/genre-icons/import.svg',
   truck: '/genre-icons/truck.svg',
 };
-
-const TRUST_BADGES = [
-  { icon: ShieldCheck, label: 'エスクロー決済' },
-  { icon: FileCheck2, label: '名義変更代行' },
-  { icon: Banknote, label: '出品手数料¥0' },
-];
 
 const SAFETY_POINTS = [
   {
@@ -233,59 +227,23 @@ export default async function HomePage() {
           <div className="mx-auto grid max-w-7xl items-stretch lg:grid-cols-2">
             {/* テキストパネル */}
             <div className="order-2 px-5 py-10 text-center text-white sm:px-8 lg:order-1 lg:py-16 lg:text-left xl:px-12">
-              <p className="mb-3 inline-block rounded-full bg-white/12 px-4 py-1 text-xs font-bold text-white ring-1 ring-white/25">
-                💰 買取も、ダイレクト販売も
-              </p>
-              <h1 className="text-4xl font-black leading-[1.14] text-white sm:text-5xl xl:text-6xl">
-                愛車は、<span className="serif font-bold text-accent-200">もっと高く</span>売れる。
+              <h1 className="text-4xl font-black leading-[1.16] text-white sm:text-5xl xl:text-[56px]">
+                愛車の価値を、<br className="hidden sm:block" /><span className="text-accent-200">もっと自由に。</span>
               </h1>
               <p className="mx-auto mt-4 max-w-xl text-sm text-white/85 sm:text-base lg:mx-0">
-                すぐ現金化なら「買取」、じっくり高値なら「ダイレクト販売」。売れなくてもBUYMOが買い取るから、いちばん高い売り方を選べます。
+                売るのも、買うのも、プロのサポートで。<br className="hidden sm:block" />
+                安心・スマートなカーライフを。
               </p>
 
-              {/* 主要CTA（売る導線） */}
-              <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:justify-center lg:justify-start">
-                <Link href="/listings/valuation" className="btn-gold justify-center px-6 py-3 text-base">
-                  無料査定を試す（買取）
-                </Link>
-                <Link
-                  href="/sell"
-                  className="btn justify-center bg-white/12 px-6 py-3 text-base font-bold text-white ring-1 ring-white/30 transition hover:bg-white/25"
-                >
-                  出品して高く売る
-                </Link>
-              </div>
-              {/* 安心の一言 */}
-              <p className="mt-3 flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-white/70 lg:justify-start">
-                <span>✓ 査定無料</span>
-                <span>✓ 最短ネット完結</span>
-                <span>✓ しつこい営業なし</span>
-              </p>
-
-              {/* ベネフィットのチップ */}
-              <ul className="mx-auto mt-5 flex max-w-xl flex-wrap justify-center gap-2 text-xs font-bold text-white lg:mx-0 lg:justify-start">
-                <li className="rounded-full bg-white/12 px-3 py-1 ring-1 ring-white/20">いちばん高い売り方を選べる</li>
-                <li className="rounded-full bg-white/12 px-3 py-1 ring-1 ring-white/20">買取保証つき</li>
-                <li className="rounded-full bg-white/12 px-3 py-1 ring-1 ring-white/20">査定無料・手数料0円</li>
-                <li className="rounded-full bg-white/12 px-3 py-1 ring-1 ring-white/20">全国オンライン完結</li>
+              {/* 安心3点 */}
+              <ul className="mx-auto mt-5 flex max-w-xl flex-wrap justify-center gap-x-5 gap-y-2 text-xs font-bold text-white/90 lg:mx-0 lg:justify-start">
+                <li className="inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-accent-200" />安心の取引<span className="font-normal text-white/60">（エスクロー決済）</span></li>
+                <li className="inline-flex items-center gap-1.5"><FileCheck2 className="h-4 w-4 text-accent-200" />名義変更代行</li>
+                <li className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4 text-accent-200" />全国対応</li>
               </ul>
 
-              {/* 買う導線 */}
-              <p className="mt-8 text-xs font-bold text-white/70">クルマを探す方はこちら</p>
-              <form
-                action="/listings"
-                className="mx-auto mt-2 flex max-w-xl gap-2 rounded-2xl bg-white p-2 shadow-xl ring-1 ring-black/5 lg:mx-0"
-              >
-                <input
-                  name="q"
-                  className="min-w-0 flex-1 bg-transparent px-3 text-base outline-none placeholder:text-slate-400 sm:text-sm"
-                  placeholder="車名・メーカー・モデルで検索"
-                />
-                <button type="submit" className="btn-accent shrink-0 rounded-xl px-5 py-2.5">
-                  <Search className="h-4 w-4" />
-                  <span className="hidden sm:inline">検索</span>
-                </button>
-              </form>
+              {/* タブ切替の検索ボックス（購入／買取査定） */}
+              <HeroSearchTabs />
 
               {/* 人気メーカーチップ */}
               <div className="mt-5 flex flex-wrap justify-center gap-2 lg:justify-start">
@@ -305,19 +263,6 @@ export default async function HomePage() {
                   すべて →
                 </Link>
               </div>
-
-              {/* 信頼バッジ */}
-              <div className="mt-6 flex flex-wrap justify-center gap-3 lg:justify-start">
-                {TRUST_BADGES.map(({ icon: Icon, label }) => (
-                  <span
-                    key={label}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-white/12 px-4 py-1.5 text-xs font-bold text-white ring-1 ring-white/20"
-                  >
-                    <Icon className="h-3.5 w-3.5 text-accent-200" />
-                    {label}
-                  </span>
-                ))}
-              </div>
             </div>
 
             {/* 人物＋車の写真 */}
@@ -332,6 +277,12 @@ export default async function HomePage() {
               />
               {/* パネルへ自然になじませる（lg以上は左端、モバイルは下端をぼかす） */}
               <div className="absolute inset-0 bg-gradient-to-t from-navy-900/40 to-transparent lg:bg-gradient-to-r lg:from-navy-900/70 lg:via-navy-900/10 lg:to-transparent" />
+              {/* 安心サポートのエンブレム */}
+              <div className="absolute bottom-4 right-4 hidden flex-col items-center rounded-2xl border border-gold-500/60 bg-navy-900/70 px-4 py-2.5 text-center backdrop-blur sm:flex">
+                <span className="text-[10px] font-bold text-gold-500">中古車取引の</span>
+                <span className="text-sm font-black leading-tight text-white">安心サポート</span>
+                <span className="mt-0.5 text-[9px] font-bold tracking-widest text-white/70">BUYMO DIRECT</span>
+              </div>
             </div>
           </div>
         </section>
@@ -387,6 +338,33 @@ export default async function HomePage() {
                     </span>
                   </div>
                 </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── 1.8 選ばれる3つの理由 ── */}
+        <section className="bg-gradient-to-br from-accent-50 to-white px-4 py-12">
+          <div className="mx-auto max-w-5xl rounded-3xl bg-white/70 p-6 shadow-sm ring-1 ring-accent-200 sm:p-8">
+            <h2 className="flex items-center gap-2 text-xl font-black text-navy-800 sm:text-2xl">
+              <span className="inline-block h-5 w-1.5 rounded bg-accent-500" />選ばれる3つの理由
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">BUYMO ダイレクトが、安心してご利用いただける理由</p>
+            <div data-reveal className="mt-6 grid gap-5 sm:grid-cols-3">
+              {[
+                { icon: ShieldCheck, title: '安心のエスクロー決済', desc: 'お金のやり取りも安全' },
+                { icon: FileCheck2, title: '名義変更を代行', desc: '面倒な手続きもおまかせ' },
+                { icon: MapPin, title: '全国の加盟店ネットワーク', desc: 'お近くのプロが対応' },
+              ].map(({ icon: Icon, title, desc }) => (
+                <div key={title} className="flex items-start gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent-50 text-accent-600">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-navy-800">{title}</h3>
+                    <p className="mt-0.5 text-sm text-slate-500">{desc}</p>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
@@ -666,7 +644,7 @@ export default async function HomePage() {
         <section className="bg-white px-4 py-12">
           <div className="mx-auto max-w-5xl">
             <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-xl font-black">新着の出品車両</h2>
+              <h2 className="text-xl font-black">人気の中古車</h2>
               <Link
                 href="/listings"
                 className="flex items-center gap-0.5 text-sm font-bold text-accent-600 hover:underline"
