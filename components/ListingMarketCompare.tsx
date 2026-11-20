@@ -50,7 +50,11 @@ export function ListingMarketCompare({
   }
   if (!result || result.channels.length === 0) return null; // 取得できなければ何も出さない
 
-  const marketMids = result.channels.map((c) => Math.round((c.priceLow + c.priceHigh) / 2)).filter((n) => n > 0);
+  // 一般消費者向け：業者仕入れ（オークション相当・卸値）の販路は表示しない（既存キャッシュ対策）
+  const channels = result.channels.filter((c) => !/業者|オークション|仕入|卸/.test(c.channel));
+  if (channels.length === 0) return null;
+
+  const marketMids = channels.map((c) => Math.round((c.priceLow + c.priceHigh) / 2)).filter((n) => n > 0);
   const marketMid = marketMids.length ? Math.round(marketMids.reduce((a, b) => a + b, 0) / marketMids.length) : 0;
   const saving = marketMid - price;
 
@@ -73,7 +77,7 @@ export function ListingMarketCompare({
       <div className="mt-3 overflow-hidden rounded-xl border border-slate-200">
         <table className="w-full text-sm">
           <tbody className="divide-y divide-slate-100">
-            {result.channels.map((c, i) => (
+            {channels.map((c, i) => (
               <tr key={i} className="text-slate-600">
                 <td className="px-3 py-2 font-bold">{c.channel}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{yen(c.priceLow)}〜{yen(c.priceHigh)}</td>
