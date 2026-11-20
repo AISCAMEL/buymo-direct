@@ -287,16 +287,21 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* ── 1.5 BUYMO マスコット（別枠）── */}
+        {/* ── 1.5 BUYMO ロゴ（別枠）── */}
         <section className="bg-gradient-to-b from-navy-50 to-white px-4 py-8">
-          <div className="mx-auto flex max-w-3xl flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Image
-              src="/buymo-mascot.png"
-              alt="BUYMO マスコット"
-              width={320}
-              height={240}
-              className="h-auto w-[160px] drop-shadow-md sm:w-[200px]"
-            />
+          <div className="mx-auto flex max-w-3xl flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-5">
+            <div className="flex items-center gap-2 text-navy-500">
+              <Image
+                src="/buymo-logo-mark.png"
+                alt="BUYMO DIRECT"
+                width={56}
+                height={56}
+                className="h-11 w-11 object-contain sm:h-14 sm:w-14"
+              />
+              <span className="flex items-center gap-1.5 text-2xl font-black tracking-tight leading-none sm:text-3xl">
+                BUYMO<span className="rounded-md bg-gold-500 px-2 py-0.5 text-xl font-black leading-none text-navy-900 sm:text-2xl">BD</span>
+              </span>
+            </div>
             <p className="text-center text-sm font-bold text-navy-700 sm:text-left sm:text-base">
               愛車の売却も、次のクルマ探しも。<br className="hidden sm:block" />
               BUYMO がまるごとサポートします。
@@ -504,7 +509,8 @@ export default async function HomePage() {
 
             {/* ジャンル */}
             <div data-reveal className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-              {['kei', 'suv', 'minivan', 'alphard', 'hiace', 'prius', 'jimny', 'jiko', 'haisha', 'ev', 'import', 'truck']
+              {/* ボディタイプ（軽自動車/SUV/ミニバン）と重複する kei/suv/minivan は除外して凝縮 */}
+              {['alphard', 'hiace', 'prius', 'jimny', 'jiko', 'haisha', 'ev', 'import', 'truck']
                 .map((s) => GENRES.find((g) => g.slug === s))
                 .filter((g): g is NonNullable<typeof g> => Boolean(g))
                 .map((g) => {
