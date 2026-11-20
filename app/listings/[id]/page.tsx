@@ -323,7 +323,7 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
 
         {/* ── 車両情報 ── */}
         <div className="card p-5">
-          <h2 className="mb-3 font-bold">車両情報</h2>
+          <h2 className="mb-3 flex items-center gap-2 font-black text-navy-800"><span className="inline-block h-4 w-1 rounded bg-accent-500" />車両情報</h2>
           <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {specs.map(({ icon: Icon, label, value }) => (
               <div key={label} className="rounded-lg bg-slate-50 p-3">
@@ -335,11 +335,9 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
               </div>
             ))}
           </dl>
-          <div className="mt-3 flex items-center gap-2 text-sm">
-            <ShieldCheck
-              className={`h-5 w-5 ${listing.repair_history ? 'text-red-500' : 'text-emerald-500'}`}
-            />
-            <span className="font-bold">
+          <div className="mt-3">
+            <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-black ${listing.repair_history ? 'bg-coral-50 text-coral-700' : 'bg-leaf-50 text-leaf-600'}`}>
+              <ShieldCheck className="h-4 w-4" />
               修復歴：{listing.repair_history ? 'あり' : 'なし'}
             </span>
           </div>
@@ -367,7 +365,7 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
 
         {listing.description && (
           <div className="card p-5">
-            <h2 className="mb-2 font-bold">出品者からのコメント</h2>
+            <h2 className="mb-2 flex items-center gap-2 font-black text-navy-800"><span className="inline-block h-4 w-1 rounded bg-accent-500" />出品者からのコメント</h2>
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
               {listing.description}
             </p>
@@ -377,7 +375,7 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
         {/* 装備・オプション */}
         {listing.equipment && listing.equipment.length > 0 && (
           <div className="card p-5">
-            <h2 className="mb-3 font-bold">装備・オプション</h2>
+            <h2 className="mb-3 flex items-center gap-2 font-black text-navy-800"><span className="inline-block h-4 w-1 rounded bg-accent-500" />装備・オプション</h2>
             <div className="flex flex-wrap gap-2">
               {listing.equipment.map((eq) => (
                 <span key={eq} className="inline-flex items-center gap-1 rounded-full border border-navy-100 bg-navy-50 px-3 py-1.5 text-xs font-bold text-navy-700">
