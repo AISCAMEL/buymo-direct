@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { PlusCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getDealerForUser } from '@/lib/dealer';
@@ -45,8 +44,7 @@ export async function Header() {
   return (
     <header className="site-header sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <Link href="/" className="flex shrink-0 items-center gap-1.5 text-navy-500">
-          <Image src="/buymo-logo-mark.png" alt="BUYMO" width={32} height={32} className="h-7 w-7 object-contain sm:h-8 sm:w-8" priority />
+        <Link href="/" className="flex shrink-0 items-center text-navy-500">
           <span className="flex items-center gap-1 text-lg font-black tracking-tight leading-none sm:gap-1.5 sm:text-[22px]">
             BUYMO<span className="rounded-md bg-gold-500 px-1.5 py-0.5 text-base font-black leading-none text-navy-900 sm:px-2 sm:text-[20px]">BD</span>
           </span>
