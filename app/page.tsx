@@ -509,7 +509,8 @@ export default async function HomePage() {
 
             {/* ジャンル */}
             <div data-reveal className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-              {['kei', 'suv', 'minivan', 'alphard', 'hiace', 'prius', 'jimny', 'jiko', 'haisha', 'ev', 'import', 'truck']
+              {/* ボディタイプ（軽自動車/SUV/ミニバン）と重複する kei/suv/minivan は除外して凝縮 */}
+              {['alphard', 'hiace', 'prius', 'jimny', 'jiko', 'haisha', 'ev', 'import', 'truck']
                 .map((s) => GENRES.find((g) => g.slug === s))
                 .filter((g): g is NonNullable<typeof g> => Boolean(g))
                 .map((g) => {
