@@ -308,17 +308,20 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
         {/* ── 気になる動線（動きの可視化） ── */}
         <ListingActivityBanner activity={activity} />
 
-        {/* ── メタ情報行 ── */}
-        <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500">
-          <span className="flex items-center gap-1">
-            <Eye className="h-4 w-4" />
+        {/* ── メタ情報行（ピル表示） ── */}
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 font-bold text-slate-600">
+            <Eye className="h-4 w-4 text-slate-400" />
             {((listing.view_count ?? 0) + 1).toLocaleString()} 回閲覧
           </span>
-          <span className="flex items-center gap-1">
-            <Heart className="h-4 w-4" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 font-bold text-slate-600">
+            <Heart className="h-4 w-4 text-slate-400" />
             {(favoriteCount ?? 0).toLocaleString()} 件のお気に入り
           </span>
-          <span>出品日：{formatDate(listing.created_at)}</span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 font-bold text-slate-600">
+            <Calendar className="h-4 w-4 text-slate-400" />
+            出品日 {formatDate(listing.created_at)}
+          </span>
         </div>
 
         {/* ── 車両情報 ── */}
