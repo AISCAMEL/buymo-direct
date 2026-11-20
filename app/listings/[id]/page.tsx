@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { MapPin, Gauge, Calendar, Fuel, Settings2, Palette, ShieldCheck, Eye, Heart, Hash, Banknote, Tag, ArrowRight, Check, Calculator, ChevronDown } from 'lucide-react';
+import { MapPin, Gauge, Calendar, Fuel, Settings2, Palette, ShieldCheck, Eye, Heart, Hash, Banknote, Tag, ArrowRight, Check, Calculator, ChevronDown, FileCheck2, MessageSquare } from 'lucide-react';
 import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { formatYen, formatMileage, formatDate } from '@/lib/format';
@@ -481,7 +481,8 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
           </div>
           <p className="mt-0.5 text-xs text-slate-400">{SELLER_KIND_NOTE[sellerKind(listing)]}</p>
 
-          <p className="mt-3 text-3xl font-black text-navy-600">{formatYen(listing.price)}</p>
+          <p className="mt-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">車両価格（税込）</p>
+          <p className="text-3xl font-black leading-tight text-navy-700">{formatYen(listing.price)}</p>
           {marketMedian && listing.status === 'active' && (
             <PriceAssessment price={listing.price} median={marketMedian} sample={marketSample} />
           )}
@@ -554,19 +555,28 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
             );
           })()}
 
-          {/* 安心バナー（チャットで納得 → エスクロー） */}
-          <div className="mt-4 flex items-center gap-2 rounded-xl bg-gold-50 px-3 py-2.5 text-xs font-bold text-gold-600">
-            <ShieldCheck className="h-4 w-4 shrink-0" />
-            チャットで納得 → エスクローで安全に購入
+          {/* 安心サポート（買い手の安心訴求・プレミアム版） */}
+          <div className="mt-4 rounded-2xl border border-accent-200 bg-gradient-to-br from-accent-50 to-white p-3.5">
+            <p className="flex items-center gap-1.5 text-sm font-black text-navy-800">
+              <ShieldCheck className="h-4 w-4 text-accent-600" />BUYMOの安心サポート
+            </p>
+            <ul className="mt-2.5 grid grid-cols-3 gap-2">
+              {[
+                { icon: Banknote, t: 'エスクロー決済', d: '代金は第三者が保全' },
+                { icon: MessageSquare, t: '納得して購入', d: 'チャット・現車確認OK' },
+                { icon: FileCheck2, t: '名義変更代行', d: '面倒な手続きもお任せ' },
+              ].map(({ icon: Icon, t, d }) => (
+                <li key={t} className="flex flex-col items-center gap-1 rounded-xl bg-white p-2 text-center shadow-sm ring-1 ring-slate-100">
+                  <Icon className="h-5 w-5 text-accent-600" />
+                  <span className="text-[11px] font-black leading-tight text-navy-800">{t}</span>
+                  <span className="text-[10px] leading-tight text-slate-500">{d}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2.5 text-[11px] leading-relaxed text-slate-500">
+              オンライン完結もOK。気になる点はチャットで質問、ご希望なら<strong className="text-slate-700">現車確認・試乗</strong>も相談できます。<strong className="text-slate-700">納得してから</strong>ご購入ください。
+            </p>
           </div>
-          <p className="mt-1.5 text-[11px] leading-relaxed text-slate-500">
-            オンラインで完結もOK。気になる点はチャットで質問、ご希望なら<strong className="text-slate-700">現車確認（見に行く）・試乗</strong>も相談できます。<strong className="text-slate-700">納得してから</strong>ご購入ください。
-          </p>
-          <ul className="mt-2 grid grid-cols-3 gap-1.5 text-center text-[10px] font-bold text-slate-600">
-            <li className="rounded-lg bg-slate-50 px-1 py-1.5">代金は<br />第三者保全</li>
-            <li className="rounded-lg bg-slate-50 px-1 py-1.5">チャットで<br />納得してから</li>
-            <li className="rounded-lg bg-slate-50 px-1 py-1.5">名義変更<br />まで代行</li>
-          </ul>
 
           {/* プロ向け情報（本部・加盟店のみ表示。個人会員・未ログインには出さない） */}
           {(viewerIsAdmin || viewerIsDealer) && (
