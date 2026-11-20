@@ -121,15 +121,17 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
       </aside>
 
       <section>
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <h1 className="text-xl font-black">
-            車を探す{' '}
-            <span className="text-sm font-bold text-slate-500">
-              {count ?? 0}件
-              {(count ?? 0) > PAGE_SIZE && `（${page}/${totalPages}ページ）`}
-            </span>
-          </h1>
-          <div className="flex flex-wrap items-center justify-end gap-2 [&>*]:shrink-0">
+        <div className="mb-4">
+          <p className="text-xs font-bold uppercase tracking-widest text-accent-600">Browse</p>
+          <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+            <h1 className="flex items-baseline gap-2 text-2xl font-black text-navy-800">
+              車を探す
+              <span className="text-sm font-bold text-slate-500">
+                {count ?? 0}件
+                {(count ?? 0) > PAGE_SIZE && `（${page}/${totalPages}ページ）`}
+              </span>
+            </h1>
+            <div className="flex flex-wrap items-center justify-end gap-2 [&>*]:shrink-0">
             {/* モバイル専用フィルタボタン */}
             <Suspense>
               <MobileFilterButton />
@@ -145,6 +147,7 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
               <ViewToggle />
             </Suspense>
             <SortSelect />
+            </div>
           </div>
         </div>
         {/* 人気の検索条件 */}
