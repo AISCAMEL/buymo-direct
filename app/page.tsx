@@ -290,16 +290,9 @@ export default async function HomePage() {
         {/* ── 1.5 BUYMO ロゴ（別枠）── */}
         <section className="bg-gradient-to-b from-navy-50 to-white px-4 py-8">
           <div className="mx-auto flex max-w-3xl flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-5">
-            <div className="flex items-center gap-2 text-navy-500">
-              <Image
-                src="/buymo-logo-mark.png"
-                alt="BUYMO DIRECT"
-                width={56}
-                height={56}
-                className="h-11 w-11 object-contain sm:h-14 sm:w-14"
-              />
-              <span className="flex items-center gap-1.5 text-2xl font-black tracking-tight leading-none sm:text-3xl">
-                BUYMO<span className="rounded-md bg-gold-500 px-2 py-0.5 text-xl font-black leading-none text-navy-900 sm:text-2xl">BD</span>
+            <div className="flex items-center text-navy-500">
+              <span className="flex items-center gap-1.5 text-3xl font-black tracking-tight leading-none sm:text-4xl">
+                BUYMO<span className="rounded-md bg-gold-500 px-2 py-0.5 text-2xl font-black leading-none text-navy-900 sm:text-3xl">BD</span>
               </span>
             </div>
             <p className="text-center text-sm font-bold text-navy-700 sm:text-left sm:text-base">
