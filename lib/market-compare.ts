@@ -33,11 +33,11 @@ export const COMPARE_SYSTEM = [
   '推定は一般的な市場感に基づく概算で構いません（実在の個別広告は参照しないこと）。',
   '必ず次のJSONだけを返してください（前後に文章・コードフェンスを付けない）:',
   '{"channels":[{"channel":"大手中古車サイト(平均的な掲載価格)","low":円,"high":円,"note":"一言"},',
-  '{"channel":"ディーラー認定中古","low":円,"high":円,"note":"一言"},',
-  '{"channel":"オークション相当(業者仕入れの目安)","low":円,"high":円,"note":"一言"}],',
+  '{"channel":"ディーラー認定中古","low":円,"high":円,"note":"一言"}],',
   '"buymoLow":円,"buymoHigh":円,"buymoNote":"BUYMO想定販売価格の根拠を一言",',
   '"summary":"この車のお得ポイントを1〜2文で"}',
   '金額は日本円の整数（例:1280000）。不明な車種でも、年式・走行距離から妥当な概算を出すこと。',
+  '※一般消費者向けの比較のため、オークション相当・業者仕入れ・卸値など事業者向けの仕入れ価格は含めないこと（販売価格の相場のみ）。',
 ].join('\n');
 
 export function buildComparePrompt(v: CompareVehicle, internal: MarketStats | null): string {
@@ -98,6 +98,8 @@ export function parseCompare(text: string, internal: MarketStats | null): Market
       } as ChannelPrice;
     })
     .filter((x): x is ChannelPrice => x !== null)
+    // 一般消費者向け：業者仕入れ（オークション相当・卸値）の販路は表示しない
+    .filter((x) => !/業者|オークション|仕入|卸/.test(x.channel))
     .slice(0, 5);
 
   // BUYMO価格：自社実データ優先（±で幅を作る）、無ければAI値
