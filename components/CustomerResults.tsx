@@ -12,11 +12,12 @@ export async function CustomerResults() {
         <h2 className="mb-2 text-center text-2xl font-black sm:text-3xl">ご利用実績</h2>
         <p className="mb-8 text-center text-sm text-slate-500">全国のお客様に、買取・ダイレクト販売でご利用いただいています。</p>
 
-        <div data-reveal className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-5 sm:overflow-visible sm:px-0 lg:grid-cols-4">
+        {/* 横スライド（全サイズ共通）。カードを少しずつ見せてスワイプ/横スクロールを促す */}
+        <div data-reveal className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-4 pb-3 [scrollbar-width:thin]">
           {items.map((it) => (
             <figure
               key={it.key}
-              className="group relative w-[72%] shrink-0 snap-start overflow-hidden rounded-2xl border border-slate-200 shadow-sm sm:w-auto"
+              className="group relative w-[74%] shrink-0 snap-start overflow-hidden rounded-2xl border border-slate-200 shadow-sm sm:w-[260px] lg:w-[280px]"
             >
               <div className="relative aspect-square overflow-hidden bg-slate-100">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -33,6 +34,7 @@ export async function CustomerResults() {
             </figure>
           ))}
         </div>
+        <p className="mt-2 text-center text-xs font-bold text-slate-400">← 横にスライドしてもっと見る →</p>
       </div>
     </section>
   );
