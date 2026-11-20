@@ -56,17 +56,20 @@ export async function Header() {
           <Link href="/listings" className="hidden whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 sm:inline-block">
             車を探す
           </Link>
+          <Link href="/listings/valuation" className="hidden whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 sm:inline-block">
+            車を売る（買取）
+          </Link>
+          <Link href="/dealers" className="hidden whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 lg:inline-block">
+            加盟店を探す
+          </Link>
           <Link href="/about" className="hidden whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 lg:inline-block">
-            初めての方へ
+            ご利用ガイド
           </Link>
           <Link href="/column" className="hidden whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 lg:inline-block">
             コラム
           </Link>
-          <Link href="/market" className="hidden whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 lg:inline-block">
-            相場をくらべる
-          </Link>
           {businessTrack && (
-            <Link href="/learn" className="hidden whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 sm:inline-block">
+            <Link href="/learn" className="hidden whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 lg:inline-block">
               買取を学ぶ
             </Link>
           )}
