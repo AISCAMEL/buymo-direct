@@ -13,6 +13,7 @@ import { ReportDialog } from '@/components/ReportDialog';
 import { RatingStars } from '@/components/RatingStars';
 import { ListingGallery } from '@/components/ListingGallery';
 import { MaintenanceRecordsPanel } from '@/components/MaintenanceRecordsPanel';
+import { warrantyAutoStatus } from '@/lib/warranty-status';
 import { FollowButton } from '@/components/FollowButton';
 import { favoritedSet } from '@/lib/favorites';
 import { ListingGrid } from '@/components/ListingGrid';
@@ -344,6 +345,24 @@ export default async function ListingDetailPage({ params }: { params: Params }) 
               修復歴：{listing.repair_history ? 'あり' : 'なし'}
             </span>
           </div>
+
+          {/* 故障保証：登録情報（年式・走行・サイズ/メーカー）から自動判定・自動反映 */}
+          {(() => {
+            const w = warrantyAutoStatus({ year: listing.year, mileageKm: listing.mileage_km, maker: listing.maker, bodyType: listing.body_type });
+            return (
+              <div className={`mt-3 rounded-xl border p-3 ${w.eligible ? 'border-accent-200 bg-accent-50/60' : 'border-slate-200 bg-slate-50'}`}>
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className={`h-5 w-5 shrink-0 ${w.eligible ? 'text-accent-600' : 'text-slate-400'}`} />
+                  <span className={`text-sm font-black ${w.eligible ? 'text-navy-800' : 'text-slate-500'}`}>{w.headline}</span>
+                  <span className="ml-auto rounded-full bg-white px-2 py-0.5 text-[10px] font-bold text-slate-400 ring-1 ring-slate-200">登録情報から自動判定</span>
+                </div>
+                <p className="mt-1.5 text-xs leading-relaxed text-slate-500">{w.detail}</p>
+                {w.eligible && (
+                  <p className="mt-0.5 text-[11px] text-slate-400">※ ご購入時の「お支払い目安」で保証プラン・期間を選べます（料金は年式・走行・排気量から自動計算）。</p>
+                )}
+              </div>
+            );
+          })()}
         </div>
 
         {listing.owner_comment && (
