@@ -114,24 +114,31 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
   );
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
+    <>
+      {/* ── ページ見出しバンド（ブランド） ── */}
+      <section className="-mx-4 -mt-6 mb-6 bg-gradient-to-br from-navy-50 to-white px-4 py-6 sm:py-8">
+        <div className="mx-auto max-w-6xl">
+          <p className="text-xs font-bold uppercase tracking-widest text-accent-600">Browse</p>
+          <h1 className="mt-1 flex items-baseline gap-2 text-2xl font-black text-navy-800 sm:text-3xl">
+            車を探す
+            <span className="text-sm font-bold text-slate-500">
+              {count ?? 0}件{(count ?? 0) > PAGE_SIZE && `（${page}/${totalPages}ページ）`}
+            </span>
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">買取保証つき・エスクロー決済・名義変更代行。全国の中古車を安心して探せます。</p>
+        </div>
+      </section>
+
+      <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
       {/* デスクトップサイドバー（モバイルは非表示） */}
       <aside className="hidden lg:sticky lg:top-20 lg:block lg:self-start">
         <SearchFilters />
       </aside>
 
       <section>
-        <div className="mb-4">
-          <p className="text-xs font-bold uppercase tracking-widest text-accent-600">Browse</p>
-          <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
-            <h1 className="flex items-baseline gap-2 text-2xl font-black text-navy-800">
-              車を探す
-              <span className="text-sm font-bold text-slate-500">
-                {count ?? 0}件
-                {(count ?? 0) > PAGE_SIZE && `（${page}/${totalPages}ページ）`}
-              </span>
-            </h1>
-            <div className="flex flex-wrap items-center justify-end gap-2 [&>*]:shrink-0">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm font-bold text-slate-500">絞り込み結果 <span className="text-navy-700">{count ?? 0}件</span></p>
+          <div className="flex flex-wrap items-center justify-end gap-2 [&>*]:shrink-0">
             {/* モバイル専用フィルタボタン */}
             <Suspense>
               <MobileFilterButton />
@@ -147,7 +154,6 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
               <ViewToggle />
             </Suspense>
             <SortSelect />
-            </div>
           </div>
         </div>
         {/* 人気の検索条件 */}
@@ -189,5 +195,6 @@ export default async function ListingsPage({ searchParams }: { searchParams: Sea
         </div>
       </section>
     </div>
+    </>
   );
 }
