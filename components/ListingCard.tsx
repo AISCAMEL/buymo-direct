@@ -70,11 +70,11 @@ export function ListingCard({
 
   const hotBadge =
     listing.status === 'active' && todayInquiries > 0 ? (
-      <span className="badge absolute left-2 top-9 inline-flex items-center gap-1 bg-rose-500 text-white shadow-sm">
+      <span className="badge absolute left-2 top-9 inline-flex items-center gap-1 bg-coral-500 text-white shadow-sm">
         <Flame className="h-3 w-3" />本日お問い合わせ{todayInquiries > 1 ? ` ${todayInquiries}` : ''}
       </span>
     ) : hot && listing.status === 'active' ? (
-      <span className="badge absolute left-2 top-9 inline-flex items-center gap-1 bg-rose-100 text-rose-700 shadow-sm">
+      <span className="badge absolute left-2 top-9 inline-flex items-center gap-1 bg-coral-50 text-coral-700 shadow-sm">
         <Flame className="h-3 w-3" />{boosted ? '注目' : '人気'}
       </span>
     ) : null;
@@ -84,17 +84,17 @@ export function ListingCard({
       {sellerBadge}
       {hotBadge}
       {goodDeal && (
-        <span className="badge absolute right-2 top-2 inline-flex items-center gap-1 bg-teal-600 text-white shadow-sm">
+        <span className="badge absolute right-2 top-2 inline-flex items-center gap-1 bg-accent-600 text-white shadow-sm">
           <TrendingDown className="h-3 w-3" />相場より安い
         </span>
       )}
       {!goodDeal && listing.status === 'active' && !!priceDrop && priceDrop > 0 && (
-        <span className="badge absolute right-2 top-2 inline-flex items-center gap-1 bg-rose-500 text-white shadow-sm">
+        <span className="badge absolute right-2 top-2 inline-flex items-center gap-1 bg-coral-500 text-white shadow-sm">
           <TrendingDown className="h-3 w-3" />値下げ {formatYen(priceDrop)}
         </span>
       )}
       {listing.repair_history && (
-        <span className="badge absolute bottom-2 left-2 bg-red-100 text-red-700">修復歴あり</span>
+        <span className="badge absolute bottom-2 left-2 bg-coral-50 text-coral-700">修復歴あり</span>
       )}
       {listing.status !== 'active' && STATUS_BADGE[listing.status] && (
         <span className={`badge absolute bottom-2 right-2 ${STATUS_BADGE[listing.status]}`}>
@@ -123,7 +123,7 @@ export function ListingCard({
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-bold text-navy-400">{listing.maker} {listing.model}</p>
-          <h3 className="mt-0.5 line-clamp-2 font-bold">{listing.title}</h3>
+          <h3 className="mt-0.5 line-clamp-2 font-bold text-navy-800">{listing.title}</h3>
           <p className="mt-1 text-2xl font-black tabular-nums text-navy-700">{formatYen(listing.price)}</p>
           <p className="text-[11px] font-bold text-slate-500">
             ローン月々 {formatYen(monthlyPayment(listing.price, LOAN_APR_FROM, 60))}〜
@@ -146,7 +146,7 @@ export function ListingCard({
         <p className="text-xs font-bold text-navy-400">
           {listing.maker} {listing.model}
         </p>
-        <h3 className="mt-0.5 line-clamp-1 font-bold">{listing.title}</h3>
+        <h3 className="mt-0.5 line-clamp-1 font-bold text-navy-800">{listing.title}</h3>
         <p className="mt-2 text-2xl font-black tabular-nums text-navy-700">{formatYen(listing.price)}</p>
         <p className="text-[11px] font-bold text-slate-500">
           ローン月々 {formatYen(monthlyPayment(listing.price, LOAN_APR_FROM, 60))}〜
